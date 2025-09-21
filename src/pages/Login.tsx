@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
+import './Login.css'
 
 const schema = z.object({
   email: z.string().email({ message: 'Email inválido' }),
@@ -40,71 +41,67 @@ const Login: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 flex flex-col items-center justify-center px-4 py-10">
+    <div className="login-container">
       {/* Encabezado superior */}
-      <div className="text-center mb-16">
-        <h1 className="text-5xl font-bold text-black mb-4">
+      <header className="login-header">
+        <h1 className="login-title">
           Sports Team Manager
         </h1>
-        <p className="text-xl text-gray-600">Sistema de gestión deportiva</p>
-      </div>
+        <p className="login-subtitle">
+          Sistema de gestión deportiva
+        </p>
+      </header>
 
-      {/* Card principal */}
-      <div className="w-full max-w-lg bg-white rounded-3xl shadow-2xl p-8">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-black mb-3">
+      {/* Tarjeta de login */}
+      <main className="login-card">
+        <div className="login-card-header">
+          <h2 className="login-card-title">
             Iniciar Sesión
           </h2>
-          <p className="text-gray-600 text-lg">
+          <p className="login-card-description">
             Ingresa tus credenciales para acceder al sistema
           </p>
         </div>
         
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <div>
-            <label 
-              htmlFor="email" 
-              className="block text-black font-semibold text-lg mb-2"
-            >
+        <form onSubmit={handleSubmit(onSubmit)} className="login-form">
+          <div className="form-group">
+            <label htmlFor="email" className="form-label">
               Email
             </label>
             <input
               id="email"
               type="email"
-              placeholder="tu@email.com"
-              className="w-full h-14 px-4 text-lg bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-400 focus:bg-white transition-all"
+              placeholder="santiago.kiryluk@gmail.com"
+              className="form-input"
               {...register('email')}
             />
             {errors.email && (
-              <p className="text-red-600 text-sm mt-1">
+              <p className="error-message">
                 {errors.email.message}
               </p>
             )}
           </div>
 
-          <div>
-            <label 
-              htmlFor="password" 
-              className="block text-black font-semibold text-lg mb-2"
-            >
+          <div className="form-group">
+            <label htmlFor="password" className="form-label">
               Contraseña
             </label>
             <input
               id="password"
               type="password"
-              placeholder="••••••••"
-              className="w-full h-14 px-4 text-lg bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-400 focus:bg-white transition-all"
+              placeholder="••••••••••"
+              className="form-input"
               {...register('password')}
             />
             {errors.password && (
-              <p className="text-red-600 text-sm mt-1">
+              <p className="error-message">
                 {errors.password.message}
               </p>
             )}
           </div>
 
           {errors.root && (
-            <div className="text-red-600 text-center bg-red-50 p-3 rounded-lg">
+            <div className="error-container">
               {errors.root.message}
             </div>
           )}
@@ -112,24 +109,21 @@ const Login: React.FC = () => {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full h-14 bg-black hover:bg-gray-800 text-white font-semibold text-lg rounded-xl transition-colors shadow-lg disabled:opacity-50"
+            className="login-button"
           >
             {isSubmitting ? 'Ingresando…' : 'Iniciar Sesión'}
           </button>
         </form>
 
-        <div className="text-center mt-8">
-          <p className="text-gray-600">
+        <footer className="login-footer">
+          <p className="login-footer-text">
             ¿No tienes cuenta?{' '}
-            <Link 
-              to="/signup" 
-              className="font-semibold text-blue-600 hover:text-blue-700 hover:underline"
-            >
+            <Link to="/signup" className="login-footer-link">
               Regístrate aquí
             </Link>
           </p>
-        </div>
-      </div>
+        </footer>
+      </main>
     </div>
   )
 }

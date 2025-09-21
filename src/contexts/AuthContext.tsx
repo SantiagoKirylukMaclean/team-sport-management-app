@@ -28,32 +28,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const navigate = useNavigate()
 
   const loadProfileRole = async (uid: string) => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', uid)
-      .maybeSingle()
-    if (error) {
-      console.error('Error leyendo profiles.role', error)
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', uid)
+        .maybeSingle()
+      if (error) {
+        console.error('Error leyendo profiles.role:', error.message, error)
+        setRole(null)
+        return
+      }
+      setRole((data?.role as AppRole | null) ?? null)
+    } catch (err) {
+      console.error('Error inesperado al cargar perfil:', err)
       setRole(null)
-      return
     }
-    setRole((data?.role as AppRole | null) ?? null)
   }
 
   // Al montar: obtener sesión y usuario; luego cargar role
   useEffect(() => {
     let mounted = true
     ;(async () => {
-      const { data } = await supabase.auth.getSession()
-      if (!mounted) return
-      setSession(data.session ?? null)
-      setUser(data.session?.user ?? null)
-      if (data.session?.user) {
-        // Cargar rol en segundo plano
-        loadProfileRole(data.session.user.id)
+      try {
+        const { data, error } = await supabase.auth.getSession()
+        if (error) {
+          console.error('Error obteniendo sesión:', error.message, error)
+        }
+        if (!mounted) return
+        setSession(data.session ?? null)
+        setUser(data.session?.user ?? null)
+        if (data.session?.user) {
+          // Cargar rol en segundo plano
+          loadProfileRole(data.session.user.id)
+        }
+        setLoading(false)
+      } catch (err) {
+        console.error('Error inesperado al inicializar auth:', err)
+        if (mounted) {
+          setLoading(false)
+        }
       }
-      setLoading(false)
     })()
 
     const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
