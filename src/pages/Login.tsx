@@ -1,67 +1,134 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { useForm } from 'react-hook-form'
+import { z } from 'zod'
+import { zodResolver } from '@hookform/resolvers/zod'
+
+const schema = z.object({
+  email: z.string().email({ message: 'Email inválido' }),
+  password: z
+    .string()
+    .min(6, { message: 'La contraseña debe tener al menos 6 caracteres' }),
+})
+
+type FormValues = z.infer<typeof schema>
 
 const Login: React.FC = () => {
   const { signIn } = useAuth()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setError,
+    clearErrors,
+  } = useForm<FormValues>({ 
+    resolver: zodResolver(schema), 
+    defaultValues: { email: '', password: '' } 
+  })
 
-  const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
-    setLoading(true)
+  const onSubmit = async (values: FormValues) => {
+    clearErrors('root')
     try {
-      await signIn(email, password)
+      await signIn(values.email, values.password)
     } catch (err: any) {
-      setError(err?.message ?? 'Ocurrió un error')
-    } finally {
-      setLoading(false)
+      setError('root', { 
+        type: 'server', 
+        message: err?.message ?? 'Ocurrió un error al iniciar sesión' 
+      })
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="w-full max-w-md bg-white shadow rounded p-6">
-        <h1 className="text-2xl font-bold mb-4 text-center">Iniciar Sesión</h1>
-        <form onSubmit={onSubmit} className="space-y-4">
+    <div className="min-h-screen w-full bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 flex flex-col items-center justify-center px-4 py-10">
+      {/* Encabezado superior */}
+      <div className="text-center mb-16">
+        <h1 className="text-5xl font-bold text-black mb-4">
+          Sports Team Manager
+        </h1>
+        <p className="text-xl text-gray-600">Sistema de gestión deportiva</p>
+      </div>
+
+      {/* Card principal */}
+      <div className="w-full max-w-lg bg-white rounded-3xl shadow-2xl p-8">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold text-black mb-3">
+            Iniciar Sesión
+          </h2>
+          <p className="text-gray-600 text-lg">
+            Ingresa tus credenciales para acceder al sistema
+          </p>
+        </div>
+        
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium mb-1" htmlFor="email">Email</label>
+            <label 
+              htmlFor="email" 
+              className="block text-black font-semibold text-lg mb-2"
+            >
+              Email
+            </label>
             <input
               id="email"
               type="email"
-              className="w-full rounded border p-2"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
+              placeholder="tu@email.com"
+              className="w-full h-14 px-4 text-lg bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-400 focus:bg-white transition-all"
+              {...register('email')}
             />
+            {errors.email && (
+              <p className="text-red-600 text-sm mt-1">
+                {errors.email.message}
+              </p>
+            )}
           </div>
+
           <div>
-            <label className="block text-sm font-medium mb-1" htmlFor="password">Password</label>
+            <label 
+              htmlFor="password" 
+              className="block text-black font-semibold text-lg mb-2"
+            >
+              Contraseña
+            </label>
             <input
               id="password"
               type="password"
-              className="w-full rounded border p-2"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
+              placeholder="••••••••"
+              className="w-full h-14 px-4 text-lg bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-400 focus:bg-white transition-all"
+              {...register('password')}
             />
+            {errors.password && (
+              <p className="text-red-600 text-sm mt-1">
+                {errors.password.message}
+              </p>
+            )}
           </div>
+
+          {errors.root && (
+            <div className="text-red-600 text-center bg-red-50 p-3 rounded-lg">
+              {errors.root.message}
+            </div>
+          )}
+
           <button
             type="submit"
-            disabled={loading}
-            className="w-full rounded p-2 font-semibold bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+            disabled={isSubmitting}
+            className="w-full h-14 bg-black hover:bg-gray-800 text-white font-semibold text-lg rounded-xl transition-colors shadow-lg disabled:opacity-50"
           >
-            {loading ? 'Ingresando...' : 'Iniciar Sesión'}
+            {isSubmitting ? 'Ingresando…' : 'Iniciar Sesión'}
           </button>
         </form>
-        {error && <p className="text-red-600 mt-3 text-sm">{error}</p>}
-        <p className="mt-4 text-sm text-center">
-          ¿No tenés cuenta?{' '}
-          <Link className="text-blue-600 hover:underline" to="/signup">Registrate</Link>
-        </p>
+
+        <div className="text-center mt-8">
+          <p className="text-gray-600">
+            ¿No tienes cuenta?{' '}
+            <Link 
+              to="/signup" 
+              className="font-semibold text-blue-600 hover:text-blue-700 hover:underline"
+            >
+              Regístrate aquí
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   )
