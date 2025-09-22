@@ -16,6 +16,9 @@ const Notes     = React.lazy(()=>import("@/pages/Notes"));
 const Profile   = React.lazy(()=>import("@/pages/Profile"));
 const Login     = React.lazy(()=>import("@/pages/Login"));
 const Signup    = React.lazy(()=>import("@/pages/Signup"));
+const Equipos   = React.lazy(()=>import("@/pages/Equipos"));
+const Jugadores = React.lazy(()=>import("@/pages/Jugadores"));
+const Partidos  = React.lazy(()=>import("@/pages/Partidos"));
 
 const withShell = (el: React.ReactNode) => <AppShell>{el}</AppShell>;
 
@@ -35,6 +38,9 @@ function App() {
           <Route path="/parts" element={withShell(<Parts/>)} />
           <Route path="/notes" element={withShell(<Notes/>)} />
           <Route path="/profile" element={withShell(<Profile/>)} />
+          <Route path="/admin/equipos" element={withShell(<Equipos/>)} />
+          <Route path="/admin/jugadores" element={withShell(<Jugadores/>)} />
+          <Route path="/admin/partidos" element={withShell(<Partidos/>)} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

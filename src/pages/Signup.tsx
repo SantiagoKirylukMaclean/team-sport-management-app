@@ -48,7 +48,7 @@ const Signup: React.FC = () => {
       {/* Encabezado superior */}
       <div className="text-center mb-12">
         <h1 className="text-5xl font-bold text-slate-900 mb-4">
-          Sports Team Manager
+          Team Sport Manager
         </h1>
         <p className="text-xl text-slate-600">Sistema de gestión deportiva</p>
       </div>

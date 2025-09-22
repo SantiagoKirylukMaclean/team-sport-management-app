@@ -45,7 +45,7 @@ const Login: React.FC = () => {
       {/* Encabezado superior */}
       <header className="login-header">
         <h1 className="login-title">
-          Sports Team Manager
+          Team Sports Manager
         </h1>
         <p className="login-subtitle">
           Sistema de gestión deportiva
