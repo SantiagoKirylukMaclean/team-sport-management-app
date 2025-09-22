@@ -103,7 +103,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (data.user) setUser(data.user)
     // Cargar rol en segundo plano y no bloquear navegación/loader
     if (data.user) loadProfileRole(data.user.id)
-    navigate('/app')
+    navigate('/dashboard')
     setLoading(false)
   }
 
@@ -119,7 +119,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (data.user) setUser(data.user)
     // Cargar rol en segundo plano y no bloquear navegación/loader
     if (data.user) loadProfileRole(data.user.id)
-    navigate('/app')
+    navigate('/dashboard')
     setLoading(false)
   }
 

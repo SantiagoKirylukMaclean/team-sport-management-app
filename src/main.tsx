@@ -6,6 +6,7 @@ import AppShell from "@/components/layout/AppShell";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { Routes, Route } from "react-router-dom";
 
+const Dashboard = React.lazy(()=>import("@/pages/Dashboard"));
 const Standings = React.lazy(()=>import("@/pages/Standings"));
 const Simulate  = React.lazy(()=>import("@/pages/Simulate"));
 const Timing    = React.lazy(()=>import("@/pages/Timing"));
@@ -25,7 +26,8 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login/>} />
           <Route path="/signup" element={<Signup/>} />
-          <Route path="/" element={withShell(<Standings/>)} />
+          <Route path="/" element={withShell(<Dashboard/>)} />
+          <Route path="/dashboard" element={withShell(<Dashboard/>)} />
           <Route path="/standings" element={withShell(<Standings/>)} />
           <Route path="/simulate" element={withShell(<Simulate/>)} />
           <Route path="/timing" element={withShell(<Timing/>)} />

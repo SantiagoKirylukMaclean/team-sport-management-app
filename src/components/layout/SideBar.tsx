@@ -1,9 +1,10 @@
 import { Link, useLocation } from "react-router-dom";
-import { Trophy, FlaskConical, Timer, Settings2, Wrench, NotebookText, User, Menu, LogOut } from "lucide-react";
+import { Trophy, FlaskConical, Timer, Settings2, Wrench, NotebookText, User, Menu, LogOut, LayoutDashboard } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { useAuth } from "@/contexts/AuthContext";
 
 const items = [
+  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/standings", label: "Standings", icon: Trophy },
   { to: "/simulate", label: "Simulate Weekend", icon: FlaskConical },
   { to: "/timing", label: "Timing Analysis", icon: Timer },
