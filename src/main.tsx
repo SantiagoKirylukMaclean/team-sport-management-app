@@ -1,33 +1,32 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import './index.css'
-import { AuthProvider } from './contexts/AuthContext'
-import ProtectedRoute from './routes/ProtectedRoute'
-import Login from './pages/Login'
-import Signup from './pages/Signup'
-import AppHome from './pages/AppHome'
-import NotFound from './pages/NotFound'
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import "./styles/globals.css";
+import AppShell from "@/components/layout/AppShell";
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <BrowserRouter>
-      <AuthProvider>
-        <Routes>
-          <Route path="/" element={<Login />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route
-            path="/app"
-            element={
-              <ProtectedRoute>
-                <AppHome />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </AuthProvider>
-    </BrowserRouter>
-  </StrictMode>,
-)
+const Standings = React.lazy(()=>import("@/pages/Standings"));
+const Simulate  = React.lazy(()=>import("@/pages/Simulate"));
+const Timing    = React.lazy(()=>import("@/pages/Timing"));
+const TestCfg   = React.lazy(()=>import("@/pages/TestConfig"));
+const Parts     = React.lazy(()=>import("@/pages/Parts"));
+const Notes     = React.lazy(()=>import("@/pages/Notes"));
+const Profile   = React.lazy(()=>import("@/pages/Profile"));
+
+const withShell = (el: React.ReactNode) => <AppShell>{el}</AppShell>;
+
+const router = createBrowserRouter([
+  { path: "/", element: withShell(<Standings/>) },
+  { path: "/standings", element: withShell(<Standings/>) },
+  { path: "/simulate", element: withShell(<Simulate/>) },
+  { path: "/timing", element: withShell(<Timing/>) },
+  { path: "/test-config", element: withShell(<TestCfg/>) },
+  { path: "/parts", element: withShell(<Parts/>) },
+  { path: "/notes", element: withShell(<Notes/>) },
+  { path: "/profile", element: withShell(<Profile/>) },
+]);
+
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
+    <RouterProvider router={router}/>
+  </React.StrictMode>
+);
