@@ -1,7 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
-import { Trophy, FlaskConical, Timer, Settings2, Wrench, NotebookText, User, Menu } from "lucide-react";
-import { useState } from "react";
+import { Trophy, FlaskConical, Timer, Settings2, Wrench, NotebookText, User, Menu, LogOut } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { useAuth } from "@/contexts/AuthContext";
 
 const items = [
   { to: "/standings", label: "Standings", icon: Trophy },
@@ -14,6 +14,7 @@ const items = [
 
 export function Sidebar({ collapsed, onToggle }:{collapsed:boolean; onToggle:()=>void}) {
   const { pathname } = useLocation();
+  const { signOut } = useAuth();
   return (
     <aside className={cn(
       "h-full bg-black/60 border-r border-border flex flex-col transition-[width] duration-200",
@@ -42,11 +43,18 @@ export function Sidebar({ collapsed, onToggle }:{collapsed:boolean; onToggle:()=
         })}
       </nav>
 
-      <div className="mt-auto p-2">
+      <div className="mt-auto p-2 space-y-1">
         <Link to="/profile" className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-accent text-muted">
           <User size={18}/>
           {!collapsed && <span>Profile</span>}
         </Link>
+        <button 
+          onClick={signOut}
+          className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-accent text-muted w-full"
+        >
+          <LogOut size={18}/>
+          {!collapsed && <span>Logout</span>}
+        </button>
       </div>
     </aside>
   );

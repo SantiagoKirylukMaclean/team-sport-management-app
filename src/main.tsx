@@ -1,8 +1,10 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { BrowserRouter } from "react-router-dom";
 import "./styles/globals.css";
 import AppShell from "@/components/layout/AppShell";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { Routes, Route } from "react-router-dom";
 
 const Standings = React.lazy(()=>import("@/pages/Standings"));
 const Simulate  = React.lazy(()=>import("@/pages/Simulate"));
@@ -11,22 +13,34 @@ const TestCfg   = React.lazy(()=>import("@/pages/TestConfig"));
 const Parts     = React.lazy(()=>import("@/pages/Parts"));
 const Notes     = React.lazy(()=>import("@/pages/Notes"));
 const Profile   = React.lazy(()=>import("@/pages/Profile"));
+const Login     = React.lazy(()=>import("@/pages/Login"));
+const Signup    = React.lazy(()=>import("@/pages/Signup"));
 
 const withShell = (el: React.ReactNode) => <AppShell>{el}</AppShell>;
 
-const router = createBrowserRouter([
-  { path: "/", element: withShell(<Standings/>) },
-  { path: "/standings", element: withShell(<Standings/>) },
-  { path: "/simulate", element: withShell(<Simulate/>) },
-  { path: "/timing", element: withShell(<Timing/>) },
-  { path: "/test-config", element: withShell(<TestCfg/>) },
-  { path: "/parts", element: withShell(<Parts/>) },
-  { path: "/notes", element: withShell(<Notes/>) },
-  { path: "/profile", element: withShell(<Profile/>) },
-]);
+function App() {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          <Route path="/login" element={<Login/>} />
+          <Route path="/signup" element={<Signup/>} />
+          <Route path="/" element={withShell(<Standings/>)} />
+          <Route path="/standings" element={withShell(<Standings/>)} />
+          <Route path="/simulate" element={withShell(<Simulate/>)} />
+          <Route path="/timing" element={withShell(<Timing/>)} />
+          <Route path="/test-config" element={withShell(<TestCfg/>)} />
+          <Route path="/parts" element={withShell(<Parts/>)} />
+          <Route path="/notes" element={withShell(<Notes/>)} />
+          <Route path="/profile" element={withShell(<Profile/>)} />
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
+  );
+}
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <RouterProvider router={router}/>
+    <App />
   </React.StrictMode>
 );
