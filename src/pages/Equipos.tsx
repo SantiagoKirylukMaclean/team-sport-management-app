@@ -11,7 +11,10 @@ const Equipos: React.FC = () => {
       </div>
       
       <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-        <h2 className="text-xl font-semibold mb-4">Hola</h2>
+        <h2 className="text-xl font-semibold mb-4">Gestión de Equipos</h2>
+        <p className="text-muted-foreground">
+          Administra la información de todos los equipos, formaciones, tácticas y configuraciones del equipo.
+        </p>
       </div>
     </div>
   )

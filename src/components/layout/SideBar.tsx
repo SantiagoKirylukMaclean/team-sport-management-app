@@ -1,16 +1,16 @@
 import { Link, useLocation } from "react-router-dom";
-import { Trophy, FlaskConical, Timer, Settings2, Wrench, NotebookText, User, Menu, LogOut, LayoutDashboard, Shield, Users, UserCheck, Calendar, ChevronDown, ChevronRight } from "lucide-react";
+import { Trophy, Timer, Settings2, NotebookText, User, Menu, LogOut, LayoutDashboard, Shield, Users, UserCheck, Calendar, ChevronDown, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 
 const items = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/standings", label: "Standings", icon: Trophy },
-  { to: "/simulate", label: "Simulate Weekend", icon: FlaskConical },
-  { to: "/timing", label: "Timing Analysis", icon: Timer },
-  { to: "/test-config", label: "Test Configuration", icon: Settings2 },
-  { to: "/parts", label: "Parts List", icon: Wrench },
+  { to: "/jugadores", label: "Jugadores", icon: UserCheck },
+  { to: "/equipos", label: "Equipos", icon: Users },
+  { to: "/entrenamiento", label: "Entrenamiento", icon: Timer },
+  { to: "/asistencia", label: "Asistencia", icon: Settings2 },
+  { to: "/campeonato", label: "Campeonato", icon: Trophy },
   { to: "/notes", label: "Notes", icon: NotebookText },
 ];
 
