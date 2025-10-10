@@ -25,11 +25,6 @@ const SportsPage = React.lazy(()=>import("@/pages/admin/SportsPage"));
 const ClubsPage = React.lazy(()=>import("@/pages/admin/ClubsPage"));
 const TeamsPage = React.lazy(()=>import("@/pages/admin/TeamsPage"));
 
-// Admin pages
-const SportsPage = React.lazy(()=>import("@/pages/admin/SportsPage"));
-const ClubsPage = React.lazy(()=>import("@/pages/admin/ClubsPage"));
-const TeamsPage = React.lazy(()=>import("@/pages/admin/TeamsPage"));
-
 const withShell = (el: React.ReactNode) => <AppShell>{el}</AppShell>;
 
 function App() {
@@ -68,14 +63,6 @@ function App() {
           <Route path="/admin/equipos" element={<Navigate to="/admin/teams" replace />} />
           <Route path="/admin/jugadores" element={withShell(<Jugadores/>)} />
           <Route path="/admin/partidos" element={withShell(<Partidos/>)} />
-          
-          {/* Admin routes with proper nesting and protection */}
-          <Route path="/admin" element={<AdminGuard><AdminLayout /></AdminGuard>}>
-            <Route index element={<Navigate to="/admin/sports" replace />} />
-            <Route path="sports" element={<SportsPage />} />
-            <Route path="clubs" element={<ClubsPage />} />
-            <Route path="teams" element={<TeamsPage />} />
-          </Route>
         </Routes>
       </AuthProvider>
     </BrowserRouter>

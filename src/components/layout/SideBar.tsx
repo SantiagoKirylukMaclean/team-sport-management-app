@@ -23,7 +23,6 @@ const adminItems = [
 export function Sidebar({ collapsed, onToggle }:{collapsed:boolean; onToggle:()=>void}) {
   const { pathname } = useLocation();
   const { signOut, role } = useAuth();
-  const { signOut, role } = useAuth();
   const [adminExpanded, setAdminExpanded] = useState(false);
   
   // Only show admin section for super_admin users
