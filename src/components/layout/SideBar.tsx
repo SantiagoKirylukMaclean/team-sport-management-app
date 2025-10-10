@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Trophy, Timer, Settings2, NotebookText, User, Menu, LogOut, LayoutDashboard, Shield, Users, UserCheck, Calendar, ChevronDown, ChevronRight } from "lucide-react";
+import { Trophy, Timer, Settings2, NotebookText, User, Menu, LogOut, LayoutDashboard, Shield, Users, UserCheck, ChevronDown, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
@@ -15,17 +15,19 @@ const items = [
 ];
 
 const adminItems = [
-  { to: "/admin/sports", label: "Deportes", icon: Trophy },
-  { to: "/admin/clubs", label: "Clubes", icon: Shield },
-  { to: "/admin/teams", label: "Equipos", icon: Users },
+  { to: "/admin/sports", label: "Sports", icon: Trophy },
+  { to: "/admin/clubs", label: "Clubs", icon: Users },
+  { to: "/admin/teams", label: "Teams", icon: UserCheck },
 ];
 
 export function Sidebar({ collapsed, onToggle }:{collapsed:boolean; onToggle:()=>void}) {
   const { pathname } = useLocation();
   const { signOut, role } = useAuth();
+  const { signOut, role } = useAuth();
   const [adminExpanded, setAdminExpanded] = useState(false);
   
-  const isAdmin = role === 'super_admin';
+  // Only show admin section for super_admin users
+  const showAdminSection = role === 'super_admin';
   return (
     <aside className={cn(
       "h-full bg-black/60 border-r border-border flex flex-col transition-[width] duration-200",
@@ -53,8 +55,8 @@ export function Sidebar({ collapsed, onToggle }:{collapsed:boolean; onToggle:()=
           );
         })}
         
-        {/* Admin Dropdown - Only show for super_admin */}
-        {isAdmin && (
+        {/* Admin Dropdown - Only visible for super_admin users */}
+        {showAdminSection && (
           <div className="space-y-1">
             <button
               onClick={() => setAdminExpanded(!adminExpanded)}

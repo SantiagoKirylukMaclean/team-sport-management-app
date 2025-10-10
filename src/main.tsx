@@ -6,7 +6,7 @@ import AppShell from "@/components/layout/AppShell";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { Routes, Route, Navigate } from "react-router-dom";
 import AdminGuard from "@/components/RouteGuards/AdminGuard";
-import AdminLayout from "@/layouts/AdminLayout";
+import { AdminLayout } from "@/layouts/AdminLayout";
 
 const Dashboard = React.lazy(()=>import("@/pages/Dashboard"));
 const Entrenamiento = React.lazy(()=>import("@/pages/Entrenamiento"));
@@ -25,20 +25,23 @@ const SportsPage = React.lazy(()=>import("@/pages/admin/SportsPage"));
 const ClubsPage = React.lazy(()=>import("@/pages/admin/ClubsPage"));
 const TeamsPage = React.lazy(()=>import("@/pages/admin/TeamsPage"));
 
+// Admin pages
+const SportsPage = React.lazy(()=>import("@/pages/admin/SportsPage"));
+const ClubsPage = React.lazy(()=>import("@/pages/admin/ClubsPage"));
+const TeamsPage = React.lazy(()=>import("@/pages/admin/TeamsPage"));
+
 const withShell = (el: React.ReactNode) => <AppShell>{el}</AppShell>;
 
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <React.Suspense fallback={
-          <div className="flex items-center justify-center min-h-screen">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-          </div>
-        }>
-          <Routes>
+        <Routes>
+          {/* Public routes */}
           <Route path="/login" element={<Login/>} />
           <Route path="/signup" element={<Signup/>} />
+          
+          {/* Protected main app routes */}
           <Route path="/" element={withShell(<Dashboard/>)} />
           <Route path="/dashboard" element={withShell(<Dashboard/>)} />
           <Route path="/jugadores" element={withShell(<Jugadores/>)} />
@@ -65,8 +68,15 @@ function App() {
           <Route path="/admin/equipos" element={<Navigate to="/admin/teams" replace />} />
           <Route path="/admin/jugadores" element={withShell(<Jugadores/>)} />
           <Route path="/admin/partidos" element={withShell(<Partidos/>)} />
-          </Routes>
-        </React.Suspense>
+          
+          {/* Admin routes with proper nesting and protection */}
+          <Route path="/admin" element={<AdminGuard><AdminLayout /></AdminGuard>}>
+            <Route index element={<Navigate to="/admin/sports" replace />} />
+            <Route path="sports" element={<SportsPage />} />
+            <Route path="clubs" element={<ClubsPage />} />
+            <Route path="teams" element={<TeamsPage />} />
+          </Route>
+        </Routes>
       </AuthProvider>
     </BrowserRouter>
   );
