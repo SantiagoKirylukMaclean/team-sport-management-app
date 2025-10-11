@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Sidebar } from "./Sidebar";
+import { Sidebar } from "./SideBar";
 import { Header } from "./Header";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
