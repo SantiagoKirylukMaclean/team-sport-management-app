@@ -16,7 +16,12 @@ export type {
   DatabaseError,
   PaginatedResponse,
   AdminEntityType,
-  AdminListItem
+  AdminListItem,
+  PendingInvite,
+  InviteUserRequest,
+  InviteUserResponse,
+  InviteFormData,
+  PendingInviteWithCreator
 } from './db'
 
 // Type validation functions and guards
@@ -26,7 +31,13 @@ export {
   isProfile,
   isSport,
   isClub,
-  isTeam
+  isTeam,
+  isValidInviteRole,
+  isValidInviteStatus,
+  isPendingInvite,
+  isInviteUserRequest,
+  isInviteUserResponse,
+  isInviteFormData
 } from './validation'
 
 // Re-export commonly used Supabase types for convenience

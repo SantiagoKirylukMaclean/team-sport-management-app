@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import { Card, CardContent } from '@/components/ui/card'
 import {
   Select,
@@ -19,6 +20,8 @@ import { ConfirmDialog } from '@/components/ConfirmDialog'
 
 
 const ClubsPage: React.FC = () => {
+  usePageTitle('Clubs Management')
+  
   const [clubs, setClubs] = useState<Club[]>([])
   const [sports, setSports] = useState<Sport[]>([])
   const [loading, setLoading] = useState(true)

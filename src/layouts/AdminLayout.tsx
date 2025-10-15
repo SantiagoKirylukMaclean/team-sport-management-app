@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { Link, useLocation, Outlet } from "react-router-dom";
-import { Menu, Trophy, Building, Users, ArrowLeft } from "lucide-react";
+import { Menu, Trophy, Building, Users, ArrowLeft, UserPlus, Mail } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 const adminNavItems = [
   { to: "/admin/sports", label: "Sports", icon: Trophy },
   { to: "/admin/clubs", label: "Clubs", icon: Building },
   { to: "/admin/teams", label: "Teams", icon: Users },
+  { to: "/admin/invite-user", label: "Invite User", icon: UserPlus },
+  { to: "/admin/invitations", label: "Invitations", icon: Mail },
 ];
 
 export function AdminLayout() {

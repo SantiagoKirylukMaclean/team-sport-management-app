@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
@@ -11,6 +12,8 @@ import { TeamFormDialog } from './components/TeamFormDialog'
 import { AssignRolesPanel } from './components/AssignRolesPanel'
 
 export default function TeamsPage() {
+  usePageTitle('Teams Management')
+  
   const { toast } = useToast()
   const [sports, setSports] = useState<Sport[]>([])
   const [clubs, setClubs] = useState<Club[]>([])

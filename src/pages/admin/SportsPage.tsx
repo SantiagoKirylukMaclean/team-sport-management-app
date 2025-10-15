@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import { useToast } from '@/components/ui/toast'
 import { SportsTable } from './components/SportsTable'
 import { SportFormDialog } from './components/SportFormDialog'
@@ -18,6 +19,8 @@ interface SportsPageState {
 }
 
 const SportsPage: React.FC = () => {
+  usePageTitle('Sports Management')
+  
   const { toast } = useToast()
   
   const [state, setState] = useState<SportsPageState>({

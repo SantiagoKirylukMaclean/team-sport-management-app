@@ -25,6 +25,8 @@ const Partidos = React.lazy(() => import("@/pages/Partidos"));
 const SportsPage = React.lazy(() => import("@/pages/admin/SportsPage"));
 const ClubsPage = React.lazy(() => import("@/pages/admin/ClubsPage"));
 const TeamsPage = React.lazy(() => import("@/pages/admin/TeamsPage"));
+const InviteUserPage = React.lazy(() => import("@/pages/admin/InviteUserPage"));
+const InvitationManagementPage = React.lazy(() => import("@/pages/admin/InvitationManagementPage"));
 
 const withShell = (el: React.ReactNode) => <AppShell>{el}</AppShell>;
 
@@ -59,6 +61,8 @@ function App() {
               <Route path="sports" element={<SportsPage />} />
               <Route path="clubs" element={<ClubsPage />} />
               <Route path="teams" element={<TeamsPage />} />
+              <Route path="invite-user" element={<InviteUserPage />} />
+              <Route path="invitations" element={<InvitationManagementPage />} />
             </Route>
 
             {/* Legacy admin routes - redirect to new structure */}

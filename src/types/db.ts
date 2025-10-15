@@ -105,3 +105,62 @@ export interface AdminListItem {
   created_at: string
   relationshipName?: string // For displaying related entity names
 }
+
+/**
+ * Invitation system types
+ */
+
+/**
+ * PendingInvite interface that matches the pending_invites table schema
+ */
+export interface PendingInvite {
+  id: number
+  email: string
+  role: 'coach' | 'admin'
+  team_ids: number[]
+  status: 'pending' | 'accepted' | 'canceled'
+  created_by: string
+  created_at: string
+  accepted_at?: string
+}
+
+/**
+ * API request type for creating invitations
+ */
+export interface InviteUserRequest {
+  email: string
+  display_name?: string
+  role: 'coach' | 'admin'
+  teamIds: number[]
+  redirectTo?: string
+}
+
+/**
+ * API response type for invitation creation
+ */
+export interface InviteUserResponse {
+  ok: boolean
+  action_link: string
+  error?: string
+}
+
+/**
+ * Form data type for the invitation form
+ */
+export interface InviteFormData {
+  email: string
+  display_name: string
+  role: 'coach' | 'admin'
+  teamIds: number[]
+  redirectTo: string
+}
+
+/**
+ * Extended invitation interface with related data for display
+ */
+export interface PendingInviteWithCreator extends PendingInvite {
+  creator?: {
+    display_name: string | null
+    email: string | null
+  }
+}

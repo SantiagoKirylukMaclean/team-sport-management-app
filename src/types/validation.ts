@@ -14,7 +14,12 @@ import type {
   TeamWithClub,
   AdminListItem,
   DatabaseError,
-  PaginatedResponse
+  PaginatedResponse,
+  PendingInvite,
+  InviteUserRequest,
+  InviteUserResponse,
+  InviteFormData,
+  PendingInviteWithCreator
 } from './db'
 
 // Validate AppRole type accepts all expected values
@@ -97,6 +102,55 @@ const samplePaginatedResponse: PaginatedResponse<Sport> = {
   error: undefined
 }
 
+// Validate invitation system types
+const samplePendingInvite: PendingInvite = {
+  id: 1,
+  email: 'coach@example.com',
+  role: 'coach',
+  team_ids: [1, 2, 3],
+  status: 'pending',
+  created_by: 'creator-uuid',
+  created_at: '2024-01-01T00:00:00Z',
+  accepted_at: undefined
+}
+
+const sampleInviteUserRequest: InviteUserRequest = {
+  email: 'newcoach@example.com',
+  display_name: 'New Coach',
+  role: 'coach',
+  teamIds: [1, 2],
+  redirectTo: 'https://app.example.com/dashboard'
+}
+
+const sampleInviteUserResponse: InviteUserResponse = {
+  ok: true,
+  action_link: 'https://supabase.co/auth/v1/recover?token=abc123',
+  error: undefined
+}
+
+const sampleInviteFormData: InviteFormData = {
+  email: 'formuser@example.com',
+  display_name: 'Form User',
+  role: 'admin',
+  teamIds: [1, 2, 3],
+  redirectTo: 'https://app.example.com/welcome'
+}
+
+const samplePendingInviteWithCreator: PendingInviteWithCreator = {
+  id: 1,
+  email: 'invited@example.com',
+  role: 'coach',
+  team_ids: [1, 2],
+  status: 'pending',
+  created_by: 'creator-uuid',
+  created_at: '2024-01-01T00:00:00Z',
+  accepted_at: undefined,
+  creator: {
+    display_name: 'Super Admin',
+    email: 'admin@example.com'
+  }
+}
+
 // Export validation functions for use in other parts of the application
 export const validateTypes = () => {
   return {
@@ -109,7 +163,12 @@ export const validateTypes = () => {
     sampleTeamWithClub,
     sampleAdminListItem,
     sampleError,
-    samplePaginatedResponse
+    samplePaginatedResponse,
+    samplePendingInvite,
+    sampleInviteUserRequest,
+    sampleInviteUserResponse,
+    sampleInviteFormData,
+    samplePendingInviteWithCreator
   }
 }
 
@@ -159,5 +218,66 @@ export const isTeam = (obj: any): obj is Team => {
     typeof obj.name === 'string' &&
     typeof obj.club_id === 'string' &&
     typeof obj.created_at === 'string'
+  )
+}
+
+// Type guards for invitation system types
+export const isValidInviteRole = (role: string): role is 'coach' | 'admin' => {
+  return ['coach', 'admin'].includes(role)
+}
+
+export const isValidInviteStatus = (status: string): status is 'pending' | 'accepted' | 'canceled' => {
+  return ['pending', 'accepted', 'canceled'].includes(status)
+}
+
+export const isPendingInvite = (obj: any): obj is PendingInvite => {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    typeof obj.id === 'number' &&
+    typeof obj.email === 'string' &&
+    isValidInviteRole(obj.role) &&
+    Array.isArray(obj.team_ids) &&
+    obj.team_ids.every((id: any) => typeof id === 'number') &&
+    isValidInviteStatus(obj.status) &&
+    typeof obj.created_by === 'string' &&
+    typeof obj.created_at === 'string' &&
+    (obj.accepted_at === undefined || typeof obj.accepted_at === 'string')
+  )
+}
+
+export const isInviteUserRequest = (obj: any): obj is InviteUserRequest => {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    typeof obj.email === 'string' &&
+    (obj.display_name === undefined || typeof obj.display_name === 'string') &&
+    isValidInviteRole(obj.role) &&
+    Array.isArray(obj.teamIds) &&
+    obj.teamIds.every((id: any) => typeof id === 'number') &&
+    (obj.redirectTo === undefined || typeof obj.redirectTo === 'string')
+  )
+}
+
+export const isInviteUserResponse = (obj: any): obj is InviteUserResponse => {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    typeof obj.ok === 'boolean' &&
+    typeof obj.action_link === 'string' &&
+    (obj.error === undefined || typeof obj.error === 'string')
+  )
+}
+
+export const isInviteFormData = (obj: any): obj is InviteFormData => {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    typeof obj.email === 'string' &&
+    typeof obj.display_name === 'string' &&
+    isValidInviteRole(obj.role) &&
+    Array.isArray(obj.teamIds) &&
+    obj.teamIds.every((id: any) => typeof id === 'number') &&
+    typeof obj.redirectTo === 'string'
   )
 }
