@@ -1,245 +1,226 @@
-import React, { useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
-import type { Team } from '@/types/db'
-import { Card, CardContent } from '@/components/ui/card'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { useAsyncOperation } from '@/hooks/useAsyncOperation'
-import PageLoading from '@/components/ui/page-loading'
-import ErrorDisplay from '@/components/ui/error-display'
-import EmptyState from '@/components/ui/empty-state'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useToast } from '@/hooks/use-toast'
+import { listSports, type Sport } from '@/services/sports'
+import { listClubs, type Club } from '@/services/clubs'
+import { listTeams, type Team } from '@/services/teams'
+import { TeamsTable } from './components/TeamsTable'
+import { TeamFormDialog } from './components/TeamFormDialog'
+import { AssignRolesPanel } from './components/AssignRolesPanel'
 
-interface TeamsData {
-  teams: Team[]
-  hasMore: boolean
-}
+export default function TeamsPage() {
+  const { toast } = useToast()
+  const [sports, setSports] = useState<Sport[]>([])
+  const [clubs, setClubs] = useState<Club[]>([])
+  const [teams, setTeams] = useState<Team[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  
+  // Filtros
+  const [selectedSportId, setSelectedSportId] = useState<number | null>(null)
+  const [selectedClubId, setSelectedClubId] = useState<number | null>(null)
+  const [filteredClubs, setFilteredClubs] = useState<Club[]>([])
+  
+  // Dialogs
+  const [showTeamForm, setShowTeamForm] = useState(false)
+  const [editingTeam, setEditingTeam] = useState<Team | null>(null)
+  const [assignRolesTeam, setAssignRolesTeam] = useState<Team | null>(null)
 
-// Move fetch functions outside component to prevent recreation
-const fetchTeamsWithJoin = async (): Promise<{ data: Team[] | null; error: any; count: number | null }> => {
-  try {
-    const { data, error, count } = await supabase
-      .from('teams')
-      .select('id, name, created_at, club_id, clubs(name)', { count: 'exact' })
-      .order('created_at', { ascending: false })
-      .limit(25)
-
-    // Transform the data to match our Team interface
-    const transformedData = data?.map(team => ({
-      ...team,
-      clubs: Array.isArray(team.clubs) && team.clubs.length > 0 
-        ? { name: team.clubs[0].name }
-        : undefined
-    })) || null
-
-    return { data: transformedData, error, count }
-  } catch (error) {
-    return { data: null, error, count: null }
-  }
-}
-
-const fetchTeamsWithFallback = async (): Promise<{ data: Team[] | null; error: any; count: number | null }> => {
-  try {
-    // First, fetch teams without joins
-    const { data: teamsData, error: teamsError, count } = await supabase
-      .from('teams')
-      .select('id, name, created_at, club_id', { count: 'exact' })
-      .order('created_at', { ascending: false })
-      .limit(25)
-
-    if (teamsError || !teamsData) {
-      return { data: null, error: teamsError, count: null }
-    }
-
-    // Get unique club IDs
-    const clubIds = [...new Set(teamsData.map(team => team.club_id))]
-
-    // Fetch clubs data separately
-    const { data: clubsData, error: clubsError } = await supabase
-      .from('clubs')
-      .select('id, name')
-      .in('id', clubIds)
-
-    if (clubsError) {
-      console.warn('Failed to fetch clubs data for mapping:', clubsError)
-      // Return teams without club names
-      return { data: teamsData, error: null, count }
-    }
-
-    // Create a map of club_id to club name
-    const clubsMap = new Map(clubsData?.map(club => [club.id, club.name]) || [])
-
-    // Map club names to teams
-    const teamsWithClubs: Team[] = teamsData.map(team => ({
-      ...team,
-      clubs: clubsMap.has(team.club_id) 
-        ? { name: clubsMap.get(team.club_id)! }
-        : undefined
-    }))
-
-    return { data: teamsWithClubs, error: null, count }
-  } catch (error) {
-    return { data: null, error, count: null }
-  }
-}
-
-const fetchTeams = async (): Promise<TeamsData> => {
-  // First, try to fetch with joins
-  let result = await fetchTeamsWithJoin()
-
-  // If join query fails, fall back to separate queries
-  if (result.error) {
-    console.warn('Join query failed, falling back to separate queries:', result.error)
-    result = await fetchTeamsWithFallback()
-  }
-
-  if (result.error) {
-    throw result.error
-  }
-
-  return {
-    teams: result.data || [],
-    hasMore: (result.count || 0) > 25
-  }
-}
-
-const TeamsPage: React.FC = () => {
-  const {
-    data,
-    loading,
-    error,
-    execute,
-    retry,
-    canRetry
-  } = useAsyncOperation(fetchTeams, 'TeamsPage')
-
+  // Cargar catálogos iniciales
   useEffect(() => {
-    execute()
-  }, [execute])
+    loadInitialData()
+  }, [])
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
+  // Filtrar clubs por deporte
+  useEffect(() => {
+    if (selectedSportId) {
+      setFilteredClubs(clubs.filter(club => club.sport_id === selectedSportId))
+      setSelectedClubId(null) // Reset club selection
+    } else {
+      setFilteredClubs(clubs)
+    }
+  }, [selectedSportId, clubs])
+
+  // Cargar equipos cuando cambian los filtros
+  useEffect(() => {
+    loadTeams()
+  }, [selectedClubId])
+
+  const loadInitialData = async () => {
+    try {
+      setLoading(true)
+      const [sportsResult, clubsResult] = await Promise.all([
+        listSports(),
+        listClubs()
+      ])
+
+      if (sportsResult.error) throw sportsResult.error
+      if (clubsResult.error) throw clubsResult.error
+
+      setSports(sportsResult.data || [])
+      setClubs(clubsResult.data || [])
+      setFilteredClubs(clubsResult.data || [])
+      
+      await loadTeams()
+    } catch (err: any) {
+      setError(err.message)
+      toast({
+        title: "Error",
+        description: `Error al cargar datos: ${err.message}`,
+        variant: "destructive"
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const loadTeams = async () => {
+    try {
+      const result = await listTeams({ 
+        clubId: selectedClubId || undefined 
+      })
+      
+      if (result.error) throw result.error
+      setTeams(result.data || [])
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: `Error al cargar equipos: ${err.message}`,
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleTeamSaved = () => {
+    loadTeams()
+    setShowTeamForm(false)
+    setEditingTeam(null)
+  }
+
+  const handleTeamDeleted = () => {
+    loadTeams()
+  }
+
+  const handleEditTeam = (team: Team) => {
+    setEditingTeam(team)
+    setShowTeamForm(true)
+  }
+
+  const handleAssignRoles = (team: Team) => {
+    setAssignRolesTeam(team)
+  }
+
+  const getClubName = (clubId: number) => {
+    return clubs.find(club => club.id === clubId)?.name || 'Club desconocido'
   }
 
   if (loading) {
     return (
-      <PageLoading
-        title="Equipos"
-        description="Gestión de equipos del sistema"
-        message="Cargando equipos..."
-      />
+      <div className="p-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-lg">Cargando...</div>
+        </div>
+      </div>
     )
   }
 
   if (error) {
     return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Equipos</h1>
-          <p className="text-muted-foreground">
-            Gestión de equipos del sistema
-          </p>
-        </div>
-        
-        <ErrorDisplay
-          error={error}
-          title="Error al cargar equipos"
-          onRetry={canRetry ? retry : undefined}
-          showDetails={true}
-        />
-      </div>
-    )
-  }
-
-  if (!data || data.teams.length === 0) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Equipos</h1>
-          <p className="text-muted-foreground">
-            Gestión de equipos del sistema
-          </p>
-        </div>
-        
-        <EmptyState
-          icon="⚽"
-          title="No hay equipos registrados"
-          description="Aún no se han registrado equipos en el sistema."
-          actionLabel="Actualizar"
-          onAction={execute}
-        />
+      <div className="p-6">
+        <div className="text-red-600">Error: {error}</div>
+        <Button onClick={loadInitialData} className="mt-4">
+          Reintentar
+        </Button>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Equipos</h1>
-          <p className="text-muted-foreground">
-            Gestión de equipos del sistema ({data.teams.length} equipos)
-          </p>
-        </div>
-        <Button onClick={execute} variant="outline" size="sm">
-          Actualizar
+    <div className="p-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Gestión de Equipos</h1>
+        <Button onClick={() => setShowTeamForm(true)}>
+          Nuevo Equipo
         </Button>
       </div>
 
-      <div className="grid gap-4">
-        {data.teams.map((team) => (
-          <Card key={team.id} className="hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <h3 className="font-semibold text-lg">{team.name}</h3>
-                  <div className="space-y-1">
-                    <p className="text-sm text-muted-foreground">
-                      ID: {team.id}
-                    </p>
-                    {team.clubs?.name ? (
-                      <p className="text-sm text-blue-600 font-medium">
-                        Club: {team.clubs.name}
-                      </p>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">
-                        Club: {team.club_id}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                <div className="text-right space-y-1">
-                  <p className="text-sm font-medium">Creado</p>
-                  <p className="text-sm text-muted-foreground">
-                    {formatDate(team.created_at)}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {/* Filtros */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Filtros</CardTitle>
+        </CardHeader>
+        <CardContent className="flex gap-4">
+          <div className="flex-1">
+            <label className="block text-sm font-medium mb-2">Deporte</label>
+            <Select 
+              value={selectedSportId?.toString() || "all"} 
+              onValueChange={(value) => setSelectedSportId(value === "all" ? null : parseInt(value))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Todos los deportes" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los deportes</SelectItem>
+                {sports.map(sport => (
+                  <SelectItem key={sport.id} value={sport.id.toString()}>
+                    {sport.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-      {data.hasMore && (
-        <Card className="border-dashed">
-          <CardContent className="flex items-center justify-center py-6">
-            <div className="text-center space-y-2">
-              <p className="text-sm text-muted-foreground">
-                Mostrando los primeros 25 equipos
-              </p>
-              <p className="text-xs text-muted-foreground">
-                La paginación completa se implementará en futuras versiones
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+          <div className="flex-1">
+            <label className="block text-sm font-medium mb-2">Club</label>
+            <Select 
+              value={selectedClubId?.toString() || "all"} 
+              onValueChange={(value) => setSelectedClubId(value === "all" ? null : parseInt(value))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Todos los clubes" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los clubes</SelectItem>
+                {filteredClubs.map(club => (
+                  <SelectItem key={club.id} value={club.id.toString()}>
+                    {club.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Tabla de equipos */}
+      <TeamsTable 
+        teams={teams}
+        getClubName={getClubName}
+        onEdit={handleEditTeam}
+        onDelete={handleTeamDeleted}
+        onAssignRoles={handleAssignRoles}
+      />
+
+      {/* Dialogs */}
+      <TeamFormDialog
+        open={showTeamForm}
+        onClose={() => {
+          setShowTeamForm(false)
+          setEditingTeam(null)
+        }}
+        onSave={handleTeamSaved}
+        team={editingTeam}
+        clubs={filteredClubs.length > 0 ? filteredClubs : clubs}
+      />
+
+      <AssignRolesPanel
+        teamId={assignRolesTeam?.id || 0}
+        teamName={assignRolesTeam?.name || ''}
+        open={!!assignRolesTeam}
+        onClose={() => setAssignRolesTeam(null)}
+      />
     </div>
   )
 }
-
-export default TeamsPage
