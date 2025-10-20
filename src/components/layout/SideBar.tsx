@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Trophy, Timer, Settings2, NotebookText, User, Menu, LogOut, LayoutDashboard, Shield, Users, UserCheck, ChevronDown, ChevronRight } from "lucide-react";
+import { Trophy, Timer, Settings2, NotebookText, User, Menu, LogOut, LayoutDashboard, Shield, Users, UserCheck, ChevronDown, ChevronRight, Calendar } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
@@ -22,6 +22,7 @@ const adminItems = [
 
 const coachItems = [
   { to: "/coach/players", label: "Jugadores", icon: UserCheck },
+  { to: "/coach/trainings", label: "Entrenamientos", icon: Calendar },
 ];
 
 export function Sidebar({ collapsed, onToggle }:{collapsed:boolean; onToggle:()=>void}) {

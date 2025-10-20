@@ -32,6 +32,7 @@ const InvitationManagementPage = React.lazy(() => import("@/pages/admin/Invitati
 
 // Coach pages
 const PlayersPage = React.lazy(() => import("@/pages/coach/PlayersPage"));
+const TrainingsPage = React.lazy(() => import("@/pages/coach/TrainingsPage"));
 
 const withShell = (el: React.ReactNode) => <AppShell>{el}</AppShell>;
 
@@ -78,6 +79,7 @@ function App() {
             }>
               <Route index element={<Navigate to="/coach/players" replace />} />
               <Route path="players" element={<PlayersPage />} />
+              <Route path="trainings" element={<TrainingsPage />} />
             </Route>
 
             {/* Legacy admin routes - redirect to new structure */}

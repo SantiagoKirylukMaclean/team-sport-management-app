@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Link, useLocation, Outlet } from "react-router-dom";
-import { Menu, Users, ArrowLeft } from "lucide-react";
+import { Menu, Users, ArrowLeft, Calendar } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 const coachNavItems = [
   { to: "/coach/players", label: "Jugadores", icon: Users },
+  { to: "/coach/trainings", label: "Entrenamientos", icon: Calendar },
 ];
 
 export function CoachLayout() {

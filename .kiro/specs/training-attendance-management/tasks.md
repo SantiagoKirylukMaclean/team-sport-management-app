@@ -1,0 +1,157 @@
+# Implementation Plan
+
+- [x] 1. Create database migration for training sessions and attendance
+  - Create idempotent migration file `supabase/migrations/20251020010000_training.sql`
+  - Define `attendance_status` enum with values: on_time, late, absent
+  - Create `training_sessions` table with columns: id, team_id, session_date, notes, created_at
+  - Create `training_attendance` table with composite primary key (training_id, player_id)
+  - Add index on `training_sessions(team_id)` for query performance
+  - Enable RLS on both tables
+  - Create RLS policies for super_admin full access on both tables
+  - Create RLS policies for coach/admin access based on `is_coach_of_team()` helper
+  - _Requirements: 1.1, 1.2, 1.5, 2.2, 3.2, 3.3, 4.2, 4.3, 5.2, 5.4, 5.5, 7.1, 7.2, 7.3, 9.1, 9.2, 9.3, 9.4, 9.5_
+
+- [x] 2. Implement training sessions service layer
+  - [x] 2.1 Create trainings service with TypeScript types
+    - Create `src/services/trainings.ts` file
+    - Define `TrainingSession` type matching database schema
+    - Define `TrainingAttendance` type for attendance records
+    - Define `AttendanceWithPlayer` type for UI display with joined player data
+    - _Requirements: 1.1, 2.2, 5.1_
+  - [x] 2.2 Implement training session CRUD functions
+    - Implement `listTrainingSessions(teamId)` to fetch sessions filtered by team
+    - Implement `createTrainingSession()` with team_id, session_date, and optional notes
+    - Implement `updateTrainingSession()` to update session_date and notes
+    - Implement `deleteTrainingSession()` to remove session by ID
+    - Use Supabase client with proper select, insert, update, delete operations
+    - Return Supabase response objects for error handling
+    - _Requirements: 1.1, 1.2, 1.3, 2.1, 2.2, 3.1, 3.2, 4.1, 4.2_
+  - [x] 2.3 Implement attendance tracking functions
+    - Implement `listTrainingAttendance(trainingId)` with join to players table
+    - Implement `upsertTrainingAttendance()` for creating/updating attendance records
+    - Use upsert with onConflict on composite key (training_id, player_id)
+    - Return attendance data with player details (full_name, jersey_number)
+    - _Requirements: 5.1, 5.2, 5.3, 5.4, 6.1, 6.2, 6.3_
+
+- [x] 3. Create training session form dialog component
+  - [x] 3.1 Implement TrainingFormDialog component
+    - Create `src/pages/coach/components/TrainingFormDialog.tsx`
+    - Accept props: open, onClose, onSave, training (for edit mode), teamId
+    - Use react-hook-form with zod validation schema
+    - Add form field for session_date (date input, required)
+    - Add form field for notes (textarea, optional, max 500 chars)
+    - Implement create mode when training prop is null
+    - Implement edit mode when training prop is provided
+    - Call `createTrainingSession()` or `updateTrainingSession()` service functions
+    - Display loading state during form submission
+    - Show success toast on save and call onSave callback
+    - Show error toast with user-friendly messages for RLS and validation errors
+    - _Requirements: 1.1, 1.2, 1.3, 3.1, 3.2, 8.1, 8.2, 8.3, 8.4_
+
+- [x] 4. Create training attendance panel component
+  - [x] 4.1 Implement TrainingAttendancePanel component
+    - Create `src/pages/coach/components/TrainingAttendancePanel.tsx`
+    - Accept props: trainingId, teamId, onClose
+    - Fetch players list for the team using `listPlayers()` service
+    - Fetch current attendance records using `listTrainingAttendance()` service
+    - Display table with columns: Player Name, Jersey Number, Attendance Status
+    - Render select dropdown for each player with options: On Time, Late, Absent, Not Marked
+    - Implement status badge display with color coding (green=on_time, yellow=late, red=absent, gray=not marked)
+    - Call `upsertTrainingAttendance()` on status change with immediate save
+    - Display loading spinner during attendance save operations
+    - Show error toast if attendance save fails with RLS or network errors
+    - Handle empty state when team has no players
+    - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 6.1, 6.2, 6.3, 6.4, 8.1, 8.2, 8.3, 8.4_
+
+- [x] 5. Create main trainings page for coaches
+  - [x] 5.1 Implement TrainingsPage component structure
+    - Create `src/pages/coach/TrainingsPage.tsx`
+    - Set up state management for teams, selectedTeamId, trainingSessions, loading states
+    - Set up dialog states for form, delete confirmation, and attendance panel
+    - Implement useEffect to load coach teams on mount using `listCoachTeams()`
+    - Implement useEffect to load training sessions when selectedTeamId changes
+    - Auto-select first team if available after teams load
+    - _Requirements: 2.1, 2.2, 10.1, 10.2, 10.3, 10.4_
+  - [x] 5.2 Implement team selector and training sessions list UI
+    - Add page header with title "Gestión de Entrenamientos"
+    - Create team selector card with Select component
+    - Populate team selector with coach's assigned teams only
+    - Display training sessions in Card with Table component
+    - Show session_date, notes, and action buttons (Edit, Delete, View Attendance) for each session
+    - Display session count in card description
+    - Show loading spinner while fetching sessions
+    - Display empty state when no sessions exist with call-to-action button
+    - Display empty state when coach has no teams assigned
+    - _Requirements: 2.1, 2.2, 2.3, 2.4, 10.1, 10.2, 10.3, 10.4_
+  - [x] 5.3 Implement training session CRUD operations
+    - Add "Nuevo Entrenamiento" button to open TrainingFormDialog in create mode
+    - Implement handleCreateTraining to open form dialog with null training
+    - Implement handleEditTraining to open form dialog with selected training
+    - Implement handleDeleteTraining to open ConfirmDialog
+    - Implement confirmDelete to call `deleteTrainingSession()` service
+    - Refresh training sessions list after successful create, update, or delete
+    - Show success toast after each operation
+    - Show error toast with user-friendly message on operation failure
+    - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 3.1, 3.2, 3.3, 3.4, 4.1, 4.2, 4.3, 4.4, 8.1, 8.2, 8.3, 8.4_
+  - [x] 5.4 Implement attendance panel integration
+    - Add "Ver Asistencia" button or clickable row to open attendance panel
+    - Pass trainingId and teamId to TrainingAttendancePanel component
+    - Render TrainingAttendancePanel as dialog or side panel
+    - Handle panel close and refresh if needed
+    - _Requirements: 5.1, 5.2, 5.3, 5.4, 6.1, 6.2, 6.3_
+
+- [x] 6. Add trainings route to coach layout
+  - Update coach routes configuration to include TrainingsPage
+  - Add route path `/coach/trainings` with CoachGuard protection
+  - Update sidebar navigation to include "Entrenamientos" link
+  - Ensure route is only accessible to users with coach or admin role
+  - _Requirements: 2.1, 2.3, 7.1, 7.2_
+
+- [x] 7. Run and verify database migration
+  - Execute migration using Supabase CLI or migration tool
+  - Verify `attendance_status` enum is created with correct values
+  - Verify `training_sessions` table exists with correct schema
+  - Verify `training_attendance` table exists with composite primary key
+  - Verify RLS policies are active on both tables
+  - Test super_admin can access all records
+  - Test coach can only access records for assigned teams
+  - Test cascade deletion when training session is deleted
+  - _Requirements: 1.5, 3.3, 4.3, 4.4, 5.5, 7.1, 7.2, 7.3, 9.1, 9.2, 9.3, 9.4, 9.5_
+
+- [x] 8. Create service layer unit tests
+  - Create `src/services/__tests__/trainings.test.ts`
+  - Mock Supabase client for isolated testing
+  - Test `listTrainingSessions()` with team filtering
+  - Test `createTrainingSession()` with required and optional fields
+  - Test `updateTrainingSession()` with partial updates
+  - Test `deleteTrainingSession()` by ID
+  - Test `listTrainingAttendance()` with player join
+  - Test `upsertTrainingAttendance()` for new and existing records
+  - Verify correct query parameters and error handling
+  - _Requirements: 1.1, 2.1, 3.1, 4.1, 5.1, 6.1_
+
+- [x] 9. Create component unit tests
+  - Create `src/pages/coach/components/__tests__/TrainingFormDialog.test.tsx`
+  - Test form renders with correct fields
+  - Test validation for required session_date field
+  - Test create mode with null training prop
+  - Test edit mode with existing training data
+  - Test form submission calls correct service function
+  - Test error handling displays toast notifications
+  - Create `src/pages/coach/components/__tests__/TrainingAttendancePanel.test.tsx`
+  - Test panel renders player list with attendance status
+  - Test status change triggers upsert function
+  - Test loading state during save operations
+  - Test error toast on save failure
+  - Test empty state when no players exist
+  - _Requirements: 5.1, 5.3, 6.1, 8.1, 8.4_
+
+- [x] 10. Create integration tests for training workflow
+  - Create `src/__tests__/TrainingWorkflow.integration.test.tsx`
+  - Test complete workflow: select team → create session → mark attendance → edit → delete
+  - Test RLS enforcement for coach accessing only assigned teams
+  - Test super_admin can access all teams
+  - Test cascade deletion of attendance records when session is deleted
+  - Test attendance upsert updates existing records correctly
+  - Mock Supabase responses for consistent test results
+  - _Requirements: 1.1, 1.2, 1.5, 2.1, 3.2, 3.3, 4.2, 4.3, 4.4, 5.4, 5.5, 7.1, 7.2, 7.3_
