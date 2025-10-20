@@ -23,6 +23,7 @@ const adminItems = [
 const coachItems = [
   { to: "/coach/players", label: "Jugadores", icon: UserCheck },
   { to: "/coach/trainings", label: "Entrenamientos", icon: Calendar },
+  { to: "/coach/matches", label: "Partidos", icon: Trophy },
 ];
 
 export function Sidebar({ collapsed, onToggle }:{collapsed:boolean; onToggle:()=>void}) {
