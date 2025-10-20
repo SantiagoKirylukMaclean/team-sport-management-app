@@ -41,3 +41,10 @@ export async function updateTeam(id: number, values: { name: string; club_id: nu
 export async function deleteTeam(id: number) {
   return supabase.from('teams').delete().eq('id', id)
 }
+
+export async function listCoachTeams() {
+  return supabase
+    .from('teams')
+    .select('id,name,created_at,club_id')
+    .order('name', { ascending: true })
+}

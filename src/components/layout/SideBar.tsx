@@ -20,13 +20,20 @@ const adminItems = [
   { to: "/admin/teams", label: "Teams", icon: UserCheck },
 ];
 
+const coachItems = [
+  { to: "/coach/players", label: "Jugadores", icon: UserCheck },
+];
+
 export function Sidebar({ collapsed, onToggle }:{collapsed:boolean; onToggle:()=>void}) {
   const { pathname } = useLocation();
   const { signOut, role } = useAuth();
   const [adminExpanded, setAdminExpanded] = useState(false);
+  const [coachExpanded, setCoachExpanded] = useState(false);
   
   // Only show admin section for super_admin users
   const showAdminSection = role === 'super_admin';
+  // Show coach section for coach, admin, and super_admin users
+  const showCoachSection = role === 'coach' || role === 'admin' || role === 'super_admin';
   return (
     <aside className={cn(
       "h-full bg-black/60 border-r border-border flex flex-col transition-[width] duration-200",
@@ -54,6 +61,47 @@ export function Sidebar({ collapsed, onToggle }:{collapsed:boolean; onToggle:()=
           );
         })}
         
+        {/* Coach Dropdown - Visible for coach, admin, and super_admin users */}
+        {showCoachSection && (
+          <div className="space-y-1">
+            <button
+              onClick={() => setCoachExpanded(!coachExpanded)}
+              className={cn(
+                "flex items-center gap-3 rounded-xl px-3 py-2 text-sm hover:bg-accent w-full text-left",
+                pathname.startsWith("/coach") ? "bg-accent" : "text-muted"
+              )}
+            >
+              <Users size={18}/>
+              {!collapsed && (
+                <>
+                  <span>Coach</span>
+                  <div className="ml-auto">
+                    {coachExpanded ? <ChevronDown size={16}/> : <ChevronRight size={16}/>}
+                  </div>
+                </>
+              )}
+            </button>
+            
+            {coachExpanded && !collapsed && (
+              <div className="ml-6 space-y-1">
+                {coachItems.map(({to,label,icon:Icon}) => {
+                  const active = pathname === to;
+                  return (
+                    <Link key={to} to={to}
+                      className={cn(
+                        "flex items-center gap-3 rounded-xl px-3 py-2 text-sm hover:bg-accent",
+                        active ? "bg-accent" : "text-muted"
+                      )}>
+                      <Icon size={16}/>
+                      <span>{label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Admin Dropdown - Only visible for super_admin users */}
         {showAdminSection && (
           <div className="space-y-1">

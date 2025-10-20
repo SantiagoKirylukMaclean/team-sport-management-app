@@ -7,7 +7,9 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ToastProvider } from "@/components/ui/toast";
 import { Routes, Route, Navigate } from "react-router-dom";
 import AdminGuard from "@/components/RouteGuards/AdminGuard";
+import CoachGuard from "@/components/RouteGuards/CoachGuard";
 import { AdminLayout } from "@/layouts/AdminLayout";
+import { CoachLayout } from "@/layouts/CoachLayout";
 
 const Dashboard = React.lazy(() => import("@/pages/Dashboard"));
 const Entrenamiento = React.lazy(() => import("@/pages/Entrenamiento"));
@@ -27,6 +29,9 @@ const ClubsPage = React.lazy(() => import("@/pages/admin/ClubsPage"));
 const TeamsPage = React.lazy(() => import("@/pages/admin/TeamsPage"));
 const InviteUserPage = React.lazy(() => import("@/pages/admin/InviteUserPage"));
 const InvitationManagementPage = React.lazy(() => import("@/pages/admin/InvitationManagementPage"));
+
+// Coach pages
+const PlayersPage = React.lazy(() => import("@/pages/coach/PlayersPage"));
 
 const withShell = (el: React.ReactNode) => <AppShell>{el}</AppShell>;
 
@@ -63,6 +68,16 @@ function App() {
               <Route path="teams" element={<TeamsPage />} />
               <Route path="invite-user" element={<InviteUserPage />} />
               <Route path="invitations" element={<InvitationManagementPage />} />
+            </Route>
+
+            {/* Coach routes - protected by CoachGuard */}
+            <Route path="/coach" element={
+              <CoachGuard>
+                <CoachLayout />
+              </CoachGuard>
+            }>
+              <Route index element={<Navigate to="/coach/players" replace />} />
+              <Route path="players" element={<PlayersPage />} />
             </Route>
 
             {/* Legacy admin routes - redirect to new structure */}
