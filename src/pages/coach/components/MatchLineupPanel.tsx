@@ -15,6 +15,8 @@ import {
   upsertMatchPeriod,
   type PeriodFraction,
 } from '@/services/matches'
+import { MatchFieldLineup } from './MatchFieldLineup'
+import { Table, MapPin } from 'lucide-react'
 
 type Props = {
   open: boolean
@@ -32,6 +34,7 @@ export function MatchLineupPanel({ open, onOpenChange, matchId, teamId }: Props)
   const { toast } = useToast()
   const [players, setPlayers] = useState<PlayerPeriods[]>([])
   const [loading, setLoading] = useState(false)
+  const [viewMode, setViewMode] = useState<'table' | 'field'>('table')
 
   useEffect(() => {
     if (open) {
@@ -109,11 +112,45 @@ export function MatchLineupPanel({ open, onOpenChange, matchId, teamId }: Props)
     return total
   }
 
+  // Si el modo es cancha, mostrar el componente de cancha
+  if (viewMode === 'field') {
+    return (
+      <MatchFieldLineup
+        open={open}
+        onOpenChange={onOpenChange}
+        matchId={matchId}
+        teamId={teamId}
+        onSwitchToTable={() => setViewMode('table')}
+      />
+    )
+  }
+
+  // Vista de tabla
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Minutos por Cuarto</DialogTitle>
+          <DialogTitle className="flex items-center justify-between">
+            <span>Minutos por Cuarto</span>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="default"
+                onClick={() => setViewMode('table')}
+              >
+                <Table className="h-4 w-4 mr-1" />
+                Tabla
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setViewMode('field')}
+              >
+                <MapPin className="h-4 w-4 mr-1" />
+                Cancha
+              </Button>
+            </div>
+          </DialogTitle>
         </DialogHeader>
         {loading ? (
           <div className="text-center py-8">Cargando...</div>
