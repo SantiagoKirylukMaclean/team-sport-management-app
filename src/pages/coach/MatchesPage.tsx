@@ -12,7 +12,8 @@ import { listTeams, type Team } from '@/services/teams'
 import { listMatches, deleteMatch, type Match } from '@/services/matches'
 import { MatchFormDialog } from './components/MatchFormDialog'
 import { MatchLineupPanel } from './components/MatchLineupPanel'
-import { Trash2, Edit, Users } from 'lucide-react'
+import { MatchCallUpDialog } from './components/MatchCallUpDialog'
+import { Trash2, Edit, Users, UserCheck } from 'lucide-react'
 
 export default function MatchesPage() {
   const { toast } = useToast()
@@ -22,8 +23,10 @@ export default function MatchesPage() {
   const [loading, setLoading] = useState(false)
   const [formOpen, setFormOpen] = useState(false)
   const [lineupOpen, setLineupOpen] = useState(false)
+  const [callUpOpen, setCallUpOpen] = useState(false)
   const [editingMatch, setEditingMatch] = useState<Match | null>(null)
   const [lineupMatchId, setLineupMatchId] = useState<number | null>(null)
+  const [callUpMatchId, setCallUpMatchId] = useState<number | null>(null)
 
   useEffect(() => {
     loadTeams()
@@ -89,6 +92,11 @@ export default function MatchesPage() {
     setLineupOpen(true)
   }
 
+  const handleCallUp = (matchId: number) => {
+    setCallUpMatchId(matchId)
+    setCallUpOpen(true)
+  }
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -147,6 +155,14 @@ export default function MatchesPage() {
                       <Button
                         size="sm"
                         variant="ghost"
+                        onClick={() => handleCallUp(m.id)}
+                        title="Convocar"
+                      >
+                        <UserCheck className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
                         onClick={() => handleLineup(m.id)}
                         title="Minutos"
                       >
@@ -186,6 +202,15 @@ export default function MatchesPage() {
             match={editingMatch}
             onSuccess={loadMatches}
           />
+          {callUpMatchId && (
+            <MatchCallUpDialog
+              open={callUpOpen}
+              onOpenChange={setCallUpOpen}
+              matchId={callUpMatchId}
+              teamId={selectedTeamId}
+              onSuccess={loadMatches}
+            />
+          )}
           {lineupMatchId && (
             <MatchLineupPanel
               open={lineupOpen}

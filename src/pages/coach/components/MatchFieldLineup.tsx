@@ -7,8 +7,10 @@ import {
   listMatchPeriods,
   upsertMatchPeriod,
   type PeriodFraction,
+  listMatchCallUps,
 } from '@/services/matches'
-import { Table, MapPin } from 'lucide-react'
+import { Table, MapPin, AlertTriangle } from 'lucide-react'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 
 type Props = {
   open: boolean
@@ -35,6 +37,7 @@ export function MatchFieldLineup({ open, onOpenChange, matchId, teamId, onSwitch
   const [benchPlayers, setBenchPlayers] = useState<Set<number>>(new Set())
   const [draggedPlayer, setDraggedPlayer] = useState<number | null>(null)
   const [loading, setLoading] = useState(false)
+  const [calledUpCount, setCalledUpCount] = useState(0)
 
   useEffect(() => {
     if (open) {
@@ -51,16 +54,26 @@ export function MatchFieldLineup({ open, onOpenChange, matchId, teamId, onSwitch
   const loadData = async () => {
     setLoading(true)
     try {
-      const [playersRes, periodsRes] = await Promise.all([
+      const [playersRes, periodsRes, callUpsRes] = await Promise.all([
         listPlayers(teamId),
         listMatchPeriods(matchId),
+        listMatchCallUps(matchId),
       ])
 
       if (playersRes.error) throw playersRes.error
       if (periodsRes.error) throw periodsRes.error
+      if (callUpsRes.error) throw callUpsRes.error
 
       const playersList = playersRes.data || []
       const periodsData = periodsRes.data || []
+      const callUpsData = callUpsRes.data || []
+
+      // Guardar conteo de convocados
+      setCalledUpCount(callUpsData.length)
+
+      // Filtrar solo jugadores convocados
+      const calledUpPlayerIds = new Set(callUpsData.map(c => c.player_id))
+      const calledUpPlayers = playersList.filter((p: Player) => calledUpPlayerIds.has(p.id))
 
       // Crear mapa de todos los períodos por jugador
       const allPeriodsMap = new Map<number, Record<number, PeriodFraction>>()
@@ -71,7 +84,7 @@ export function MatchFieldLineup({ open, onOpenChange, matchId, teamId, onSwitch
         allPeriodsMap.get(pd.player_id)![pd.period] = pd.fraction
       })
 
-      const mapped: PlayerWithPeriod[] = playersList.map((p: Player) => {
+      const mapped: PlayerWithPeriod[] = calledUpPlayers.map((p: Player) => {
         const playerPeriods = allPeriodsMap.get(p.id) || {}
         return {
           ...p,
@@ -82,7 +95,7 @@ export function MatchFieldLineup({ open, onOpenChange, matchId, teamId, onSwitch
       setPlayers(mapped)
       
       // Debug: ver qué jugadores tenemos
-      console.log('Jugadores cargados:', mapped.length)
+      console.log('Jugadores convocados:', mapped.length)
       console.log('Jugadores:', mapped)
       
       // Actualizar posiciones basado en el período actual
@@ -194,6 +207,16 @@ export function MatchFieldLineup({ open, onOpenChange, matchId, teamId, onSwitch
     e.preventDefault()
     if (!draggedPlayer) return
 
+    // Validar mínimo 7 jugadores convocados
+    if (calledUpCount < 7) {
+      toast({
+        variant: 'destructive',
+        title: 'Convocatoria incompleta',
+        description: 'Debes convocar al menos 7 jugadores antes de asignar posiciones.'
+      })
+      return
+    }
+
     const rect = e.currentTarget.getBoundingClientRect()
     const x = ((e.clientX - rect.left) / rect.width) * 100
     const y = ((e.clientY - rect.top) / rect.height) * 100
@@ -225,6 +248,16 @@ export function MatchFieldLineup({ open, onOpenChange, matchId, teamId, onSwitch
   const handleBenchDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
     if (!draggedPlayer) return
+
+    // Validar mínimo 7 jugadores convocados
+    if (calledUpCount < 7) {
+      toast({
+        variant: 'destructive',
+        title: 'Convocatoria incompleta',
+        description: 'Debes convocar al menos 7 jugadores antes de asignar posiciones.'
+      })
+      return
+    }
 
     // Mover jugador al banco
     const newBench = new Set(benchPlayers)
@@ -301,6 +334,22 @@ export function MatchFieldLineup({ open, onOpenChange, matchId, teamId, onSwitch
           <div className="text-center py-8">Cargando...</div>
         ) : (
           <div className="space-y-3 overflow-y-auto flex-1">
+            {/* Alerta de convocatoria incompleta */}
+            {calledUpCount < 7 && (
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  <div className="font-semibold mb-1">
+                    Convocatoria incompleta
+                  </div>
+                  <div>
+                    Debes convocar al menos 7 jugadores para poder asignar posiciones.
+                    Actualmente tienes {calledUpCount} jugador(es) convocado(s).
+                  </div>
+                </AlertDescription>
+              </Alert>
+            )}
+
             {/* Selector de período */}
             <div className="flex gap-2 justify-center">
               {([1, 2, 3, 4] as const).map((period) => (
@@ -321,9 +370,13 @@ export function MatchFieldLineup({ open, onOpenChange, matchId, teamId, onSwitch
                   Jugadores Disponibles ({availablePlayers.length})
                 </h3>
                 <div className="border rounded-lg p-2 max-h-[400px] overflow-y-auto bg-gray-50">
-                  {players.length === 0 ? (
+                  {calledUpCount < 7 ? (
                     <p className="text-xs text-gray-500 text-center py-4">
-                      No hay jugadores en el equipo
+                      Convoca al menos 7 jugadores para comenzar
+                    </p>
+                  ) : players.length === 0 ? (
+                    <p className="text-xs text-gray-500 text-center py-4">
+                      No hay jugadores convocados
                     </p>
                   ) : availablePlayers.length === 0 ? (
                     <p className="text-xs text-gray-500 text-center py-4">
@@ -333,10 +386,10 @@ export function MatchFieldLineup({ open, onOpenChange, matchId, teamId, onSwitch
                     availablePlayers.map((player) => (
                       <div
                         key={player.id}
-                        draggable
+                        draggable={calledUpCount >= 7}
                         onDragStart={() => handleDragStart(player.id)}
                         onDragEnd={handleDragEnd}
-                        className="bg-white border rounded p-2 mb-2 cursor-move hover:bg-gray-100"
+                        className={`bg-white border rounded p-2 mb-2 ${calledUpCount >= 7 ? 'cursor-move hover:bg-gray-100' : 'cursor-not-allowed opacity-50'}`}
                       >
                         <div className="text-xs font-semibold text-gray-900">
                           {player.jersey_number ? `#${player.jersey_number} ` : ''}{player.full_name}
@@ -376,10 +429,10 @@ export function MatchFieldLineup({ open, onOpenChange, matchId, teamId, onSwitch
                     return (
                       <div
                         key={playerId}
-                        draggable
+                        draggable={calledUpCount >= 7}
                         onDragStart={() => handleDragStart(playerId)}
                         onDragEnd={handleDragEnd}
-                        className="absolute -translate-x-1/2 -translate-y-1/2 cursor-move"
+                        className={`absolute -translate-x-1/2 -translate-y-1/2 ${calledUpCount >= 7 ? 'cursor-move' : 'cursor-not-allowed opacity-50'}`}
                         style={{
                           left: `${pos.x}%`,
                           top: `${pos.y}%`,
@@ -418,10 +471,10 @@ export function MatchFieldLineup({ open, onOpenChange, matchId, teamId, onSwitch
                           return (
                             <div
                               key={playerId}
-                              draggable
+                              draggable={calledUpCount >= 7}
                               onDragStart={() => handleDragStart(playerId)}
                               onDragEnd={handleDragEnd}
-                              className="bg-orange-500 text-white rounded-full px-2 py-1 cursor-move hover:bg-orange-600 text-xs"
+                              className={`bg-orange-500 text-white rounded-full px-2 py-1 text-xs ${calledUpCount >= 7 ? 'cursor-move hover:bg-orange-600' : 'cursor-not-allowed opacity-50'}`}
                             >
                               {player.jersey_number ? `#${player.jersey_number}` : ''} {player.full_name}
                             </div>

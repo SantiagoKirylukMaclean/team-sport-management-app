@@ -78,3 +78,71 @@ export async function upsertMatchPeriod(
     .select('match_id,player_id,period,fraction,created_at')
     .single()
 }
+
+// ---- Call-ups (Convocatorias) ----
+export type MatchCallUp = {
+  match_id: number
+  player_id: number
+  created_at: string
+}
+
+export async function listMatchCallUps(matchId: number) {
+  return supabase
+    .from('match_call_ups')
+    .select('match_id,player_id,created_at')
+    .eq('match_id', matchId)
+}
+
+export async function addPlayerToCallUp(matchId: number, playerId: number) {
+  return supabase
+    .from('match_call_ups')
+    .insert({ match_id: matchId, player_id: playerId })
+    .select('match_id,player_id,created_at')
+    .single()
+}
+
+export async function removePlayerFromCallUp(matchId: number, playerId: number) {
+  return supabase
+    .from('match_call_ups')
+    .delete()
+    .match({ match_id: matchId, player_id: playerId })
+}
+
+export async function setMatchCallUps(matchId: number, playerIds: number[]) {
+  // Primero eliminar todas las convocatorias existentes
+  await supabase.from('match_call_ups').delete().eq('match_id', matchId)
+  
+  // Luego insertar las nuevas
+  if (playerIds.length === 0) {
+    return { data: [], error: null }
+  }
+  
+  return supabase
+    .from('match_call_ups')
+    .insert(playerIds.map(playerId => ({ match_id: matchId, player_id: playerId })))
+    .select('match_id,player_id,created_at')
+}
+
+export type CallUpWithPeriods = {
+  match_id: number
+  player_id: number
+  called_up_at: string
+  periods_played: number
+}
+
+export async function listMatchCallUpsWithPeriods(matchId: number) {
+  return supabase
+    .from('match_call_ups_with_periods')
+    .select('match_id,player_id,called_up_at,periods_played')
+    .eq('match_id', matchId)
+}
+
+export type ValidationResult = {
+  player_id: number
+  full_name: string
+  periods_played: number
+}
+
+export async function validateMatchMinimumPeriods(matchId: number) {
+  return supabase.rpc('validate_match_minimum_periods', { p_match_id: matchId })
+}
