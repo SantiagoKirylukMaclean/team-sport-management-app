@@ -24,6 +24,7 @@ const Jugadores = React.lazy(() => import("@/pages/Jugadores"));
 const Partidos = React.lazy(() => import("@/pages/Partidos"));
 
 // Admin pages
+const AdminDashboard = React.lazy(() => import("@/pages/admin/AdminDashboard"));
 const SportsPage = React.lazy(() => import("@/pages/admin/SportsPage"));
 const ClubsPage = React.lazy(() => import("@/pages/admin/ClubsPage"));
 const TeamsPage = React.lazy(() => import("@/pages/admin/TeamsPage"));
@@ -64,7 +65,7 @@ function App() {
                 <AdminLayout />
               </AdminGuard>
             }>
-              <Route index element={<Navigate to="/admin/sports" replace />} />
+              <Route index element={<AdminDashboard />} />
               <Route path="sports" element={<SportsPage />} />
               <Route path="clubs" element={<ClubsPage />} />
               <Route path="teams" element={<TeamsPage />} />

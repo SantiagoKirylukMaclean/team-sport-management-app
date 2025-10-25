@@ -14,12 +14,6 @@ const items = [
   { to: "/notes", label: "Notes", icon: NotebookText },
 ];
 
-const adminItems = [
-  { to: "/admin/sports", label: "Sports", icon: Trophy },
-  { to: "/admin/clubs", label: "Clubs", icon: Users },
-  { to: "/admin/teams", label: "Teams", icon: UserCheck },
-];
-
 const coachItems = [
   { to: "/coach/players", label: "Jugadores", icon: UserCheck },
   { to: "/coach/trainings", label: "Entrenamientos", icon: Calendar },
@@ -29,7 +23,6 @@ const coachItems = [
 export function Sidebar({ collapsed, onToggle }:{collapsed:boolean; onToggle:()=>void}) {
   const { pathname } = useLocation();
   const { signOut, role } = useAuth();
-  const [adminExpanded, setAdminExpanded] = useState(false);
   const [coachExpanded, setCoachExpanded] = useState(false);
   
   // Only show admin section for super_admin users
@@ -104,45 +97,18 @@ export function Sidebar({ collapsed, onToggle }:{collapsed:boolean; onToggle:()=
           </div>
         )}
 
-        {/* Admin Dropdown - Only visible for super_admin users */}
+        {/* Admin Link - Only visible for super_admin users */}
         {showAdminSection && (
-          <div className="space-y-1">
-            <button
-              onClick={() => setAdminExpanded(!adminExpanded)}
-              className={cn(
-                "flex items-center gap-3 rounded-xl px-3 py-2 text-sm hover:bg-accent w-full text-left",
-                pathname.startsWith("/admin") ? "bg-accent" : "text-muted"
-              )}
-            >
-              <Shield size={18}/>
-              {!collapsed && (
-                <>
-                  <span>Admin</span>
-                  <div className="ml-auto">
-                    {adminExpanded ? <ChevronDown size={16}/> : <ChevronRight size={16}/>}
-                  </div>
-                </>
-              )}
-            </button>
-            
-            {adminExpanded && !collapsed && (
-              <div className="ml-6 space-y-1">
-                {adminItems.map(({to,label,icon:Icon}) => {
-                  const active = pathname === to;
-                  return (
-                    <Link key={to} to={to}
-                      className={cn(
-                        "flex items-center gap-3 rounded-xl px-3 py-2 text-sm hover:bg-accent",
-                        active ? "bg-accent" : "text-muted"
-                      )}>
-                      <Icon size={16}/>
-                      <span>{label}</span>
-                    </Link>
-                  );
-                })}
-              </div>
+          <Link 
+            to="/admin"
+            className={cn(
+              "flex items-center gap-3 rounded-xl px-3 py-2 text-sm hover:bg-accent",
+              pathname.startsWith("/admin") ? "bg-accent" : "text-muted"
             )}
-          </div>
+          >
+            <Shield size={18}/>
+            {!collapsed && <span>Admin</span>}
+          </Link>
         )}
       </nav>
 
