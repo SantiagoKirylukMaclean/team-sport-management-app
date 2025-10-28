@@ -146,3 +146,54 @@ export type ValidationResult = {
 export async function validateMatchMinimumPeriods(matchId: number) {
   return supabase.rpc('validate_match_minimum_periods', { p_match_id: matchId })
 }
+
+// ---- Substitutions (Cambios) ----
+export type MatchSubstitution = {
+  id: number
+  match_id: number
+  period: number
+  player_out: number
+  player_in: number
+  created_at: string
+}
+
+export async function listMatchSubstitutions(matchId: number, period?: number) {
+  let query = supabase
+    .from('match_substitutions')
+    .select('id,match_id,period,player_out,player_in,created_at')
+    .eq('match_id', matchId)
+  
+  if (period !== undefined) {
+    query = query.eq('period', period)
+  }
+  
+  return query.order('created_at', { ascending: true })
+}
+
+export async function applyMatchSubstitution(
+  matchId: number,
+  period: number,
+  playerOut: number,
+  playerIn: number
+) {
+  return supabase.rpc('apply_match_substitution', {
+    p_match_id: matchId,
+    p_period: period,
+    p_player_out: playerOut,
+    p_player_in: playerIn
+  })
+}
+
+export async function removeMatchSubstitution(
+  matchId: number,
+  period: number,
+  playerOut: number,
+  playerIn: number
+) {
+  return supabase.rpc('remove_match_substitution', {
+    p_match_id: matchId,
+    p_period: period,
+    p_player_out: playerOut,
+    p_player_in: playerIn
+  })
+}
