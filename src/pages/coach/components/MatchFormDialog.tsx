@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -17,11 +17,21 @@ type Props = {
 
 export function MatchFormDialog({ open, onOpenChange, teamId, match, onSuccess }: Props) {
   const { toast } = useToast()
-  const [opponent, setOpponent] = useState(match?.opponent || '')
-  const [matchDate, setMatchDate] = useState(match?.match_date || '')
-  const [location, setLocation] = useState(match?.location || '')
-  const [notes, setNotes] = useState(match?.notes || '')
+  const [opponent, setOpponent] = useState('')
+  const [matchDate, setMatchDate] = useState('')
+  const [location, setLocation] = useState('')
+  const [notes, setNotes] = useState('')
   const [loading, setLoading] = useState(false)
+
+  // Actualizar los campos cuando cambia el match o se abre el diálogo
+  useEffect(() => {
+    if (open) {
+      setOpponent(match?.opponent || '')
+      setMatchDate(match?.match_date || '')
+      setLocation(match?.location || '')
+      setNotes(match?.notes || '')
+    }
+  }, [open, match])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
