@@ -51,6 +51,14 @@ export async function deleteMatch(id: number) {
 // ---- Periods / minutes ----
 export type PeriodFraction = 'FULL' | 'HALF'
 
+export type MatchPlayerPeriod = {
+  match_id: number
+  player_id: number
+  period: number
+  fraction: PeriodFraction
+  created_at: string
+}
+
 export async function listMatchPeriods(matchId: number) {
   return supabase
     .from('match_player_periods')

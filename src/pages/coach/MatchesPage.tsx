@@ -13,7 +13,8 @@ import { listMatches, deleteMatch, type Match } from '@/services/matches'
 import { MatchFormDialog } from './components/MatchFormDialog'
 import { MatchLineupPanel } from './components/MatchLineupPanel'
 import { MatchCallUpDialog } from './components/MatchCallUpDialog'
-import { Trash2, Edit, Users, UserCheck } from 'lucide-react'
+import { MatchDetailDialog } from './components/MatchDetailDialog'
+import { Trash2, Edit, Users, UserCheck, FileText } from 'lucide-react'
 
 export default function MatchesPage() {
   const { toast } = useToast()
@@ -24,9 +25,11 @@ export default function MatchesPage() {
   const [formOpen, setFormOpen] = useState(false)
   const [lineupOpen, setLineupOpen] = useState(false)
   const [callUpOpen, setCallUpOpen] = useState(false)
+  const [detailOpen, setDetailOpen] = useState(false)
   const [editingMatch, setEditingMatch] = useState<Match | null>(null)
   const [lineupMatchId, setLineupMatchId] = useState<number | null>(null)
   const [callUpMatchId, setCallUpMatchId] = useState<number | null>(null)
+  const [detailMatch, setDetailMatch] = useState<Match | null>(null)
 
   useEffect(() => {
     loadTeams()
@@ -97,6 +100,11 @@ export default function MatchesPage() {
     setCallUpOpen(true)
   }
 
+  const handleDetail = (match: Match) => {
+    setDetailMatch(match)
+    setDetailOpen(true)
+  }
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -152,6 +160,14 @@ export default function MatchesPage() {
                   <td className="p-3">{m.notes || '-'}</td>
                   <td className="p-3">
                     <div className="flex justify-end gap-2">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleDetail(m)}
+                        title="Detalle"
+                      >
+                        <FileText className="h-4 w-4" />
+                      </Button>
                       <Button
                         size="sm"
                         variant="ghost"
@@ -216,6 +232,14 @@ export default function MatchesPage() {
               open={lineupOpen}
               onOpenChange={setLineupOpen}
               matchId={lineupMatchId}
+              teamId={selectedTeamId}
+            />
+          )}
+          {detailMatch && (
+            <MatchDetailDialog
+              open={detailOpen}
+              onOpenChange={setDetailOpen}
+              match={detailMatch}
               teamId={selectedTeamId}
             />
           )}

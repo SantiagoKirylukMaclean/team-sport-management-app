@@ -8,7 +8,7 @@ import { Pencil, Trash2, Plus, Users } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { PlayerFormDialog } from './components/PlayerFormDialog'
-import { listPlayers, deletePlayer, type Player } from '@/services/players'
+import { listPlayers, deletePlayer, getTeamPlayerStatistics, type Player, type PlayerStatistics } from '@/services/players'
 import { listCoachTeams, type Team } from '@/services/teams'
 
 export default function PlayersPage() {
@@ -18,6 +18,7 @@ export default function PlayersPage() {
   const [teams, setTeams] = useState<Team[]>([])
   const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null)
   const [players, setPlayers] = useState<Player[]>([])
+  const [playerStats, setPlayerStats] = useState<PlayerStatistics[]>([])
   const [loading, setLoading] = useState(true)
   const [playersLoading, setPlayersLoading] = useState(false)
   
@@ -72,13 +73,21 @@ export default function PlayersPage() {
     
     setPlayersLoading(true)
     try {
-      const result = await listPlayers(selectedTeamId)
+      const [playersResult, statsResult] = await Promise.all([
+        listPlayers(selectedTeamId),
+        getTeamPlayerStatistics(selectedTeamId)
+      ])
       
-      if (result.error) {
-        throw result.error
+      if (playersResult.error) {
+        throw playersResult.error
+      }
+      
+      if (statsResult.error) {
+        throw statsResult.error
       }
 
-      setPlayers(result.data || [])
+      setPlayers(playersResult.data || [])
+      setPlayerStats(statsResult.data || [])
     } catch (err: any) {
       toast({
         title: "Error",
@@ -256,46 +265,79 @@ export default function PlayersPage() {
                   <TableRow>
                     <TableHead>Nombre</TableHead>
                     <TableHead>Número</TableHead>
-                    <TableHead>Fecha de Registro</TableHead>
+                    <TableHead className="text-center">% Asist. Entrenamientos</TableHead>
+                    <TableHead className="text-center">% Asist. Partidos</TableHead>
+                    <TableHead className="text-center">Prom. Períodos</TableHead>
                     <TableHead className="text-right">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {players.map((player) => (
-                    <TableRow key={player.id}>
-                      <TableCell className="font-medium">
-                        {player.full_name}
-                      </TableCell>
-                      <TableCell>
-                        {player.jersey_number ? (
-                          <Badge variant="outline">#{player.jersey_number}</Badge>
-                        ) : (
-                          <span className="text-muted-foreground">Sin número</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {new Date(player.created_at).toLocaleDateString('es-AR')}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEditPlayer(player)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDeletePlayer(player)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {players.map((player) => {
+                    const stats = playerStats.find(s => s.player_id === player.id)
+                    return (
+                      <TableRow key={player.id}>
+                        <TableCell className="font-medium">
+                          {player.full_name}
+                        </TableCell>
+                        <TableCell>
+                          {player.jersey_number ? (
+                            <Badge variant="outline">#{player.jersey_number}</Badge>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {stats ? (
+                            <div className="flex flex-col items-center">
+                              <span className="font-medium">{stats.training_attendance_pct}%</span>
+                              <span className="text-xs text-muted-foreground">
+                                {stats.trainings_attended}/{stats.total_trainings}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {stats ? (
+                            <div className="flex flex-col items-center">
+                              <span className="font-medium">{stats.match_attendance_pct}%</span>
+                              <span className="text-xs text-muted-foreground">
+                                {stats.matches_called_up}/{stats.total_matches}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {stats ? (
+                            <span className="font-medium">{stats.avg_periods_played}</span>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEditPlayer(player)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeletePlayer(player)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
                 </TableBody>
               </Table>
             )}

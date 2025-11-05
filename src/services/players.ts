@@ -8,6 +8,20 @@ export type Player = {
   created_at: string
 }
 
+export type PlayerStatistics = {
+  player_id: number
+  team_id: number
+  full_name: string
+  jersey_number: number | null
+  total_trainings: number
+  trainings_attended: number
+  training_attendance_pct: number
+  total_matches: number
+  matches_called_up: number
+  match_attendance_pct: number
+  avg_periods_played: number
+}
+
 export async function listPlayers(teamId: number) {
   return supabase
     .from('players')
@@ -35,4 +49,8 @@ export async function updatePlayer(id: number, values: { full_name?: string; jer
 
 export async function deletePlayer(id: number) {
   return supabase.from('players').delete().eq('id', id)
+}
+
+export async function getTeamPlayerStatistics(teamId: number) {
+  return supabase.rpc('get_team_player_statistics', { p_team_id: teamId })
 }
