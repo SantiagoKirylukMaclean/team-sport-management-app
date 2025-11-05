@@ -60,7 +60,11 @@ export default function MatchesPage() {
     try {
       const { data, error } = await listMatches(selectedTeamId)
       if (error) throw error
-      setMatches(data || [])
+      // Ordenar por fecha descendente (más reciente primero)
+      const sortedData = (data || []).sort((a, b) => {
+        return new Date(b.match_date).getTime() - new Date(a.match_date).getTime()
+      })
+      setMatches(sortedData)
     } catch (err: any) {
       toast({ title: 'Error', description: err.message || 'Error al cargar partidos', variant: 'destructive' })
     } finally {
