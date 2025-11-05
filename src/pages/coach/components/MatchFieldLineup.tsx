@@ -235,12 +235,8 @@ export function MatchFieldLineup({ open, onOpenChange, matchId, teamId, onSwitch
           const existingCount = newField.size
           newField.set(player.id, getDefaultPosition(existingCount))
         }
-        // Si tiene HALF y es el que "sale", va al banco
-        else if (player.currentPeriod === 'HALF' && playersOut.has(player.id)) {
-          newBench.add(player.id)
-        }
-        // Si no tiene período registrado, va al banco (suplente sin minutos)
-        else if (!player.currentPeriod) {
+        // Todos los demás van al banco
+        else {
           newBench.add(player.id)
         }
       })
@@ -385,10 +381,6 @@ export function MatchFieldLineup({ open, onOpenChange, matchId, teamId, onSwitch
   }
 
   const getPlayerById = (id: number) => players.find((p) => p.id === id)
-
-  const availablePlayers = players.filter(
-    (p) => !fieldPlayers.has(p.id) && !benchPlayers.has(p.id)
-  )
 
   const handlePlayerClickForSubstitution = async (playerId: number) => {
     console.log('=== CLICK EN JUGADOR ===')
@@ -623,45 +615,9 @@ export function MatchFieldLineup({ open, onOpenChange, matchId, teamId, onSwitch
               </div>
             )}
 
-            <div className="grid grid-cols-4 gap-3">
-              {/* Jugadores disponibles */}
-              <div className="space-y-2">
-                <h3 className="font-semibold text-sm">
-                  Jugadores Disponibles ({availablePlayers.length})
-                </h3>
-                <div className="border rounded-lg p-2 max-h-[400px] overflow-y-auto bg-gray-50">
-                  {calledUpCount < 7 ? (
-                    <p className="text-xs text-gray-500 text-center py-4">
-                      Convoca al menos 7 jugadores para comenzar
-                    </p>
-                  ) : players.length === 0 ? (
-                    <p className="text-xs text-gray-500 text-center py-4">
-                      No hay jugadores convocados
-                    </p>
-                  ) : availablePlayers.length === 0 ? (
-                    <p className="text-xs text-gray-500 text-center py-4">
-                      Todos asignados
-                    </p>
-                  ) : (
-                    availablePlayers.map((player) => (
-                      <div
-                        key={player.id}
-                        draggable={calledUpCount >= 7}
-                        onDragStart={() => handleDragStart(player.id)}
-                        onDragEnd={handleDragEnd}
-                        className={`bg-white border rounded p-2 mb-2 ${calledUpCount >= 7 ? 'cursor-move hover:bg-gray-100' : 'cursor-not-allowed opacity-50'}`}
-                      >
-                        <div className="text-xs font-semibold text-gray-900">
-                          {player.jersey_number ? `#${player.jersey_number} ` : ''}{player.full_name}
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-
+            <div className="space-y-3">
               {/* Cancha */}
-              <div className="col-span-3 space-y-2">
+              <div className="space-y-2">
                 <h3 className="font-semibold text-sm">
                   Cancha ({fieldPlayers.size}/7 jugadores)
                 </h3>
