@@ -321,7 +321,7 @@ export function MatchFieldLineup({ open, onOpenChange, matchId, teamId, onSwitch
     }
   }
 
-  const handleBenchDrop = (e: React.DragEvent<HTMLDivElement>) => {
+  const handleBenchDrop = async (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
     if (!draggedPlayer) return
 
@@ -335,25 +335,44 @@ export function MatchFieldLineup({ open, onOpenChange, matchId, teamId, onSwitch
       return
     }
 
-    // Mover jugador al banco
-    const newBench = new Set(benchPlayers)
-    newBench.add(draggedPlayer)
-    setBenchPlayers(newBench)
+    console.log('🔄 Moviendo jugador al banco:', draggedPlayer)
 
-    // Remover del campo
-    const newField = new Map(fieldPlayers)
-    newField.delete(draggedPlayer)
-    setFieldPlayers(newField)
-
-    // No actualizar período - los del banco no tienen registro
-    // Solo eliminar si existe
     try {
-      supabase
+      // Eliminar el registro del período en la base de datos
+      const { error } = await supabase
         .from('match_player_periods')
         .delete()
         .match({ match_id: matchId, player_id: draggedPlayer, period: selectedPeriod })
-    } catch (err) {
-      console.error('Error removing period:', err)
+
+      if (error) throw error
+
+      console.log('✅ Período eliminado de la base de datos')
+
+      // Actualizar estado local
+      const newBench = new Set(benchPlayers)
+      newBench.add(draggedPlayer)
+      setBenchPlayers(newBench)
+
+      // Remover del campo
+      const newField = new Map(fieldPlayers)
+      newField.delete(draggedPlayer)
+      setFieldPlayers(newField)
+
+      // Actualizar el estado del jugador
+      setPlayers((prev) =>
+        prev.map((p) =>
+          p.id === draggedPlayer ? { ...p, currentPeriod: null } : p
+        )
+      )
+
+      console.log('✅ Estado actualizado')
+    } catch (err: any) {
+      console.error('❌ Error al mover jugador al banco:', err)
+      toast({
+        title: 'Error',
+        description: err.message || 'Error al actualizar jugador',
+        variant: 'destructive',
+      })
     }
   }
 
