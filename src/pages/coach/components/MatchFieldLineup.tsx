@@ -581,33 +581,36 @@ export function MatchFieldLineup({ open, onOpenChange, matchId, teamId, onSwitch
 
             {/* Cambios registrados */}
             {substitutions.length > 0 && (
-              <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-                <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
+              <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
                   <ArrowLeftRight className="h-4 w-4" />
-                  Cambios en Q{selectedPeriod}
+                  Cambios en Q{selectedPeriod} ({substitutions.length})
                 </h4>
                 <div className="space-y-2">
                   {substitutions.map((sub) => {
                     const playerOut = getPlayerById(sub.player_out)
                     const playerIn = getPlayerById(sub.player_in)
                     return (
-                      <div key={sub.id} className="flex items-center justify-between bg-white dark:bg-gray-800 rounded p-2 text-sm">
-                        <div className="flex items-center gap-2">
-                          <span className="text-red-600 dark:text-red-400">
+                      <div 
+                        key={sub.id} 
+                        className="group relative flex items-center justify-between gap-3 bg-white dark:bg-gray-800 rounded p-3 text-sm hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer border-2 border-transparent hover:border-red-300 transition-all"
+                        onClick={() => handleRemoveSubstitution(sub)}
+                      >
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <span className="text-red-600 dark:text-red-400 font-medium">
                             ↓ {playerOut?.jersey_number ? `#${playerOut.jersey_number}` : ''} {playerOut?.full_name}
                           </span>
-                          <ArrowLeftRight className="h-3 w-3" />
-                          <span className="text-green-600 dark:text-green-400">
+                          <ArrowLeftRight className="h-4 w-4 text-gray-400 shrink-0" />
+                          <span className="text-green-600 dark:text-green-400 font-medium">
                             ↑ {playerIn?.jersey_number ? `#${playerIn.jersey_number}` : ''} {playerIn?.full_name}
                           </span>
                         </div>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleRemoveSubstitution(sub)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="text-xs text-gray-500 group-hover:text-red-600 font-medium">
+                            Click para eliminar
+                          </span>
+                          <X className="h-5 w-5 text-gray-400 group-hover:text-red-600" />
+                        </div>
                       </div>
                     )
                   })}
