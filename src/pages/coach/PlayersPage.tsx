@@ -4,12 +4,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import { Pencil, Trash2, Plus, Users } from 'lucide-react'
+import { Pencil, Trash2, Plus, Users, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { PlayerFormDialog } from './components/PlayerFormDialog'
 import { listPlayers, deletePlayer, getTeamPlayerStatistics, type Player, type PlayerStatistics } from '@/services/players'
 import { listCoachTeams, type Team } from '@/services/teams'
+
+type SortColumn = 'name' | 'number' | 'training_attendance' | 'match_attendance' | 'avg_periods'
+type SortDirection = 'asc' | 'desc' | null
 
 export default function PlayersPage() {
   const { toast } = useToast()
@@ -28,6 +31,10 @@ export default function PlayersPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deletingPlayer, setDeletingPlayer] = useState<Player | null>(null)
   const [deleteLoading, setDeleteLoading] = useState(false)
+
+  // Sorting state
+  const [sortColumn, setSortColumn] = useState<SortColumn | null>(null)
+  const [sortDirection, setSortDirection] = useState<SortDirection>(null)
 
   // Load teams on mount
   useEffect(() => {
@@ -150,6 +157,74 @@ export default function PlayersPage() {
     loadPlayers()
   }
 
+  const handleSort = (column: SortColumn) => {
+    if (sortColumn === column) {
+      // Cycle through: asc -> desc -> null
+      if (sortDirection === 'asc') {
+        setSortDirection('desc')
+      } else if (sortDirection === 'desc') {
+        setSortDirection(null)
+        setSortColumn(null)
+      }
+    } else {
+      setSortColumn(column)
+      setSortDirection('asc')
+    }
+  }
+
+  const getSortedPlayers = () => {
+    if (!sortColumn || !sortDirection) {
+      return players
+    }
+
+    const sorted = [...players].sort((a, b) => {
+      const statsA = playerStats.find(s => s.player_id === a.id)
+      const statsB = playerStats.find(s => s.player_id === b.id)
+
+      let compareValue = 0
+
+      switch (sortColumn) {
+        case 'name':
+          compareValue = a.full_name.localeCompare(b.full_name)
+          break
+        case 'number':
+          const numA = a.jersey_number || 999
+          const numB = b.jersey_number || 999
+          compareValue = numA - numB
+          break
+        case 'training_attendance':
+          const trainingA = statsA ? statsA.training_attendance_pct : -1
+          const trainingB = statsB ? statsB.training_attendance_pct : -1
+          compareValue = trainingA - trainingB
+          break
+        case 'match_attendance':
+          const matchA = statsA ? statsA.match_attendance_pct : -1
+          const matchB = statsB ? statsB.match_attendance_pct : -1
+          compareValue = matchA - matchB
+          break
+        case 'avg_periods':
+          const avgA = statsA ? statsA.avg_periods_played : -1
+          const avgB = statsB ? statsB.avg_periods_played : -1
+          compareValue = avgA - avgB
+          break
+      }
+
+      return sortDirection === 'asc' ? compareValue : -compareValue
+    })
+
+    return sorted
+  }
+
+  const SortIcon = ({ column }: { column: SortColumn }) => {
+    if (sortColumn !== column) {
+      return <ArrowUpDown className="h-4 w-4 ml-1 opacity-50" />
+    }
+    if (sortDirection === 'asc') {
+      return <ArrowUp className="h-4 w-4 ml-1" />
+    }
+    return <ArrowDown className="h-4 w-4 ml-1" />
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -263,16 +338,56 @@ export default function PlayersPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Nombre</TableHead>
-                    <TableHead>Número</TableHead>
-                    <TableHead className="text-center">% Asist. Entrenamientos</TableHead>
-                    <TableHead className="text-center">% Asist. Partidos</TableHead>
-                    <TableHead className="text-center">Prom. Períodos</TableHead>
+                    <TableHead 
+                      className="cursor-pointer hover:bg-muted/50 select-none"
+                      onClick={() => handleSort('name')}
+                    >
+                      <div className="flex items-center">
+                        Nombre
+                        <SortIcon column="name" />
+                      </div>
+                    </TableHead>
+                    <TableHead 
+                      className="cursor-pointer hover:bg-muted/50 select-none"
+                      onClick={() => handleSort('number')}
+                    >
+                      <div className="flex items-center">
+                        Número
+                        <SortIcon column="number" />
+                      </div>
+                    </TableHead>
+                    <TableHead 
+                      className="text-center cursor-pointer hover:bg-muted/50 select-none"
+                      onClick={() => handleSort('training_attendance')}
+                    >
+                      <div className="flex items-center justify-center">
+                        % Asist. Entrenamientos
+                        <SortIcon column="training_attendance" />
+                      </div>
+                    </TableHead>
+                    <TableHead 
+                      className="text-center cursor-pointer hover:bg-muted/50 select-none"
+                      onClick={() => handleSort('match_attendance')}
+                    >
+                      <div className="flex items-center justify-center">
+                        % Asist. Partidos
+                        <SortIcon column="match_attendance" />
+                      </div>
+                    </TableHead>
+                    <TableHead 
+                      className="text-center cursor-pointer hover:bg-muted/50 select-none"
+                      onClick={() => handleSort('avg_periods')}
+                    >
+                      <div className="flex items-center justify-center">
+                        Prom. Períodos
+                        <SortIcon column="avg_periods" />
+                      </div>
+                    </TableHead>
                     <TableHead className="text-right">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {players.map((player) => {
+                  {getSortedPlayers().map((player) => {
                     const stats = playerStats.find(s => s.player_id === player.id)
                     return (
                       <TableRow key={player.id}>
