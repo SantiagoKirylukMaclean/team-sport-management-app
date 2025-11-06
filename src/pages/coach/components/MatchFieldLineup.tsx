@@ -14,7 +14,7 @@ import {
   type MatchSubstitution,
 } from '@/services/matches'
 import { supabase } from '@/lib/supabase'
-import { Table, MapPin, AlertTriangle, ArrowLeftRight, X } from 'lucide-react'
+import { AlertTriangle, ArrowLeftRight, X } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
 type Props = {
@@ -22,7 +22,6 @@ type Props = {
   onOpenChange: (open: boolean) => void
   matchId: number
   teamId: number
-  onSwitchToTable?: () => void
 }
 
 type PlayerWithPeriod = Player & {
@@ -34,7 +33,7 @@ type FieldPosition = {
   y: number
 }
 
-export function MatchFieldLineup({ open, onOpenChange, matchId, teamId, onSwitchToTable }: Props) {
+export function MatchFieldLineup({ open, onOpenChange, matchId, teamId }: Props) {
   const { toast } = useToast()
   const [players, setPlayers] = useState<PlayerWithPeriod[]>([])
   const [selectedPeriod, setSelectedPeriod] = useState<1 | 2 | 3 | 4>(1)
@@ -511,27 +510,8 @@ export function MatchFieldLineup({ open, onOpenChange, matchId, teamId, onSwitch
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
+          <DialogTitle>
             <span>Alineación - Vista de Cancha</span>
-            {onSwitchToTable && (
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={onSwitchToTable}
-                >
-                  <Table className="h-4 w-4 mr-1" />
-                  Tabla
-                </Button>
-                <Button
-                  size="sm"
-                  variant="default"
-                >
-                  <MapPin className="h-4 w-4 mr-1" />
-                  Cancha
-                </Button>
-              </div>
-            )}
           </DialogTitle>
         </DialogHeader>
 
