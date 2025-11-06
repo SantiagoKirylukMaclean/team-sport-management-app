@@ -205,3 +205,86 @@ export async function removeMatchSubstitution(
     p_player_in: playerIn
   })
 }
+
+// ---- Quarter Results (Resultados por Cuarto) ----
+export type MatchQuarterResult = {
+  id: number
+  match_id: number
+  quarter: number
+  team_goals: number
+  opponent_goals: number
+  created_at: string
+  updated_at: string
+}
+
+export async function listMatchQuarterResults(matchId: number) {
+  return supabase
+    .from('match_quarter_results')
+    .select('id,match_id,quarter,team_goals,opponent_goals,created_at,updated_at')
+    .eq('match_id', matchId)
+    .order('quarter', { ascending: true })
+}
+
+export async function upsertMatchQuarterResult(
+  matchId: number,
+  quarter: number,
+  teamGoals: number,
+  opponentGoals: number
+) {
+  return supabase
+    .from('match_quarter_results')
+    .upsert(
+      { match_id: matchId, quarter, team_goals: teamGoals, opponent_goals: opponentGoals },
+      { onConflict: 'match_id,quarter' }
+    )
+    .select('id,match_id,quarter,team_goals,opponent_goals,created_at,updated_at')
+    .single()
+}
+
+// ---- Match Goals (Goles con goleador y asistidor) ----
+export type MatchGoal = {
+  id: number
+  match_id: number
+  quarter: number
+  scorer_id: number
+  assister_id: number | null
+  created_at: string
+}
+
+export async function listMatchGoals(matchId: number, quarter?: number) {
+  let query = supabase
+    .from('match_goals')
+    .select('id,match_id,quarter,scorer_id,assister_id,created_at')
+    .eq('match_id', matchId)
+  
+  if (quarter !== undefined) {
+    query = query.eq('quarter', quarter)
+  }
+  
+  return query.order('created_at', { ascending: true })
+}
+
+export async function addMatchGoal(
+  matchId: number,
+  quarter: number,
+  scorerId: number,
+  assisterId?: number | null
+) {
+  return supabase
+    .from('match_goals')
+    .insert({
+      match_id: matchId,
+      quarter,
+      scorer_id: scorerId,
+      assister_id: assisterId || null
+    })
+    .select('id,match_id,quarter,scorer_id,assister_id,created_at')
+    .single()
+}
+
+export async function deleteMatchGoal(goalId: number) {
+  return supabase
+    .from('match_goals')
+    .delete()
+    .eq('id', goalId)
+}

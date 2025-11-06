@@ -14,7 +14,8 @@ import { MatchFormDialog } from './components/MatchFormDialog'
 import { MatchLineupPanel } from './components/MatchLineupPanel'
 import { MatchCallUpDialog } from './components/MatchCallUpDialog'
 import { MatchDetailDialog } from './components/MatchDetailDialog'
-import { Trash2, Edit, Users, UserCheck, FileText } from 'lucide-react'
+import { MatchQuarterResultsDialog } from './components/MatchQuarterResultsDialog'
+import { Trash2, Edit, Users, UserCheck, FileText, Target } from 'lucide-react'
 
 export default function MatchesPage() {
   const { toast } = useToast()
@@ -26,10 +27,12 @@ export default function MatchesPage() {
   const [lineupOpen, setLineupOpen] = useState(false)
   const [callUpOpen, setCallUpOpen] = useState(false)
   const [detailOpen, setDetailOpen] = useState(false)
+  const [resultsOpen, setResultsOpen] = useState(false)
   const [editingMatch, setEditingMatch] = useState<Match | null>(null)
   const [lineupMatchId, setLineupMatchId] = useState<number | null>(null)
   const [callUpMatchId, setCallUpMatchId] = useState<number | null>(null)
   const [detailMatch, setDetailMatch] = useState<Match | null>(null)
+  const [resultsMatch, setResultsMatch] = useState<Match | null>(null)
 
   useEffect(() => {
     loadTeams()
@@ -109,6 +112,11 @@ export default function MatchesPage() {
     setDetailOpen(true)
   }
 
+  const handleResults = (match: Match) => {
+    setResultsMatch(match)
+    setResultsOpen(true)
+  }
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -171,6 +179,14 @@ export default function MatchesPage() {
                         title="Detalle"
                       >
                         <FileText className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleResults(m)}
+                        title="Resultados"
+                      >
+                        <Target className="h-4 w-4" />
                       </Button>
                       <Button
                         size="sm"
@@ -244,6 +260,14 @@ export default function MatchesPage() {
               open={detailOpen}
               onOpenChange={setDetailOpen}
               match={detailMatch}
+              teamId={selectedTeamId}
+            />
+          )}
+          {resultsMatch && (
+            <MatchQuarterResultsDialog
+              open={resultsOpen}
+              onOpenChange={setResultsOpen}
+              match={resultsMatch}
               teamId={selectedTeamId}
             />
           )}
