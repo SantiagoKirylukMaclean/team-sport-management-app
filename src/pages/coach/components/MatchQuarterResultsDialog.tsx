@@ -65,14 +65,17 @@ export function MatchQuarterResultsDialog({
   useEffect(() => {
     // Actualizar los valores cuando cambia el cuarto seleccionado
     const result = quarterResults.find((r) => r.quarter === selectedQuarter)
+    
+    // Calcular goles del equipo desde los goles registrados
+    const quarterGoalsCount = goals.filter((g) => g.quarter === selectedQuarter).length
+    setTeamGoals(quarterGoalsCount)
+    
     if (result) {
-      setTeamGoals(result.team_goals)
       setOpponentGoals(result.opponent_goals)
     } else {
-      setTeamGoals(0)
       setOpponentGoals(0)
     }
-  }, [selectedQuarter, quarterResults])
+  }, [selectedQuarter, quarterResults, goals])
 
   const loadData = async () => {
     setLoading(true)
@@ -249,8 +252,13 @@ export function MatchQuarterResultsDialog({
                     type="number"
                     min="0"
                     value={teamGoals}
-                    onChange={(e) => setTeamGoals(parseInt(e.target.value) || 0)}
+                    readOnly
+                    disabled
+                    className="bg-muted cursor-not-allowed"
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Calculado automáticamente desde los goleadores
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="opponent-goals">Goles de {match.opponent}</Label>
