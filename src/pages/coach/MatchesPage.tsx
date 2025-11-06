@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
 import { listTeams, type Team } from '@/services/teams'
-import { listMatches, deleteMatch, type Match } from '@/services/matches'
+import { listMatches, deleteMatch, type Match, listMatchQuarterResults } from '@/services/matches'
 import { MatchFormDialog } from './components/MatchFormDialog'
 import { MatchLineupPanel } from './components/MatchLineupPanel'
 import { MatchCallUpDialog } from './components/MatchCallUpDialog'
@@ -17,22 +17,28 @@ import { MatchDetailDialog } from './components/MatchDetailDialog'
 import { MatchQuarterResultsDialog } from './components/MatchQuarterResultsDialog'
 import { Trash2, Edit, Users, UserCheck, FileText, Target } from 'lucide-react'
 
+type MatchWithResult = Match & {
+  result?: 'win' | 'draw' | 'loss' | null
+  teamGoals?: number
+  opponentGoals?: number
+}
+
 export default function MatchesPage() {
   const { toast } = useToast()
   const [teams, setTeams] = useState<Team[]>([])
   const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null)
-  const [matches, setMatches] = useState<Match[]>([])
+  const [matches, setMatches] = useState<MatchWithResult[]>([])
   const [loading, setLoading] = useState(false)
   const [formOpen, setFormOpen] = useState(false)
   const [lineupOpen, setLineupOpen] = useState(false)
   const [callUpOpen, setCallUpOpen] = useState(false)
   const [detailOpen, setDetailOpen] = useState(false)
   const [resultsOpen, setResultsOpen] = useState(false)
-  const [editingMatch, setEditingMatch] = useState<Match | null>(null)
+  const [editingMatch, setEditingMatch] = useState<MatchWithResult | null>(null)
   const [lineupMatchId, setLineupMatchId] = useState<number | null>(null)
   const [callUpMatchId, setCallUpMatchId] = useState<number | null>(null)
-  const [detailMatch, setDetailMatch] = useState<Match | null>(null)
-  const [resultsMatch, setResultsMatch] = useState<Match | null>(null)
+  const [detailMatch, setDetailMatch] = useState<MatchWithResult | null>(null)
+  const [resultsMatch, setResultsMatch] = useState<MatchWithResult | null>(null)
 
   useEffect(() => {
     loadTeams()
@@ -63,8 +69,35 @@ export default function MatchesPage() {
     try {
       const { data, error } = await listMatches(selectedTeamId)
       if (error) throw error
+      
+      // Cargar resultados para cada partido
+      const matchesWithResults = await Promise.all(
+        (data || []).map(async (match) => {
+          const { data: quarters } = await listMatchQuarterResults(match.id)
+          
+          if (!quarters || quarters.length === 0) {
+            return { ...match, result: null, teamGoals: undefined, opponentGoals: undefined }
+          }
+          
+          // Calcular totales
+          const totalTeamGoals = quarters.reduce((sum, q) => sum + q.team_goals, 0)
+          const totalOpponentGoals = quarters.reduce((sum, q) => sum + q.opponent_goals, 0)
+          
+          let result: 'win' | 'draw' | 'loss' | null = null
+          if (totalTeamGoals > totalOpponentGoals) {
+            result = 'win'
+          } else if (totalTeamGoals === totalOpponentGoals) {
+            result = 'draw'
+          } else {
+            result = 'loss'
+          }
+          
+          return { ...match, result, teamGoals: totalTeamGoals, opponentGoals: totalOpponentGoals }
+        })
+      )
+      
       // Ordenar por fecha descendente (más reciente primero)
-      const sortedData = (data || []).sort((a, b) => {
+      const sortedData = matchesWithResults.sort((a, b) => {
         return new Date(b.match_date).getTime() - new Date(a.match_date).getTime()
       })
       setMatches(sortedData)
@@ -87,7 +120,7 @@ export default function MatchesPage() {
     }
   }
 
-  const handleEdit = (match: Match) => {
+  const handleEdit = (match: MatchWithResult) => {
     setEditingMatch(match)
     setFormOpen(true)
   }
@@ -107,14 +140,22 @@ export default function MatchesPage() {
     setCallUpOpen(true)
   }
 
-  const handleDetail = (match: Match) => {
+  const handleDetail = (match: MatchWithResult) => {
     setDetailMatch(match)
     setDetailOpen(true)
   }
 
-  const handleResults = (match: Match) => {
+  const handleResults = (match: MatchWithResult) => {
     setResultsMatch(match)
     setResultsOpen(true)
+  }
+  
+  const getRowClassName = (result: 'win' | 'draw' | 'loss' | null | undefined) => {
+    if (!result) return ''
+    if (result === 'win') return 'bg-green-500/20 hover:bg-green-500/30'
+    if (result === 'draw') return 'bg-white/5 hover:bg-white/10'
+    if (result === 'loss') return 'bg-red-500/20 hover:bg-red-500/30'
+    return ''
   }
 
   return (
@@ -159,16 +200,22 @@ export default function MatchesPage() {
                 <th className="text-left p-3">Fecha</th>
                 <th className="text-left p-3">Oponente</th>
                 <th className="text-left p-3">Lugar</th>
+                <th className="text-center p-3">Resultado</th>
                 <th className="text-left p-3">Notas</th>
                 <th className="text-right p-3">Acciones</th>
               </tr>
             </thead>
             <tbody>
               {matches.map((m) => (
-                <tr key={m.id} className="border-t">
+                <tr key={m.id} className={`border-t transition-colors ${getRowClassName(m.result)}`}>
                   <td className="p-3">{m.match_date}</td>
                   <td className="p-3">{m.opponent}</td>
                   <td className="p-3">{m.location || '-'}</td>
+                  <td className="p-3 text-center font-semibold">
+                    {m.teamGoals !== undefined && m.opponentGoals !== undefined
+                      ? `${m.teamGoals} - ${m.opponentGoals}`
+                      : '-'}
+                  </td>
                   <td className="p-3">{m.notes || '-'}</td>
                   <td className="p-3">
                     <div className="flex justify-end gap-2">
