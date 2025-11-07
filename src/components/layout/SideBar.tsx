@@ -1,8 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
-import { Trophy, Timer, Settings2, NotebookText, User, Menu, LogOut, LayoutDashboard, Shield, Users, UserCheck, ChevronDown, ChevronRight, Calendar, BarChart3 } from "lucide-react";
+import { Trophy, Timer, Settings2, NotebookText, User, Menu, LogOut, LayoutDashboard, Shield, Users, UserCheck, Calendar, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { useAuth } from "@/contexts/AuthContext";
-import { useState } from "react";
 
 const items = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -15,16 +14,9 @@ const items = [
   { to: "/notes", label: "Notes", icon: NotebookText },
 ];
 
-const coachItems = [
-  { to: "/coach/players", label: "Jugadores", icon: UserCheck },
-  { to: "/coach/trainings", label: "Entrenamientos", icon: Calendar },
-  { to: "/coach/matches", label: "Partidos", icon: Trophy },
-];
-
 export function Sidebar({ collapsed, onToggle }:{collapsed:boolean; onToggle:()=>void}) {
   const { pathname } = useLocation();
   const { signOut, role } = useAuth();
-  const [coachExpanded, setCoachExpanded] = useState(false);
   
   // Only show admin section for super_admin users
   const showAdminSection = role === 'super_admin';
@@ -57,45 +49,18 @@ export function Sidebar({ collapsed, onToggle }:{collapsed:boolean; onToggle:()=
           );
         })}
         
-        {/* Coach Dropdown - Visible for coach, admin, and super_admin users */}
+        {/* Coach Link - Visible for coach, admin, and super_admin users */}
         {showCoachSection && (
-          <div className="space-y-1">
-            <button
-              onClick={() => setCoachExpanded(!coachExpanded)}
-              className={cn(
-                "flex items-center gap-3 rounded-xl px-3 py-2 text-sm hover:bg-accent w-full text-left",
-                pathname.startsWith("/coach") ? "bg-accent" : "text-muted"
-              )}
-            >
-              <Users size={18}/>
-              {!collapsed && (
-                <>
-                  <span>Coach</span>
-                  <div className="ml-auto">
-                    {coachExpanded ? <ChevronDown size={16}/> : <ChevronRight size={16}/>}
-                  </div>
-                </>
-              )}
-            </button>
-            
-            {coachExpanded && !collapsed && (
-              <div className="ml-6 space-y-1">
-                {coachItems.map(({to,label,icon:Icon}) => {
-                  const active = pathname === to;
-                  return (
-                    <Link key={to} to={to}
-                      className={cn(
-                        "flex items-center gap-3 rounded-xl px-3 py-2 text-sm hover:bg-accent",
-                        active ? "bg-accent" : "text-muted"
-                      )}>
-                      <Icon size={16}/>
-                      <span>{label}</span>
-                    </Link>
-                  );
-                })}
-              </div>
+          <Link 
+            to="/coach"
+            className={cn(
+              "flex items-center gap-3 rounded-xl px-3 py-2 text-sm hover:bg-accent",
+              pathname.startsWith("/coach") ? "bg-accent" : "text-muted"
             )}
-          </div>
+          >
+            <Users size={18}/>
+            {!collapsed && <span>Coach</span>}
+          </Link>
         )}
 
         {/* Admin Link - Only visible for super_admin users */}

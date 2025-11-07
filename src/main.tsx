@@ -32,6 +32,7 @@ const InviteUserPage = React.lazy(() => import("@/pages/admin/InviteUserPage"));
 const InvitationManagementPage = React.lazy(() => import("@/pages/admin/InvitationManagementPage"));
 
 // Coach pages
+const CoachDashboard = React.lazy(() => import("@/pages/coach/CoachDashboard"));
 const PlayersPage = React.lazy(() => import("@/pages/coach/PlayersPage"));
 const TrainingsPage = React.lazy(() => import("@/pages/coach/TrainingsPage"));
 const MatchesPage = React.lazy(() => import("@/pages/coach/MatchesPage"));
@@ -83,7 +84,7 @@ function App() {
                 <CoachLayout />
               </CoachGuard>
             }>
-              <Route index element={<Navigate to="/coach/players" replace />} />
+              <Route index element={<CoachDashboard />} />
               <Route path="players" element={<PlayersPage />} />
               <Route path="trainings" element={<TrainingsPage />} />
               <Route path="matches" element={<MatchesPage />} />
