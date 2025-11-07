@@ -63,7 +63,7 @@ export function Sidebar({ collapsed, onToggle }:{collapsed:boolean; onToggle:()=
           </Link>
         )}
 
-        {/* Admin Link - Only visible for super_admin users */}
+        {/* Super Admin Link - Only visible for super_admin users */}
         {showAdminSection && (
           <Link 
             to="/admin"
@@ -73,7 +73,7 @@ export function Sidebar({ collapsed, onToggle }:{collapsed:boolean; onToggle:()=
             )}
           >
             <Shield size={18}/>
-            {!collapsed && <span>Admin</span>}
+            {!collapsed && <span>Super Admin</span>}
           </Link>
         )}
       </nav>

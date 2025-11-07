@@ -239,7 +239,7 @@ describe('Admin Routes Integration Tests', () => {
       await waitFor(() => {
         // Admin layout elements should be present
         expect(screen.getByText('Administration')).toBeInTheDocument()
-        expect(screen.getByText('Admin Panel')).toBeInTheDocument()
+        expect(screen.getByText('Super Admin Panel')).toBeInTheDocument()
         expect(screen.getByText('Back to App')).toBeInTheDocument()
         
         // Sports page content should be present

@@ -92,8 +92,6 @@ function App() {
 
             {/* Legacy admin routes - redirect to new structure */}
             <Route path="/admin/equipos" element={<Navigate to="/admin/teams" replace />} />
-            <Route path="/admin/jugadores" element={withShell(<Jugadores />)} />
-            <Route path="/admin/partidos" element={withShell(<Partidos />)} />
           </Routes>
         </ToastProvider>
       </AuthProvider>

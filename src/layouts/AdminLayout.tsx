@@ -7,7 +7,6 @@ const adminNavItems = [
   { to: "/admin/sports", label: "Sports", icon: Trophy },
   { to: "/admin/clubs", label: "Clubs", icon: Building },
   { to: "/admin/teams", label: "Teams", icon: Users },
-  { to: "/coach/players", label: "Players", icon: Users },
   { to: "/admin/invite-user", label: "Invite User", icon: UserPlus },
   { to: "/admin/invitations", label: "Invitations", icon: Mail },
 ];
@@ -31,7 +30,7 @@ export function AdminLayout() {
           >
             <Menu size={18}/>
           </button>
-          {!collapsed && <span className="text-sm font-medium">Admin Panel</span>}
+          {!collapsed && <span className="text-sm font-medium">Super Admin Panel</span>}
         </div>
 
         {/* Navigation */}
