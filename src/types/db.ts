@@ -58,6 +58,19 @@ export interface Team {
 }
 
 /**
+ * Player entity interface
+ * Represents the players table
+ */
+export interface Player {
+  id: number
+  team_id: number
+  full_name: string
+  jersey_number: number | null
+  user_id: string | null
+  created_at: string
+}
+
+/**
  * Database query result types for admin pages
  * These types represent the expected structure when fetching data with joins
  */
@@ -116,8 +129,9 @@ export interface AdminListItem {
 export interface PendingInvite {
   id: number
   email: string
-  role: 'coach' | 'admin'
+  role: 'coach' | 'admin' | 'player'
   team_ids: number[]
+  player_id?: number // For player invitations, links to specific player
   status: 'pending' | 'accepted' | 'canceled'
   created_by: string
   created_at: string
@@ -130,8 +144,9 @@ export interface PendingInvite {
 export interface InviteUserRequest {
   email: string
   display_name?: string
-  role: 'coach' | 'admin'
+  role: 'coach' | 'admin' | 'player'
   teamIds: number[]
+  playerId?: number // For player invitations
   redirectTo?: string
 }
 
@@ -150,8 +165,9 @@ export interface InviteUserResponse {
 export interface InviteFormData {
   email: string
   display_name: string
-  role: 'coach' | 'admin'
+  role: 'coach' | 'admin' | 'player'
   teamIds: number[]
+  playerId?: number // For player invitations
   redirectTo: string
 }
 

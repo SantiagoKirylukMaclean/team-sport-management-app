@@ -5,8 +5,9 @@ import { corsHeaders } from '../_shared/cors.ts'
 interface InviteUserRequest {
   email: string;
   display_name?: string;
-  role: 'coach' | 'admin';
+  role: 'coach' | 'admin' | 'player';
   teamIds: number[];
+  playerId?: number; // For player invitations
   redirectTo?: string;
 }
 
@@ -79,9 +80,9 @@ serve(async (req) => {
       .eq('id', user.id)
       .single()
 
-    if (profileError || !profile || profile.role !== 'SUPER_ADMIN') {
+    if (profileError || !profile || (profile.role !== 'super_admin' && profile.role !== 'admin')) {
       return new Response(
-        JSON.stringify({ ok: false, error: 'Insufficient permissions. SUPER_ADMIN role required.' }),
+        JSON.stringify({ ok: false, error: 'Insufficient permissions. Admin or Super Admin role required.' }),
         { 
           status: 403, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -107,14 +108,65 @@ serve(async (req) => {
     }
 
     // Validate role
-    if (!['coach', 'admin'].includes(body.role)) {
+    if (!['coach', 'admin', 'player'].includes(body.role)) {
       return new Response(
-        JSON.stringify({ ok: false, error: 'Invalid role. Must be "coach" or "admin"' }),
+        JSON.stringify({ ok: false, error: 'Invalid role. Must be "coach", "admin", or "player"' }),
         { 
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       )
+    }
+
+    // Validate player-specific requirements
+    if (body.role === 'player') {
+      if (!body.playerId) {
+        return new Response(
+          JSON.stringify({ ok: false, error: 'playerId is required for player invitations' }),
+          { 
+            status: 400, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        )
+      }
+
+      // Verify player exists and is not already linked
+      const { data: player, error: playerError } = await supabaseAdmin
+        .from('players')
+        .select('id, user_id, team_id')
+        .eq('id', body.playerId)
+        .single()
+
+      if (playerError || !player) {
+        return new Response(
+          JSON.stringify({ ok: false, error: 'Player not found' }),
+          { 
+            status: 404, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        )
+      }
+
+      if (player.user_id) {
+        return new Response(
+          JSON.stringify({ ok: false, error: 'This player already has a linked account' }),
+          { 
+            status: 400, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        )
+      }
+
+      // For players, teamIds should match the player's team
+      if (body.teamIds.length !== 1 || body.teamIds[0] !== player.team_id) {
+        return new Response(
+          JSON.stringify({ ok: false, error: 'Player must be assigned to their team only' }),
+          { 
+            status: 400, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        )
+      }
     }
 
     // Validate email format
@@ -155,14 +207,18 @@ serve(async (req) => {
       )
     }
 
-    // Check if user already exists
-    const { data: existingUser, error: userLookupError } = await supabaseAdmin.auth.admin.getUserByEmail(body.email)
+    // Check if user already exists by querying profiles table
+    const { data: existingProfile } = await supabaseAdmin
+      .from('profiles')
+      .select('id')
+      .eq('email', body.email.toLowerCase())
+      .single()
     
     let userId: string
 
-    if (existingUser?.user) {
+    if (existingProfile) {
       // User exists, use existing user ID
-      userId = existingUser.user.id
+      userId = existingProfile.id
     } else {
       // Create new user
       const { data: newUser, error: createUserError } = await supabaseAdmin.auth.admin.createUser({
@@ -190,7 +246,9 @@ serve(async (req) => {
     }
 
     // Generate recovery link
-    const redirectTo = body.redirectTo || `${Deno.env.get('SUPABASE_URL')?.replace('/supabase', '')}/reset-password`
+    // Default to localhost:5173 for development, or use provided redirectTo
+    const defaultRedirect = Deno.env.get('REDIRECT_URL') || 'http://localhost:5173'
+    const redirectTo = body.redirectTo || defaultRedirect
     
     const { data: recoveryData, error: recoveryError } = await supabaseAdmin.auth.admin.generateLink({
       type: 'recovery',
@@ -214,16 +272,23 @@ serve(async (req) => {
     }
 
     // Upsert pending invitation
+    const inviteData: any = {
+      email: body.email.toLowerCase(),
+      display_name: body.display_name,
+      role: body.role,
+      team_ids: body.teamIds,
+      status: 'pending',
+      created_by: user.id
+    }
+
+    // Add player_id for player invitations
+    if (body.role === 'player' && body.playerId) {
+      inviteData.player_id = body.playerId
+    }
+
     const { error: inviteError } = await supabaseAdmin
       .from('pending_invites')
-      .upsert({
-        email: body.email.toLowerCase(),
-        display_name: body.display_name,
-        role: body.role,
-        team_ids: body.teamIds,
-        status: 'pending',
-        created_by: user.id
-      }, {
+      .upsert(inviteData, {
         onConflict: 'email'
       })
 

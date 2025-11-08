@@ -151,7 +151,7 @@ export function InvitationResult({ actionLink, error, onClose, onRetry }: Invita
                 <Input
                   value={actionLink}
                   readOnly
-                  className="font-mono text-xs bg-white border-green-200 focus:border-green-300 select-all"
+                  className="font-mono text-xs bg-white text-gray-900 border-green-200 focus:border-green-300 select-all"
                   onClick={(e) => (e.target as HTMLInputElement).select()}
                 />
                 <Button

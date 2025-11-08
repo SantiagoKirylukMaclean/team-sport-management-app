@@ -7,7 +7,8 @@ const adminNavItems = [
   { to: "/admin/sports", label: "Sports", icon: Trophy },
   { to: "/admin/clubs", label: "Clubs", icon: Building },
   { to: "/admin/teams", label: "Teams", icon: Users },
-  { to: "/admin/invite-user", label: "Invite User", icon: UserPlus },
+  { to: "/admin/invite-user", label: "Invite Coach/Admin", icon: UserPlus },
+  { to: "/admin/invite-player", label: "Invite Player", icon: Users },
   { to: "/admin/invitations", label: "Invitations", icon: Mail },
 ];
 
