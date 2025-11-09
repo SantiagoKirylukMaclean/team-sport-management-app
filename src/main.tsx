@@ -19,6 +19,7 @@ const Notes = React.lazy(() => import("@/pages/Notes"));
 const Profile = React.lazy(() => import("@/pages/Profile"));
 const Login = React.lazy(() => import("@/pages/Login"));
 const Signup = React.lazy(() => import("@/pages/Signup"));
+const SetPassword = React.lazy(() => import("@/pages/SetPassword"));
 const Equipos = React.lazy(() => import("@/pages/Equipos"));
 const Jugadores = React.lazy(() => import("@/pages/Jugadores"));
 const Partidos = React.lazy(() => import("@/pages/Partidos"));
@@ -52,6 +53,7 @@ function App() {
             {/* Public routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/set-password" element={<SetPassword />} />
 
             {/* Protected main app routes */}
             <Route path="/" element={withShell(<Dashboard />)} />

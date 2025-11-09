@@ -109,7 +109,7 @@ export default function InviteUserPage() {
         display_name: data.display_name?.trim() || undefined,
         role: data.role,
         teamIds: data.teamIds,
-        redirectTo: data.redirectTo?.trim() || undefined,
+        redirectTo: data.redirectTo?.trim() || `${window.location.origin}/set-password`,
       }
 
       const result = await createInvitation(request)

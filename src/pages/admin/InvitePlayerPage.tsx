@@ -86,7 +86,7 @@ export default function InvitePlayerPage() {
         role: 'player',
         teamIds: [player.team_id],
         playerId: data.playerId,
-        redirectTo: data.redirectTo?.trim() || undefined,
+        redirectTo: data.redirectTo?.trim() || `${window.location.origin}/set-password`,
       }
 
       const result = await createInvitation(request)
