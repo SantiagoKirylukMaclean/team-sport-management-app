@@ -1,19 +1,19 @@
-import { MatchFieldLineup } from './MatchFieldLineup'
+import { MatchLineupAndResults } from './MatchLineupAndResults'
+import { type Match } from '@/services/matches'
 
 type Props = {
   open: boolean
   onOpenChange: (open: boolean) => void
-  matchId: number
+  match: Match
   teamId: number
 }
 
-export function MatchLineupPanel({ open, onOpenChange, matchId, teamId }: Props) {
-  // Siempre mostrar la vista de cancha
+export function MatchLineupPanel({ open, onOpenChange, match, teamId }: Props) {
   return (
-    <MatchFieldLineup
+    <MatchLineupAndResults
       open={open}
       onOpenChange={onOpenChange}
-      matchId={matchId}
+      match={match}
       teamId={teamId}
     />
   )

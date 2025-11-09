@@ -1,6 +1,15 @@
 import { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
 import { listPlayers, type Player } from '@/services/players'
 import {
@@ -12,15 +21,23 @@ import {
   applyMatchSubstitution,
   removeMatchSubstitution,
   type MatchSubstitution,
+  listMatchQuarterResults,
+  upsertMatchQuarterResult,
+  listMatchGoals,
+  addMatchGoal,
+  deleteMatchGoal,
+  type Match,
+  type MatchQuarterResult,
+  type MatchGoal,
 } from '@/services/matches'
 import { supabase } from '@/lib/supabase'
-import { AlertTriangle, ArrowLeftRight, X } from 'lucide-react'
+import { AlertTriangle, ArrowLeftRight, X, Plus, Trash2 } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
 type Props = {
   open: boolean
   onOpenChange: (open: boolean) => void
-  matchId: number
+  match: Match
   teamId: number
 }
 
@@ -33,7 +50,7 @@ type FieldPosition = {
   y: number
 }
 
-export function MatchFieldLineup({ open, onOpenChange, matchId, teamId }: Props) {
+export function MatchLineupAndResults({ open, onOpenChange, match, teamId }: Props) {
   const { toast } = useToast()
   const [players, setPlayers] = useState<PlayerWithPeriod[]>([])
   const [selectedPeriod, setSelectedPeriod] = useState<1 | 2 | 3 | 4>(1)
@@ -45,31 +62,45 @@ export function MatchFieldLineup({ open, onOpenChange, matchId, teamId }: Props)
   const [substitutions, setSubstitutions] = useState<MatchSubstitution[]>([])
   const [substitutionMode, setSubstitutionMode] = useState(false)
   const [selectedPlayerForSub, setSelectedPlayerForSub] = useState<number | null>(null)
-
-  // Debug: monitorear cambios en selectedPlayerForSub
-  useEffect(() => {
-    console.log('🎯 Estado selectedPlayerForSub cambió a:', selectedPlayerForSub)
-  }, [selectedPlayerForSub])
+  
+  // Estados para resultados
+  const [quarterResults, setQuarterResults] = useState<MatchQuarterResult[]>([])
+  const [goals, setGoals] = useState<MatchGoal[]>([])
+  const [teamGoals, setTeamGoals] = useState<number>(0)
+  const [opponentGoals, setOpponentGoals] = useState<number>(0)
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     if (open) {
       loadData()
     }
-  }, [open, matchId, teamId])
+  }, [open, match.id, teamId])
 
   useEffect(() => {
     if (players.length > 0) {
       updatePlayerPositions()
       loadSubstitutions()
     }
-    // Reset selección al cambiar de período
     setSelectedPlayerForSub(null)
     setSubstitutionMode(false)
   }, [selectedPeriod])
 
+  useEffect(() => {
+    // Actualizar los valores cuando cambia el cuarto seleccionado
+    const result = quarterResults.find((r) => r.quarter === selectedPeriod)
+    const quarterGoalsCount = goals.filter((g) => g.quarter === selectedPeriod).length
+    setTeamGoals(quarterGoalsCount)
+    
+    if (result) {
+      setOpponentGoals(result.opponent_goals)
+    } else {
+      setOpponentGoals(0)
+    }
+  }, [selectedPeriod, quarterResults, goals])
+
   const loadSubstitutions = async () => {
     try {
-      const { data, error } = await listMatchSubstitutions(matchId, selectedPeriod)
+      const { data, error } = await listMatchSubstitutions(match.id, selectedPeriod)
       if (error) throw error
       setSubstitutions(data || [])
     } catch (err: any) {
@@ -80,28 +111,31 @@ export function MatchFieldLineup({ open, onOpenChange, matchId, teamId }: Props)
   const loadData = async () => {
     setLoading(true)
     try {
-      const [playersRes, periodsRes, callUpsRes] = await Promise.all([
+      const [playersRes, periodsRes, callUpsRes, resultsRes, goalsRes] = await Promise.all([
         listPlayers(teamId),
-        listMatchPeriods(matchId),
-        listMatchCallUps(matchId),
+        listMatchPeriods(match.id),
+        listMatchCallUps(match.id),
+        listMatchQuarterResults(match.id),
+        listMatchGoals(match.id),
       ])
 
       if (playersRes.error) throw playersRes.error
       if (periodsRes.error) throw periodsRes.error
       if (callUpsRes.error) throw callUpsRes.error
+      if (resultsRes.error) throw resultsRes.error
+      if (goalsRes.error) throw goalsRes.error
 
       const playersList = playersRes.data || []
       const periodsData = periodsRes.data || []
       const callUpsData = callUpsRes.data || []
 
-      // Guardar conteo de convocados
       setCalledUpCount(callUpsData.length)
+      setQuarterResults(resultsRes.data || [])
+      setGoals(goalsRes.data || [])
 
-      // Filtrar solo jugadores convocados
       const calledUpPlayerIds = new Set(callUpsData.map(c => c.player_id))
       const calledUpPlayers = playersList.filter((p: Player) => calledUpPlayerIds.has(p.id))
 
-      // Crear mapa de todos los períodos por jugador
       const allPeriodsMap = new Map<number, Record<number, PeriodFraction>>()
       periodsData.forEach((pd: any) => {
         if (!allPeriodsMap.has(pd.player_id)) {
@@ -120,45 +154,31 @@ export function MatchFieldLineup({ open, onOpenChange, matchId, teamId }: Props)
 
       setPlayers(mapped)
       
-      // Debug: ver qué jugadores tenemos
-      console.log('Jugadores convocados:', mapped.length)
-      console.log('Jugadores:', mapped)
-      
-      // Cargar cambios del período actual
-      const { data: subsData } = await listMatchSubstitutions(matchId, selectedPeriod)
+      const { data: subsData } = await listMatchSubstitutions(match.id, selectedPeriod)
       const currentSubs = subsData || []
       
-      // Crear sets de jugadores involucrados en cambios
       const playersOut = new Set(currentSubs.map(s => s.player_out))
       const playersIn = new Set(currentSubs.map(s => s.player_in))
       
-      // Actualizar posiciones basado en el período actual y cambios
       const newField = new Map<number, FieldPosition>()
       const newBench = new Set<number>()
       
       mapped.forEach((player) => {
-        // Si tiene FULL y no está en un cambio como "sale", va al campo
         if (player.currentPeriod === 'FULL' && !playersOut.has(player.id)) {
           const existingCount = newField.size
           newField.set(player.id, getDefaultPosition(existingCount))
         }
-        // Si tiene HALF y es el que "entra", va al campo
         else if (player.currentPeriod === 'HALF' && playersIn.has(player.id)) {
           const existingCount = newField.size
           newField.set(player.id, getDefaultPosition(existingCount))
         }
-        // Si tiene HALF y es el que "sale", va al banco
         else if (player.currentPeriod === 'HALF' && playersOut.has(player.id)) {
           newBench.add(player.id)
         }
-        // Si no tiene período registrado, va al banco (suplente sin minutos)
         else if (!player.currentPeriod) {
           newBench.add(player.id)
         }
       })
-      
-      console.log('Campo:', newField.size, 'Banco:', newBench.size, 'Disponibles:', mapped.length - newField.size - newBench.size)
-      console.log('Cambios:', currentSubs.length)
       
       setFieldPlayers(newField)
       setBenchPlayers(newBench)
@@ -174,12 +194,11 @@ export function MatchFieldLineup({ open, onOpenChange, matchId, teamId }: Props)
   }
 
   const updatePlayerPositions = async () => {
-    // Recargar datos para el nuevo período
     try {
       const [playersRes, periodsRes, callUpsRes] = await Promise.all([
         listPlayers(teamId),
-        listMatchPeriods(matchId),
-        listMatchCallUps(matchId),
+        listMatchPeriods(match.id),
+        listMatchCallUps(match.id),
       ])
 
       if (playersRes.error) throw playersRes.error
@@ -190,7 +209,6 @@ export function MatchFieldLineup({ open, onOpenChange, matchId, teamId }: Props)
       const periodsData = periodsRes.data || []
       const callUpsData = callUpsRes.data || []
 
-      // Filtrar solo jugadores convocados
       const calledUpPlayerIds = new Set(callUpsData.map(c => c.player_id))
       const calledUpPlayers = playersList.filter((p: Player) => calledUpPlayerIds.has(p.id))
 
@@ -212,11 +230,9 @@ export function MatchFieldLineup({ open, onOpenChange, matchId, teamId }: Props)
 
       setPlayers(mapped)
       
-      // Cargar cambios del período actual
-      const { data: subsData } = await listMatchSubstitutions(matchId, selectedPeriod)
+      const { data: subsData } = await listMatchSubstitutions(match.id, selectedPeriod)
       const currentSubs = subsData || []
       
-      // Crear sets de jugadores involucrados en cambios
       const playersOut = new Set(currentSubs.map(s => s.player_out))
       const playersIn = new Set(currentSubs.map(s => s.player_in))
       
@@ -224,17 +240,14 @@ export function MatchFieldLineup({ open, onOpenChange, matchId, teamId }: Props)
       const newBench = new Set<number>()
       
       mapped.forEach((player) => {
-        // Si tiene FULL y no está en un cambio como "sale", va al campo
         if (player.currentPeriod === 'FULL' && !playersOut.has(player.id)) {
           const existingCount = newField.size
           newField.set(player.id, getDefaultPosition(existingCount))
         }
-        // Si tiene HALF y es el que "entra", va al campo
         else if (player.currentPeriod === 'HALF' && playersIn.has(player.id)) {
           const existingCount = newField.size
           newField.set(player.id, getDefaultPosition(existingCount))
         }
-        // Todos los demás van al banco
         else {
           newBench.add(player.id)
         }
@@ -252,15 +265,9 @@ export function MatchFieldLineup({ open, onOpenChange, matchId, teamId }: Props)
   }
 
   const getDefaultPosition = (index: number): FieldPosition => {
-    // Formación 3-2-1 por defecto
     const formations = [
-      { x: 50, y: 85 }, // Portero
-      { x: 25, y: 65 }, // Defensa izq
-      { x: 50, y: 65 }, // Defensa centro
-      { x: 75, y: 65 }, // Defensa der
-      { x: 35, y: 40 }, // Medio izq
-      { x: 65, y: 40 }, // Medio der
-      { x: 50, y: 20 }, // Delantero
+      { x: 50, y: 85 }, { x: 25, y: 65 }, { x: 50, y: 65 }, { x: 75, y: 65 },
+      { x: 35, y: 40 }, { x: 65, y: 40 }, { x: 50, y: 20 },
     ]
     return formations[index % formations.length] || { x: 50, y: 50 }
   }
@@ -277,7 +284,6 @@ export function MatchFieldLineup({ open, onOpenChange, matchId, teamId }: Props)
     e.preventDefault()
     if (!draggedPlayer) return
 
-    // Validar mínimo 7 jugadores convocados
     if (calledUpCount < 7) {
       toast({
         variant: 'destructive',
@@ -291,7 +297,6 @@ export function MatchFieldLineup({ open, onOpenChange, matchId, teamId }: Props)
     const x = ((e.clientX - rect.left) / rect.width) * 100
     const y = ((e.clientY - rect.top) / rect.height) * 100
 
-    // Verificar límite de 7 jugadores en campo
     if (!fieldPlayers.has(draggedPlayer) && fieldPlayers.size >= 7) {
       toast({
         title: 'Límite alcanzado',
@@ -301,17 +306,14 @@ export function MatchFieldLineup({ open, onOpenChange, matchId, teamId }: Props)
       return
     }
 
-    // Mover jugador al campo
     const newField = new Map(fieldPlayers)
     newField.set(draggedPlayer, { x, y })
     setFieldPlayers(newField)
 
-    // Remover del banco si estaba ahí
     const newBench = new Set(benchPlayers)
     newBench.delete(draggedPlayer)
     setBenchPlayers(newBench)
 
-    // Actualizar período a FULL solo si no está involucrado en un cambio
     const isInSubstitution = substitutions.some(
       sub => sub.player_out === draggedPlayer || sub.player_in === draggedPlayer
     )
@@ -324,7 +326,6 @@ export function MatchFieldLineup({ open, onOpenChange, matchId, teamId }: Props)
     e.preventDefault()
     if (!draggedPlayer) return
 
-    // Validar mínimo 7 jugadores convocados
     if (calledUpCount < 7) {
       toast({
         variant: 'destructive',
@@ -334,39 +335,28 @@ export function MatchFieldLineup({ open, onOpenChange, matchId, teamId }: Props)
       return
     }
 
-    console.log('🔄 Moviendo jugador al banco:', draggedPlayer)
-
     try {
-      // Eliminar el registro del período en la base de datos
       const { error } = await supabase
         .from('match_player_periods')
         .delete()
-        .match({ match_id: matchId, player_id: draggedPlayer, period: selectedPeriod })
+        .match({ match_id: match.id, player_id: draggedPlayer, period: selectedPeriod })
 
       if (error) throw error
 
-      console.log('✅ Período eliminado de la base de datos')
-
-      // Actualizar estado local
       const newBench = new Set(benchPlayers)
       newBench.add(draggedPlayer)
       setBenchPlayers(newBench)
 
-      // Remover del campo
       const newField = new Map(fieldPlayers)
       newField.delete(draggedPlayer)
       setFieldPlayers(newField)
 
-      // Actualizar el estado del jugador
       setPlayers((prev) =>
         prev.map((p) =>
           p.id === draggedPlayer ? { ...p, currentPeriod: null } : p
         )
       )
-
-      console.log('✅ Estado actualizado')
     } catch (err: any) {
-      console.error('❌ Error al mover jugador al banco:', err)
       toast({
         title: 'Error',
         description: err.message || 'Error al actualizar jugador',
@@ -377,7 +367,7 @@ export function MatchFieldLineup({ open, onOpenChange, matchId, teamId }: Props)
 
   const updatePlayerPeriod = async (playerId: number, fraction: PeriodFraction) => {
     try {
-      const { error } = await upsertMatchPeriod(matchId, playerId, selectedPeriod, fraction)
+      const { error } = await upsertMatchPeriod(match.id, playerId, selectedPeriod, fraction)
       if (error) throw error
 
       setPlayers((prev) =>
@@ -401,42 +391,22 @@ export function MatchFieldLineup({ open, onOpenChange, matchId, teamId }: Props)
   const getPlayerById = (id: number) => players.find((p) => p.id === id)
 
   const handlePlayerClickForSubstitution = async (playerId: number) => {
-    console.log('=== CLICK EN JUGADOR ===')
-    console.log('Player ID:', playerId)
-    console.log('Modo cambio:', substitutionMode)
-    console.log('Jugador ya seleccionado:', selectedPlayerForSub)
-    console.log('Campo:', Array.from(fieldPlayers.keys()))
-    console.log('Banco:', Array.from(benchPlayers))
-    
-    if (!substitutionMode) {
-      console.log('❌ Modo cambio no está activo')
-      return
-    }
+    if (!substitutionMode) return
 
-    // Si no hay jugador seleccionado, seleccionar este
     if (!selectedPlayerForSub) {
-      console.log('✅ Seleccionando primer jugador:', playerId)
       setSelectedPlayerForSub(playerId)
       return
     }
 
-    // Si es el mismo jugador, deseleccionar
     if (selectedPlayerForSub === playerId) {
-      console.log('🔄 Deseleccionando jugador:', playerId)
       setSelectedPlayerForSub(null)
       return
     }
 
-    console.log('🔍 Validando cambio...')
-    console.log('Jugador 1 (seleccionado):', selectedPlayerForSub, 'en campo?', fieldPlayers.has(selectedPlayerForSub))
-    console.log('Jugador 2 (nuevo click):', playerId, 'en campo?', fieldPlayers.has(playerId))
-
-    // Validar que uno esté en campo y otro en banco
     const player1InField = fieldPlayers.has(selectedPlayerForSub)
     const player2InField = fieldPlayers.has(playerId)
 
     if (player1InField === player2InField) {
-      console.log('❌ Cambio inválido: ambos en', player1InField ? 'campo' : 'banco')
       toast({
         title: 'Cambio inválido',
         description: 'Debes seleccionar un jugador del campo y uno del banco',
@@ -446,36 +416,22 @@ export function MatchFieldLineup({ open, onOpenChange, matchId, teamId }: Props)
       return
     }
 
-    // Determinar quién sale y quién entra
     const playerOut = player1InField ? selectedPlayerForSub : playerId
     const playerIn = player1InField ? playerId : selectedPlayerForSub
 
-    console.log('✅ Cambio válido!')
-    console.log('Sale del campo:', playerOut)
-    console.log('Entra al campo:', playerIn)
-
     try {
-      console.log('📡 Aplicando cambio en servidor...')
-      const { error } = await applyMatchSubstitution(matchId, selectedPeriod, playerOut, playerIn)
-      if (error) {
-        console.error('❌ Error del servidor:', error)
-        throw error
-      }
+      const { error } = await applyMatchSubstitution(match.id, selectedPeriod, playerOut, playerIn)
+      if (error) throw error
 
-      console.log('✅ Cambio aplicado exitosamente')
       toast({
         title: 'Cambio aplicado',
         description: 'Ambos jugadores tienen HALF en este cuarto',
       })
 
-      // Recargar datos
-      console.log('🔄 Recargando datos...')
       await loadData()
       await loadSubstitutions()
       setSelectedPlayerForSub(null)
-      console.log('✅ Datos recargados')
     } catch (err: any) {
-      console.error('❌ Error al aplicar cambio:', err)
       toast({
         title: 'Error',
         description: err.message || 'Error al aplicar cambio',
@@ -486,7 +442,7 @@ export function MatchFieldLineup({ open, onOpenChange, matchId, teamId }: Props)
 
   const handleRemoveSubstitution = async (sub: MatchSubstitution) => {
     try {
-      const { error } = await removeMatchSubstitution(matchId, sub.period, sub.player_out, sub.player_in)
+      const { error } = await removeMatchSubstitution(match.id, sub.period, sub.player_out, sub.player_in)
       if (error) throw error
 
       toast({
@@ -494,7 +450,6 @@ export function MatchFieldLineup({ open, onOpenChange, matchId, teamId }: Props)
         description: 'Se restauró el estado anterior',
       })
 
-      // Recargar datos
       await loadData()
       await loadSubstitutions()
     } catch (err: any) {
@@ -506,141 +461,218 @@ export function MatchFieldLineup({ open, onOpenChange, matchId, teamId }: Props)
     }
   }
 
+  // Funciones para resultados
+  const handleSaveQuarterResult = async () => {
+    setSaving(true)
+    try {
+      const { error } = await upsertMatchQuarterResult(
+        match.id,
+        selectedPeriod,
+        teamGoals,
+        opponentGoals
+      )
+
+      if (error) throw error
+
+      toast({
+        title: 'Guardado',
+        description: 'Resultado del cuarto guardado correctamente',
+      })
+
+      await loadData()
+    } catch (err: any) {
+      toast({
+        title: 'Error',
+        description: err.message || 'Error al guardar resultado',
+        variant: 'destructive',
+      })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleAddGoal = async (scorerId: number, assisterId?: number) => {
+    try {
+      const { error } = await addMatchGoal(
+        match.id,
+        selectedPeriod,
+        scorerId,
+        assisterId
+      )
+
+      if (error) throw error
+
+      toast({
+        title: 'Gol agregado',
+        description: 'Gol registrado correctamente',
+      })
+
+      await loadData()
+    } catch (err: any) {
+      toast({
+        title: 'Error',
+        description: err.message || 'Error al agregar gol',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  const handleDeleteGoal = async (goalId: number) => {
+    try {
+      const { error } = await deleteMatchGoal(goalId)
+
+      if (error) throw error
+
+      toast({
+        title: 'Gol eliminado',
+        description: 'Gol eliminado correctamente',
+      })
+
+      await loadData()
+    } catch (err: any) {
+      toast({
+        title: 'Error',
+        description: err.message || 'Error al eliminar gol',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  const getPlayerName = (playerId: number) => {
+    const player = players.find((p) => p.id === playerId)
+    return player ? player.full_name : 'Desconocido'
+  }
+
+  const calledUpPlayers = players
+  const quarterGoals = goals.filter((g) => g.quarter === selectedPeriod)
+
+  const getTotalScore = () => {
+    const teamTotal = quarterResults.reduce((sum, r) => sum + r.team_goals, 0)
+    const opponentTotal = quarterResults.reduce((sum, r) => sum + r.opponent_goals, 0)
+    return { teamTotal, opponentTotal }
+  }
+
+  const { teamTotal, opponentTotal } = getTotalScore()
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[85vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle>
-            <span>Alineación - Vista de Cancha</span>
-          </DialogTitle>
+          <DialogTitle>Formación y Resultado - {match.opponent}</DialogTitle>
         </DialogHeader>
 
         {loading ? (
           <div className="text-center py-8">Cargando...</div>
         ) : (
-          <div className="space-y-3 overflow-y-auto flex-1">
-            {/* Alerta de convocatoria incompleta */}
-            {calledUpCount < 7 && (
-              <Alert variant="destructive">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertDescription>
-                  <div className="font-semibold mb-1">
-                    Convocatoria incompleta
-                  </div>
-                  <div>
-                    Debes convocar al menos 7 jugadores para poder asignar posiciones.
-                    Actualmente tienes {calledUpCount} jugador(es) convocado(s).
-                  </div>
-                </AlertDescription>
-              </Alert>
-            )}
-
-            {/* Selector de período y modo cambio */}
-            <div className="flex gap-2 justify-between items-center">
-              <div className="flex gap-2">
-                {([1, 2, 3, 4] as const).map((period) => (
-                  <Button
-                    key={period}
-                    variant={selectedPeriod === period ? 'default' : 'outline'}
-                    onClick={() => setSelectedPeriod(period)}
-                  >
-                    Q{period}
-                  </Button>
-                ))}
-              </div>
-              <Button
-                variant={substitutionMode ? 'default' : 'outline'}
-                onClick={() => {
-                  console.log('Toggle modo cambio. Actual:', substitutionMode, 'Nuevo:', !substitutionMode)
-                  console.log('Jugadores en campo:', fieldPlayers.size, 'Convocados:', calledUpCount)
-                  setSubstitutionMode(!substitutionMode)
-                  setSelectedPlayerForSub(null)
-                }}
-                disabled={calledUpCount < 7 || fieldPlayers.size < 7}
-              >
-                <ArrowLeftRight className="h-4 w-4 mr-1" />
-                {substitutionMode ? 'Cancelar Cambio' : 'Hacer Cambio'}
-              </Button>
-            </div>
-
-            {/* Modo cambio activo */}
-            {substitutionMode && (
-              <Alert>
-                <ArrowLeftRight className="h-4 w-4" />
-                <AlertDescription>
-                  <div className="font-semibold mb-1">Modo Cambio Activo</div>
-                  <div className="text-sm">
-                    {selectedPlayerForSub 
-                      ? 'Selecciona el segundo jugador para completar el cambio'
-                      : 'Selecciona un jugador del campo y uno del banco para hacer un cambio'}
-                  </div>
-                </AlertDescription>
-              </Alert>
-            )}
-
-            {/* Cambios registrados */}
-            {substitutions.length > 0 && (
-              <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
-                  <ArrowLeftRight className="h-4 w-4" />
-                  Cambios en Q{selectedPeriod} ({substitutions.length})
-                </h4>
-                <div className="space-y-2">
-                  {substitutions.map((sub) => {
-                    const playerOut = getPlayerById(sub.player_out)
-                    const playerIn = getPlayerById(sub.player_in)
-                    return (
-                      <div 
-                        key={sub.id} 
-                        className="group relative flex items-center justify-between gap-3 bg-white dark:bg-gray-800 rounded p-3 text-sm hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer border-2 border-transparent hover:border-red-300 transition-all"
-                        onClick={() => handleRemoveSubstitution(sub)}
-                      >
-                        <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <span className="text-red-600 dark:text-red-400 font-medium">
-                            ↓ {playerOut?.jersey_number ? `#${playerOut.jersey_number}` : ''} {playerOut?.full_name}
-                          </span>
-                          <ArrowLeftRight className="h-4 w-4 text-gray-400 shrink-0" />
-                          <span className="text-green-600 dark:text-green-400 font-medium">
-                            ↑ {playerIn?.jersey_number ? `#${playerIn.jersey_number}` : ''} {playerIn?.full_name}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          <span className="text-xs text-gray-500 group-hover:text-red-600 font-medium">
-                            Click para eliminar
-                          </span>
-                          <X className="h-5 w-5 text-gray-400 group-hover:text-red-600" />
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
-
+          <div className="grid grid-cols-2 gap-4 overflow-y-auto flex-1">
+            {/* COLUMNA IZQUIERDA: FORMACIÓN */}
             <div className="space-y-3">
+              <h2 className="font-semibold text-lg">Formación</h2>
+              
+              {calledUpCount < 7 && (
+                <Alert variant="destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>
+                    <div className="font-semibold mb-1">Convocatoria incompleta</div>
+                    <div>
+                      Debes convocar al menos 7 jugadores. Actualmente: {calledUpCount}
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {/* Selector de período y modo cambio */}
+              <div className="flex gap-2 justify-between items-center">
+                <div className="flex gap-2">
+                  {([1, 2, 3, 4] as const).map((period) => (
+                    <Button
+                      key={period}
+                      variant={selectedPeriod === period ? 'default' : 'outline'}
+                      onClick={() => setSelectedPeriod(period)}
+                      size="sm"
+                    >
+                      Q{period}
+                    </Button>
+                  ))}
+                </div>
+                <Button
+                  variant={substitutionMode ? 'default' : 'outline'}
+                  onClick={() => {
+                    setSubstitutionMode(!substitutionMode)
+                    setSelectedPlayerForSub(null)
+                  }}
+                  disabled={calledUpCount < 7 || fieldPlayers.size < 7}
+                  size="sm"
+                >
+                  <ArrowLeftRight className="h-4 w-4 mr-1" />
+                  {substitutionMode ? 'Cancelar' : 'Cambio'}
+                </Button>
+              </div>
+
+              {substitutionMode && (
+                <Alert>
+                  <ArrowLeftRight className="h-4 w-4" />
+                  <AlertDescription>
+                    <div className="font-semibold mb-1">Modo Cambio Activo</div>
+                    <div className="text-sm">
+                      {selectedPlayerForSub 
+                        ? 'Selecciona el segundo jugador'
+                        : 'Selecciona un jugador del campo y uno del banco'}
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {substitutions.length > 0 && (
+                <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                  <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                    <ArrowLeftRight className="h-4 w-4" />
+                    Cambios en Q{selectedPeriod}
+                  </h4>
+                  <div className="space-y-2">
+                    {substitutions.map((sub) => {
+                      const playerOut = getPlayerById(sub.player_out)
+                      const playerIn = getPlayerById(sub.player_in)
+                      return (
+                        <div 
+                          key={sub.id} 
+                          className="group flex items-center justify-between gap-2 bg-white dark:bg-gray-800 rounded p-2 text-xs hover:bg-red-50 cursor-pointer"
+                          onClick={() => handleRemoveSubstitution(sub)}
+                        >
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <span className="text-red-600 font-medium truncate">
+                              ↓ {playerOut?.jersey_number ? `#${playerOut.jersey_number}` : ''} {playerOut?.full_name}
+                            </span>
+                            <ArrowLeftRight className="h-3 w-3 shrink-0" />
+                            <span className="text-green-600 font-medium truncate">
+                              ↑ {playerIn?.jersey_number ? `#${playerIn.jersey_number}` : ''} {playerIn?.full_name}
+                            </span>
+                          </div>
+                          <X className="h-4 w-4 text-gray-400 group-hover:text-red-600 shrink-0" />
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* Cancha */}
               <div className="space-y-2">
                 <h3 className="font-semibold text-sm">
                   Cancha ({fieldPlayers.size}/7 jugadores)
                 </h3>
                 <div
-                  className="relative w-full h-[400px] bg-gradient-to-b from-green-600 to-green-700 rounded-lg border-4 border-white overflow-hidden"
+                  className="relative w-full h-[300px] bg-gradient-to-b from-green-600 to-green-700 rounded-lg border-4 border-white overflow-hidden"
                   onDrop={handleFieldDrop}
                   onDragOver={handleDragOver}
                 >
-                  {/* Líneas de la cancha */}
                   <div className="absolute inset-0">
-                    {/* Línea central */}
                     <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-white/50" />
-                    {/* Círculo central */}
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 border-2 border-white/50 rounded-full" />
-                    {/* Área superior */}
                     <div className="absolute top-0 left-1/4 right-1/4 h-16 border-2 border-white/50 border-t-0" />
-                    {/* Área inferior */}
                     <div className="absolute bottom-0 left-1/4 right-1/4 h-16 border-2 border-white/50 border-b-0" />
                   </div>
 
-                  {/* Jugadores en el campo */}
                   {Array.from(fieldPlayers.entries()).map(([playerId, pos]) => {
                     const player = getPlayerById(playerId)
                     if (!player) return null
@@ -655,15 +687,10 @@ export function MatchFieldLineup({ open, onOpenChange, matchId, teamId }: Props)
                         onDragStart={() => handleDragStart(playerId)}
                         onDragEnd={handleDragEnd}
                         onClick={(e) => {
-                          console.log('🖱️ onClick disparado en campo, jugador:', playerId)
                           e.stopPropagation()
                           e.preventDefault()
-                          console.log('Modo cambio:', substitutionMode)
                           if (substitutionMode) {
-                            console.log('Llamando a handlePlayerClickForSubstitution')
                             handlePlayerClickForSubstitution(playerId)
-                          } else {
-                            console.log('Modo cambio no activo, ignorando click')
                           }
                         }}
                         className={`absolute -translate-x-1/2 -translate-y-1/2 ${
@@ -702,7 +729,7 @@ export function MatchFieldLineup({ open, onOpenChange, matchId, teamId }: Props)
                     Banco {substitutionMode && '(Click para cambio)'}
                   </h3>
                   <div
-                    className={`border-2 border-dashed rounded-lg p-2 min-h-[80px] ${
+                    className={`border-2 border-dashed rounded-lg p-2 min-h-[60px] ${
                       substitutionMode ? 'bg-yellow-50 border-yellow-300' : 'bg-gray-50'
                     }`}
                     onDrop={handleBenchDrop}
@@ -710,7 +737,7 @@ export function MatchFieldLineup({ open, onOpenChange, matchId, teamId }: Props)
                   >
                     {benchPlayers.size === 0 ? (
                       <p className="text-xs text-gray-500 text-center py-2">
-                        Arrastra jugadores aquí para el banco
+                        Arrastra jugadores aquí
                       </p>
                     ) : (
                       <div className="flex flex-wrap gap-2">
@@ -728,15 +755,10 @@ export function MatchFieldLineup({ open, onOpenChange, matchId, teamId }: Props)
                               onDragStart={() => handleDragStart(playerId)}
                               onDragEnd={handleDragEnd}
                               onClick={(e) => {
-                                console.log('🖱️ onClick disparado en banco, jugador:', playerId)
                                 e.stopPropagation()
                                 e.preventDefault()
-                                console.log('Modo cambio:', substitutionMode)
                                 if (substitutionMode) {
-                                  console.log('Llamando a handlePlayerClickForSubstitution')
                                   handlePlayerClickForSubstitution(playerId)
-                                } else {
-                                  console.log('Modo cambio no activo, ignorando click')
                                 }
                               }}
                               className={`text-white rounded-full px-2 py-1 text-xs ${
@@ -763,14 +785,221 @@ export function MatchFieldLineup({ open, onOpenChange, matchId, teamId }: Props)
               </div>
             </div>
 
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => onOpenChange(false)}>
-                Cerrar
-              </Button>
+            {/* COLUMNA DERECHA: RESULTADOS */}
+            <div className="space-y-3">
+              <h2 className="font-semibold text-lg">Resultado</h2>
+              
+              {/* Marcador Total */}
+              <div className="bg-muted p-3 rounded-lg">
+                <h3 className="font-semibold text-center mb-1 text-sm">Marcador Final</h3>
+                <div className="text-2xl font-bold text-center">
+                  {teamTotal} - {opponentTotal}
+                </div>
+                <div className="text-xs text-muted-foreground text-center mt-1">
+                  Tu equipo vs {match.opponent}
+                </div>
+              </div>
+
+              {/* Resumen por Cuartos */}
+              <div className="border rounded-lg p-3">
+                <h3 className="font-semibold mb-2 text-sm">Resumen por Cuartos</h3>
+                <div className="grid grid-cols-4 gap-2">
+                  {[1, 2, 3, 4].map((q) => {
+                    const result = quarterResults.find((r) => r.quarter === q)
+                    return (
+                      <div
+                        key={q}
+                        className={`text-center p-2 rounded ${
+                          q === selectedPeriod ? 'bg-primary text-primary-foreground' : 'bg-muted'
+                        }`}
+                      >
+                        <div className="text-xs font-medium mb-1">Q{q}</div>
+                        <div className="text-sm font-bold">
+                          {result ? `${result.team_goals}-${result.opponent_goals}` : '-'}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Resultado del Cuarto */}
+              <div className="border rounded-lg p-3 space-y-3">
+                <h3 className="font-semibold text-sm">Resultado del Cuarto {selectedPeriod}</h3>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="team-goals" className="text-xs">Goles de tu equipo</Label>
+                    <Input
+                      id="team-goals"
+                      type="number"
+                      min="0"
+                      value={teamGoals}
+                      readOnly
+                      disabled
+                      className="bg-muted cursor-not-allowed h-8 text-sm"
+                    />
+                    <p className="text-[10px] text-muted-foreground">
+                      Calculado desde goleadores
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="opponent-goals" className="text-xs">Goles de {match.opponent}</Label>
+                    <Input
+                      id="opponent-goals"
+                      type="number"
+                      min="0"
+                      value={opponentGoals}
+                      onChange={(e) => setOpponentGoals(parseInt(e.target.value) || 0)}
+                      className="h-8 text-sm"
+                    />
+                  </div>
+                </div>
+
+                <Button
+                  onClick={handleSaveQuarterResult}
+                  disabled={saving}
+                  className="w-full h-8 text-sm"
+                  size="sm"
+                >
+                  {saving ? 'Guardando...' : 'Guardar Resultado'}
+                </Button>
+              </div>
+
+              {/* Goles del Equipo */}
+              <div className="border rounded-lg p-3 space-y-3">
+                <h3 className="font-semibold text-sm">Goles en Cuarto {selectedPeriod}</h3>
+                
+                {calledUpPlayers.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">
+                    No hay jugadores convocados
+                  </p>
+                ) : (
+                  <GoalForm
+                    players={calledUpPlayers}
+                    onAddGoal={handleAddGoal}
+                  />
+                )}
+
+                {quarterGoals.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-medium">Goles registrados:</h4>
+                    <div className="space-y-1">
+                      {quarterGoals.map((goal) => (
+                        <div
+                          key={goal.id}
+                          className="flex items-center justify-between bg-muted p-2 rounded text-xs"
+                        >
+                          <div>
+                            <span className="font-medium">
+                              ⚽ {getPlayerName(goal.scorer_id)}
+                            </span>
+                            {goal.assister_id && (
+                              <span className="text-muted-foreground text-[10px]">
+                                {' '}(Asist: {getPlayerName(goal.assister_id)})
+                              </span>
+                            )}
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteGoal(goal.id)}
+                            className="h-6 w-6 p-0"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
+
+        <div className="flex justify-end gap-2 pt-2 border-t">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cerrar
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
+  )
+}
+
+// Componente auxiliar para el formulario de agregar gol
+function GoalForm({
+  players,
+  onAddGoal,
+}: {
+  players: Player[]
+  onAddGoal: (scorerId: number, assisterId?: number) => Promise<void>
+}) {
+  const [scorerId, setScorerId] = useState<string | undefined>(undefined)
+  const [assisterId, setAssisterId] = useState<string | undefined>(undefined)
+  const [adding, setAdding] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!scorerId) return
+
+    setAdding(true)
+    try {
+      await onAddGoal(
+        parseInt(scorerId),
+        assisterId ? parseInt(assisterId) : undefined
+      )
+      setScorerId(undefined)
+      setAssisterId(undefined)
+    } finally {
+      setAdding(false)
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-2">
+      <div className="grid grid-cols-2 gap-2">
+        <div className="space-y-1">
+          <Label htmlFor="scorer" className="text-xs">Goleador *</Label>
+          <Select value={scorerId} onValueChange={setScorerId}>
+            <SelectTrigger id="scorer" className="h-8 text-xs">
+              <SelectValue placeholder="Seleccionar" />
+            </SelectTrigger>
+            <SelectContent>
+              {players.map((player) => (
+                <SelectItem key={player.id} value={player.id.toString()} className="text-xs">
+                  {player.full_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-1">
+          <Label htmlFor="assister" className="text-xs">Asistidor</Label>
+          <Select value={assisterId} onValueChange={(value) => setAssisterId(value === 'none' ? undefined : value)}>
+            <SelectTrigger id="assister" className="h-8 text-xs">
+              <SelectValue placeholder="Sin asistencia" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none" className="text-xs">Sin asistencia</SelectItem>
+              {players
+                .filter((p) => p.id.toString() !== scorerId)
+                .map((player) => (
+                  <SelectItem key={player.id} value={player.id.toString()} className="text-xs">
+                    {player.full_name}
+                  </SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <Button type="submit" disabled={!scorerId || adding} className="w-full h-8 text-xs" size="sm">
+        <Plus className="h-3 w-3 mr-1" />
+        {adding ? 'Agregando...' : 'Agregar Gol'}
+      </Button>
+    </form>
   )
 }

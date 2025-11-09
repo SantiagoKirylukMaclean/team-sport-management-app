@@ -14,8 +14,7 @@ import { MatchFormDialog } from './components/MatchFormDialog'
 import { MatchLineupPanel } from './components/MatchLineupPanel'
 import { MatchCallUpDialog } from './components/MatchCallUpDialog'
 import { MatchDetailDialog } from './components/MatchDetailDialog'
-import { MatchQuarterResultsDialog } from './components/MatchQuarterResultsDialog'
-import { Trash2, Edit, Users, UserCheck, FileText, Target } from 'lucide-react'
+import { Trash2, Edit, Users, UserCheck, FileText } from 'lucide-react'
 
 type MatchWithResult = Match & {
   result?: 'win' | 'draw' | 'loss' | null
@@ -33,12 +32,10 @@ export default function MatchesPage() {
   const [lineupOpen, setLineupOpen] = useState(false)
   const [callUpOpen, setCallUpOpen] = useState(false)
   const [detailOpen, setDetailOpen] = useState(false)
-  const [resultsOpen, setResultsOpen] = useState(false)
   const [editingMatch, setEditingMatch] = useState<MatchWithResult | null>(null)
-  const [lineupMatchId, setLineupMatchId] = useState<number | null>(null)
+  const [lineupMatch, setLineupMatch] = useState<MatchWithResult | null>(null)
   const [callUpMatchId, setCallUpMatchId] = useState<number | null>(null)
   const [detailMatch, setDetailMatch] = useState<MatchWithResult | null>(null)
-  const [resultsMatch, setResultsMatch] = useState<MatchWithResult | null>(null)
 
   useEffect(() => {
     loadTeams()
@@ -130,8 +127,8 @@ export default function MatchesPage() {
     setFormOpen(true)
   }
 
-  const handleLineup = (matchId: number) => {
-    setLineupMatchId(matchId)
+  const handleLineup = (match: MatchWithResult) => {
+    setLineupMatch(match)
     setLineupOpen(true)
   }
 
@@ -143,11 +140,6 @@ export default function MatchesPage() {
   const handleDetail = (match: MatchWithResult) => {
     setDetailMatch(match)
     setDetailOpen(true)
-  }
-
-  const handleResults = (match: MatchWithResult) => {
-    setResultsMatch(match)
-    setResultsOpen(true)
   }
   
   const getRowClassName = (result: 'win' | 'draw' | 'loss' | null | undefined) => {
@@ -230,14 +222,6 @@ export default function MatchesPage() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => handleResults(m)}
-                        title="Resultados"
-                      >
-                        <Target className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
                         onClick={() => handleCallUp(m.id)}
                         title="Convocar"
                       >
@@ -246,8 +230,8 @@ export default function MatchesPage() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => handleLineup(m.id)}
-                        title="Minutos"
+                        onClick={() => handleLineup(m)}
+                        title="Formación y Resultado"
                       >
                         <Users className="h-4 w-4" />
                       </Button>
@@ -294,11 +278,11 @@ export default function MatchesPage() {
               onSuccess={loadMatches}
             />
           )}
-          {lineupMatchId && (
+          {lineupMatch && (
             <MatchLineupPanel
               open={lineupOpen}
               onOpenChange={setLineupOpen}
-              matchId={lineupMatchId}
+              match={lineupMatch}
               teamId={selectedTeamId}
             />
           )}
@@ -307,14 +291,6 @@ export default function MatchesPage() {
               open={detailOpen}
               onOpenChange={setDetailOpen}
               match={detailMatch}
-              teamId={selectedTeamId}
-            />
-          )}
-          {resultsMatch && (
-            <MatchQuarterResultsDialog
-              open={resultsOpen}
-              onOpenChange={setResultsOpen}
-              match={resultsMatch}
               teamId={selectedTeamId}
             />
           )}
