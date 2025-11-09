@@ -29,6 +29,7 @@ const AdminDashboard = React.lazy(() => import("@/pages/admin/AdminDashboard"));
 const SportsPage = React.lazy(() => import("@/pages/admin/SportsPage"));
 const ClubsPage = React.lazy(() => import("@/pages/admin/ClubsPage"));
 const TeamsPage = React.lazy(() => import("@/pages/admin/TeamsPage"));
+const UsersPage = React.lazy(() => import("@/pages/admin/UsersPage"));
 const InviteUserPage = React.lazy(() => import("@/pages/admin/InviteUserPage"));
 const InvitePlayerPage = React.lazy(() => import("@/pages/admin/InvitePlayerPage"));
 const InvitationManagementPage = React.lazy(() => import("@/pages/admin/InvitationManagementPage"));
@@ -77,6 +78,7 @@ function App() {
               <Route path="sports" element={<SportsPage />} />
               <Route path="clubs" element={<ClubsPage />} />
               <Route path="teams" element={<TeamsPage />} />
+              <Route path="users" element={<UsersPage />} />
               <Route path="invite-user" element={<InviteUserPage />} />
               <Route path="invite-player" element={<InvitePlayerPage />} />
               <Route path="invitations" element={<InvitationManagementPage />} />

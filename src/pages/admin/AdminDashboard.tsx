@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Trophy, Building, Users, UserPlus, Mail } from "lucide-react";
+import { Trophy, Building, Users, UserPlus, Mail, UserCog } from "lucide-react";
 
 const adminOptions = [
   { 
@@ -22,6 +22,13 @@ const adminOptions = [
     description: "Gestión de equipos",
     icon: Users,
     color: "bg-purple-500/10 hover:bg-purple-500/20 border-purple-500/20"
+  },
+  { 
+    to: "/admin/users", 
+    label: "Usuarios", 
+    description: "Administrar usuarios, roles y permisos",
+    icon: UserCog,
+    color: "bg-cyan-500/10 hover:bg-cyan-500/20 border-cyan-500/20"
   },
   { 
     to: "/admin/invite-user", 

@@ -245,24 +245,24 @@ serve(async (req) => {
       userId = newUser.user.id
     }
 
-    // Generate recovery link
+    // Generate magic link for invitation
     // Default to localhost:5173 for development, or use provided redirectTo
     const defaultRedirect = Deno.env.get('REDIRECT_URL') || 'http://localhost:5173'
     const redirectTo = body.redirectTo || defaultRedirect
     
-    const { data: recoveryData, error: recoveryError } = await supabaseAdmin.auth.admin.generateLink({
-      type: 'recovery',
+    const { data: magicLinkData, error: magicLinkError } = await supabaseAdmin.auth.admin.generateLink({
+      type: 'magiclink',
       email: body.email,
       options: {
         redirectTo: redirectTo
       }
     })
 
-    if (recoveryError || !recoveryData.properties?.action_link) {
+    if (magicLinkError || !magicLinkData.properties?.action_link) {
       return new Response(
         JSON.stringify({ 
           ok: false, 
-          error: `Failed to generate recovery link: ${recoveryError?.message || 'Unknown error'}` 
+          error: `Failed to generate invitation link: ${magicLinkError?.message || 'Unknown error'}` 
         }),
         { 
           status: 500, 
@@ -308,7 +308,7 @@ serve(async (req) => {
     // Return success response with action link
     const response: InviteUserResponse = {
       ok: true,
-      action_link: recoveryData.properties.action_link
+      action_link: magicLinkData.properties.action_link
     }
 
     return new Response(
