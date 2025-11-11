@@ -44,6 +44,7 @@ const MatchesPage = React.lazy(() => import("@/pages/coach/MatchesPage"));
 // Stats page (accessible to all roles)
 const PlayerMatchStatsPage = React.lazy(() => import("@/pages/PlayerMatchStatsPage"));
 const StatisticsPage = React.lazy(() => import("@/pages/coach/StatisticsPage"));
+const PlayerStatisticsPage = React.lazy(() => import("@/pages/player/PlayerStatisticsPage"));
 
 const withShell = (el: React.ReactNode) => <AppShell>{el}</AppShell>;
 
@@ -67,6 +68,7 @@ function App() {
             <Route path="/asistencia" element={withShell(<Asistencia />)} />
             <Route path="/campeonato" element={withShell(<Campeonato />)} />
             <Route path="/estadisticas" element={withShell(<StatisticsPage />)} />
+            <Route path="/estadisticasdores" element={withShell(<PlayerStatisticsPage />)} />
             <Route path="/notes" element={withShell(<Notes />)} />
             <Route path="/profile" element={withShell(<Profile />)} />
 

@@ -338,19 +338,8 @@ export default function UsersPage() {
 
         if (playerError) throw playerError;
 
-        // Also assign player role to the team
-        const player = players.find(p => p.id === selectedPlayer);
-        if (player) {
-          const { error: insertError } = await supabase
-            .from('user_team_roles')
-            .insert({
-              user_id: selectedUser.id,
-              team_id: player.team_id,
-              role: 'player'
-            });
-
-          if (insertError) throw insertError;
-        }
+        // Note: Players don't need user_team_roles entries
+        // They are linked through players.user_id
       }
 
       // Reload data
