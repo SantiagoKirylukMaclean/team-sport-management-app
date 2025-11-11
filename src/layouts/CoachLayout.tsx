@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { Link, useLocation, Outlet } from "react-router-dom";
-import { Menu, Users, ArrowLeft, Calendar, Trophy } from "lucide-react";
+import { Menu, Users, ArrowLeft, Calendar, Trophy, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 const coachNavItems = [
   { to: "/coach/players", label: "Jugadores", icon: Users },
   { to: "/coach/trainings", label: "Entrenamientos", icon: Calendar },
   { to: "/coach/matches", label: "Partidos", icon: Trophy },
+  { to: "/estadisticas", label: "Estadísticas", icon: BarChart3 },
 ];
 
 export function CoachLayout() {
