@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2, User, Mail, Shield, Calendar, Key } from 'lucide-react'
+import { Loader2, User, Mail, Shield, Calendar, Key, Users } from 'lucide-react'
 
 interface UserProfile {
   id: string
@@ -16,9 +16,28 @@ interface UserProfile {
   last_sign_in_at: string | null
 }
 
+interface PlayerInfo {
+  id: number
+  full_name: string
+  jersey_number: number | null
+  team: {
+    id: number
+    name: string
+    club: {
+      id: number
+      name: string
+      sport: {
+        id: number
+        name: string
+      }
+    }
+  }
+}
+
 const Profile: React.FC = () => {
   const { user, loading: authLoading } = useAuth()
   const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [playerInfo, setPlayerInfo] = useState<PlayerInfo | null>(null)
   const [loading, setLoading] = useState(true)
   const [changingPassword, setChangingPassword] = useState(false)
   const [currentPassword, setCurrentPassword] = useState('')
@@ -46,13 +65,68 @@ const Profile: React.FC = () => {
         if (authError) throw authError
 
         if (authUser) {
-          setProfile({
+          const userProfile = {
             id: authUser.id,
             email: authUser.email || '',
             role: authUser.user_metadata?.role || 'user',
             created_at: authUser.created_at,
             last_sign_in_at: authUser.last_sign_in_at || null
-          })
+          }
+          setProfile(userProfile)
+
+          // If user is a player, fetch player information
+          if (userProfile.role === 'player') {
+            const { data: playerData, error: playerError } = await supabase
+              .from('players')
+              .select(`
+                id,
+                full_name,
+                jersey_number,
+                team_id,
+                teams(
+                  id,
+                  name,
+                  club_id,
+                  clubs(
+                    id,
+                    name,
+                    sport_id,
+                    sports(
+                      id,
+                      name
+                    )
+                  )
+                )
+              `)
+              .eq('user_id', authUser.id)
+              .single()
+
+            if (!playerError && playerData) {
+              const team = playerData.teams as any
+              const club = team?.clubs as any
+              const sport = club?.sports as any
+
+              if (team && club && sport) {
+                setPlayerInfo({
+                  id: playerData.id,
+                  full_name: playerData.full_name,
+                  jersey_number: playerData.jersey_number,
+                  team: {
+                    id: team.id,
+                    name: team.name,
+                    club: {
+                      id: club.id,
+                      name: club.name,
+                      sport: {
+                        id: sport.id,
+                        name: sport.name
+                      }
+                    }
+                  }
+                })
+              }
+            }
+          }
         }
       } catch (error) {
         console.error('Error loading profile:', error)
@@ -224,6 +298,51 @@ const Profile: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Player Team Information Card - Only shown for players */}
+      {profile.role === 'player' && playerInfo && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Información del Equipo
+            </CardTitle>
+            <CardDescription>
+              Tu relación con el equipo
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-muted-foreground">Nombre del Jugador</Label>
+                <p className="text-lg font-medium">{playerInfo.full_name}</p>
+              </div>
+
+              {playerInfo.jersey_number && (
+                <div className="space-y-2">
+                  <Label className="text-muted-foreground">Número de Camiseta</Label>
+                  <p className="text-lg font-medium">#{playerInfo.jersey_number}</p>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label className="text-muted-foreground">Equipo</Label>
+                <p className="text-lg font-medium">{playerInfo.team.name}</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-muted-foreground">Club</Label>
+                <p className="text-lg font-medium">{playerInfo.team.club.name}</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-muted-foreground">Deporte</Label>
+                <p className="text-lg font-medium">{playerInfo.team.club.sport.name}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Change Password Card */}
       <Card>
