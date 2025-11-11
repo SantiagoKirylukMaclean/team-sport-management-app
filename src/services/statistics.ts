@@ -34,9 +34,15 @@ export type QuarterDetail = {
   result: 'win' | 'loss' | 'draw'
 }
 
+export type PlayerWithFraction = {
+  name: string
+  fraction: 'FULL' | 'HALF'
+}
+
 export type FormationStats = {
   formation_key: string
   player_names: string[]
+  players_with_fractions: PlayerWithFraction[]
   matches_played: number
   wins: number
   losses: number
@@ -184,15 +190,15 @@ export async function getFormationStatistics(teamId: number) {
       const quarterResult = quarterResults.find((qr: any) => qr.quarter === quarter)
       if (!quarterResult) continue
 
-      // Obtener jugadores que jugaron en este cuarto (período)
-      const quarterPlayers = playerPeriods
+      // Obtener jugadores que jugaron en este cuarto (período) con sus fracciones
+      const quarterPlayerData = playerPeriods
         .filter((p: any) => p.period === quarter)
-        .map((p: any) => p.player_id)
-        .sort((a: number, b: number) => a - b)
+        .sort((a: any, b: any) => a.player_id - b.player_id)
 
-      if (quarterPlayers.length === 0) continue
+      if (quarterPlayerData.length === 0) continue
 
       // Crear clave única con IDs de jugadores
+      const quarterPlayers = quarterPlayerData.map((p: any) => p.player_id)
       const formationKey = quarterPlayers.join('-')
 
       // Obtener nombres de jugadores
@@ -200,6 +206,17 @@ export async function getFormationStatistics(teamId: number) {
         .map((id: number) => {
           const player = playerMap.get(id)
           return player ? `${player.full_name}${player.jersey_number ? ` (#${player.jersey_number})` : ''}` : `ID:${id}`
+        })
+
+      // Obtener jugadores con sus fracciones
+      const playersWithFractions: PlayerWithFraction[] = quarterPlayerData
+        .map((p: any) => {
+          const player = playerMap.get(p.player_id)
+          const name = player ? `${player.full_name}${player.jersey_number ? ` (#${player.jersey_number})` : ''}` : `ID:${p.player_id}`
+          return {
+            name,
+            fraction: p.fraction as 'FULL' | 'HALF'
+          }
         })
 
       // Determinar resultado del cuarto
@@ -223,6 +240,7 @@ export async function getFormationStatistics(teamId: number) {
         formationMap.set(formationKey, {
           formation_key: formationKey,
           player_names: playerNames,
+          players_with_fractions: playersWithFractions,
           matches_played: 0,
           wins: 0,
           losses: 0,

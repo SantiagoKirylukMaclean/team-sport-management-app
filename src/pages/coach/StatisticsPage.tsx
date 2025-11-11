@@ -43,6 +43,70 @@ import {
 type SortField = 'name' | 'jersey' | 'matches' | 'match_pct' | 'quarters' | 'trainings' | 'training_pct'
 type SortDirection = 'asc' | 'desc' | null
 
+type PlayerQuarterStats = {
+  player_name: string
+  quarters_played: number
+  quarters_won: number
+  quarters_lost: number
+  win_percentage: number
+  loss_percentage: number
+}
+
+// Función para obtener estadísticas individuales de jugadores por cuartos
+function getTopPlayersByQuarterWins(formationStats: FormationStats[]): PlayerQuarterStats[] {
+  const playerStatsMap = new Map<string, { won: number; lost: number; played: number }>()
+
+  formationStats.forEach(formation => {
+    formation.player_names.forEach(playerName => {
+      if (!playerStatsMap.has(playerName)) {
+        playerStatsMap.set(playerName, { won: 0, lost: 0, played: 0 })
+      }
+      const stats = playerStatsMap.get(playerName)!
+      stats.played += formation.matches_played
+      stats.won += formation.wins
+      stats.lost += formation.losses
+    })
+  })
+
+  return Array.from(playerStatsMap.entries())
+    .map(([name, stats]) => ({
+      player_name: name,
+      quarters_played: stats.played,
+      quarters_won: stats.won,
+      quarters_lost: stats.lost,
+      win_percentage: stats.played > 0 ? (stats.won / stats.played) * 100 : 0,
+      loss_percentage: stats.played > 0 ? (stats.lost / stats.played) * 100 : 0
+    }))
+    .sort((a, b) => b.quarters_won - a.quarters_won)
+}
+
+function getTopPlayersByQuarterLosses(formationStats: FormationStats[]): PlayerQuarterStats[] {
+  const playerStatsMap = new Map<string, { won: number; lost: number; played: number }>()
+
+  formationStats.forEach(formation => {
+    formation.player_names.forEach(playerName => {
+      if (!playerStatsMap.has(playerName)) {
+        playerStatsMap.set(playerName, { won: 0, lost: 0, played: 0 })
+      }
+      const stats = playerStatsMap.get(playerName)!
+      stats.played += formation.matches_played
+      stats.won += formation.wins
+      stats.lost += formation.losses
+    })
+  })
+
+  return Array.from(playerStatsMap.entries())
+    .map(([name, stats]) => ({
+      player_name: name,
+      quarters_played: stats.played,
+      quarters_won: stats.won,
+      quarters_lost: stats.lost,
+      win_percentage: stats.played > 0 ? (stats.won / stats.played) * 100 : 0,
+      loss_percentage: stats.played > 0 ? (stats.lost / stats.played) * 100 : 0
+    }))
+    .sort((a, b) => b.quarters_lost - a.quarters_lost)
+}
+
 // Componente para mostrar detalles de cuartos
 function QuarterDetailsDialog({ formation }: { formation: FormationStats }) {
   return (
@@ -61,11 +125,27 @@ function QuarterDetailsDialog({ formation }: { formation: FormationStats }) {
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-2">
-          <div className="flex flex-wrap gap-2 mb-4">
-            <span className="font-semibold">Jugadores:</span>
-            {formation.player_names.map((name, i) => (
-              <Badge key={i} variant="secondary">{name}</Badge>
-            ))}
+          <div className="mb-4">
+            <div className="flex flex-wrap gap-2 mb-2">
+              <span className="font-semibold">Jugadores:</span>
+              {formation.players_with_fractions.map((player, i) => (
+                <Badge 
+                  key={i} 
+                  variant={player.fraction === 'FULL' ? 'default' : 'secondary'}
+                  className={player.fraction === 'FULL' ? 'bg-blue-600' : ''}
+                >
+                  {player.name} {player.fraction === 'HALF' && '(½)'}
+                </Badge>
+              ))}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              <span className="inline-flex items-center gap-1">
+                <Badge variant="default" className="bg-blue-600 h-4 w-4"></Badge> Cuarto completo
+              </span>
+              <span className="inline-flex items-center gap-1 ml-3">
+                <Badge variant="secondary" className="h-4 w-4"></Badge> Medio cuarto (½)
+              </span>
+            </div>
           </div>
           <Table>
             <TableHeader>
@@ -124,6 +204,13 @@ export default function StatisticsPage() {
   // Sorting state
   const [sortField, setSortField] = useState<SortField | null>(null)
   const [sortDirection, setSortDirection] = useState<SortDirection>(null)
+
+  // Sorting state for player quarter stats
+  type PlayerQuarterSortField = 'name' | 'quarters_won' | 'quarters_lost' | 'quarters_played' | 'win_percentage' | 'loss_percentage'
+  const [playerWinsSortField, setPlayerWinsSortField] = useState<PlayerQuarterSortField>('quarters_won')
+  const [playerWinsSortDirection, setPlayerWinsSortDirection] = useState<'asc' | 'desc'>('desc')
+  const [playerLossesSortField, setPlayerLossesSortField] = useState<PlayerQuarterSortField>('quarters_lost')
+  const [playerLossesSortDirection, setPlayerLossesSortDirection] = useState<'asc' | 'desc'>('desc')
 
   useEffect(() => {
     loadTeams()
@@ -227,6 +314,76 @@ export default function StatisticsPage() {
       return <ArrowUp className="h-4 w-4 ml-1 inline" />
     }
     return <ArrowDown className="h-4 w-4 ml-1 inline" />
+  }
+
+  const getPlayerQuarterSortIcon = (field: PlayerQuarterSortField, currentField: PlayerQuarterSortField, currentDirection: 'asc' | 'desc') => {
+    if (currentField !== field) {
+      return <ArrowUpDown className="h-4 w-4 ml-1 inline opacity-50" />
+    }
+    if (currentDirection === 'asc') {
+      return <ArrowUp className="h-4 w-4 ml-1 inline" />
+    }
+    return <ArrowDown className="h-4 w-4 ml-1 inline" />
+  }
+
+  const handlePlayerWinsSort = (field: PlayerQuarterSortField) => {
+    if (playerWinsSortField === field) {
+      setPlayerWinsSortDirection(playerWinsSortDirection === 'asc' ? 'desc' : 'asc')
+    } else {
+      setPlayerWinsSortField(field)
+      setPlayerWinsSortDirection('desc')
+    }
+  }
+
+  const handlePlayerLossesSort = (field: PlayerQuarterSortField) => {
+    if (playerLossesSortField === field) {
+      setPlayerLossesSortDirection(playerLossesSortDirection === 'asc' ? 'desc' : 'asc')
+    } else {
+      setPlayerLossesSortField(field)
+      setPlayerLossesSortDirection('desc')
+    }
+  }
+
+  const getSortedPlayerWins = (players: PlayerQuarterStats[]) => {
+    return [...players].sort((a, b) => {
+      let comparison = 0
+      switch (playerWinsSortField) {
+        case 'name':
+          comparison = a.player_name.localeCompare(b.player_name)
+          break
+        case 'quarters_won':
+          comparison = a.quarters_won - b.quarters_won
+          break
+        case 'quarters_played':
+          comparison = a.quarters_played - b.quarters_played
+          break
+        case 'win_percentage':
+          comparison = a.win_percentage - b.win_percentage
+          break
+      }
+      return playerWinsSortDirection === 'asc' ? comparison : -comparison
+    })
+  }
+
+  const getSortedPlayerLosses = (players: PlayerQuarterStats[]) => {
+    return [...players].sort((a, b) => {
+      let comparison = 0
+      switch (playerLossesSortField) {
+        case 'name':
+          comparison = a.player_name.localeCompare(b.player_name)
+          break
+        case 'quarters_lost':
+          comparison = a.quarters_lost - b.quarters_lost
+          break
+        case 'quarters_played':
+          comparison = a.quarters_played - b.quarters_played
+          break
+        case 'loss_percentage':
+          comparison = a.loss_percentage - b.loss_percentage
+          break
+      }
+      return playerLossesSortDirection === 'asc' ? comparison : -comparison
+    })
   }
 
   const getSortedPlayerStats = () => {
@@ -701,7 +858,7 @@ export default function StatisticsPage() {
                         <div className="space-y-4">
                           {[...formationStats]
                             .sort((a, b) => b.wins - a.wins)
-                            .slice(0, 5)
+                            .slice(0, 3)
                             .map((fs, index) => (
                               <div key={fs.formation_key} className="border rounded-lg p-4 space-y-2">
                                 <div className="flex items-center justify-between">
@@ -718,9 +875,23 @@ export default function StatisticsPage() {
                                   </div>
                                 </div>
                                 <div className="flex flex-wrap gap-2">
-                                  {fs.player_names.map((name, i) => (
-                                    <Badge key={i} variant="secondary">{name}</Badge>
+                                  {fs.players_with_fractions.map((player, i) => (
+                                    <Badge 
+                                      key={i} 
+                                      variant={player.fraction === 'FULL' ? 'default' : 'secondary'}
+                                      className={player.fraction === 'FULL' ? 'bg-blue-600' : ''}
+                                    >
+                                      {player.name} {player.fraction === 'HALF' && '(½)'}
+                                    </Badge>
                                   ))}
+                                </div>
+                                <div className="text-xs text-muted-foreground mt-2">
+                                  <span className="inline-flex items-center gap-1">
+                                    <Badge variant="default" className="bg-blue-600 h-4 w-4"></Badge> Cuarto completo
+                                  </span>
+                                  <span className="inline-flex items-center gap-1 ml-3">
+                                    <Badge variant="secondary" className="h-4 w-4"></Badge> Medio cuarto (½)
+                                  </span>
                                 </div>
                               </div>
                             ))}
@@ -747,7 +918,7 @@ export default function StatisticsPage() {
                         <div className="space-y-4">
                           {[...formationStats]
                             .sort((a, b) => b.total_goals_scored - a.total_goals_scored)
-                            .slice(0, 5)
+                            .slice(0, 3)
                             .map((fs, index) => (
                               <div key={fs.formation_key} className="border rounded-lg p-4 space-y-2">
                                 <div className="flex items-center justify-between">
@@ -764,9 +935,23 @@ export default function StatisticsPage() {
                                   </div>
                                 </div>
                                 <div className="flex flex-wrap gap-2">
-                                  {fs.player_names.map((name, i) => (
-                                    <Badge key={i} variant="secondary">{name}</Badge>
+                                  {fs.players_with_fractions.map((player, i) => (
+                                    <Badge 
+                                      key={i} 
+                                      variant={player.fraction === 'FULL' ? 'default' : 'secondary'}
+                                      className={player.fraction === 'FULL' ? 'bg-blue-600' : ''}
+                                    >
+                                      {player.name} {player.fraction === 'HALF' && '(½)'}
+                                    </Badge>
                                   ))}
+                                </div>
+                                <div className="text-xs text-muted-foreground mt-2">
+                                  <span className="inline-flex items-center gap-1">
+                                    <Badge variant="default" className="bg-blue-600 h-4 w-4"></Badge> Cuarto completo
+                                  </span>
+                                  <span className="inline-flex items-center gap-1 ml-3">
+                                    <Badge variant="secondary" className="h-4 w-4"></Badge> Medio cuarto (½)
+                                  </span>
                                 </div>
                               </div>
                             ))}
@@ -793,7 +978,7 @@ export default function StatisticsPage() {
                         <div className="space-y-4">
                           {[...formationStats]
                             .sort((a, b) => b.losses - a.losses)
-                            .slice(0, 5)
+                            .slice(0, 3)
                             .map((fs, index) => (
                               <div key={fs.formation_key} className="border rounded-lg p-4 space-y-2 border-red-200">
                                 <div className="flex items-center justify-between">
@@ -809,9 +994,23 @@ export default function StatisticsPage() {
                                   </div>
                                 </div>
                                 <div className="flex flex-wrap gap-2">
-                                  {fs.player_names.map((name, i) => (
-                                    <Badge key={i} variant="secondary">{name}</Badge>
+                                  {fs.players_with_fractions.map((player, i) => (
+                                    <Badge 
+                                      key={i} 
+                                      variant={player.fraction === 'FULL' ? 'default' : 'secondary'}
+                                      className={player.fraction === 'FULL' ? 'bg-blue-600' : ''}
+                                    >
+                                      {player.name} {player.fraction === 'HALF' && '(½)'}
+                                    </Badge>
                                   ))}
+                                </div>
+                                <div className="text-xs text-muted-foreground mt-2">
+                                  <span className="inline-flex items-center gap-1">
+                                    <Badge variant="default" className="bg-blue-600 h-4 w-4"></Badge> Cuarto completo
+                                  </span>
+                                  <span className="inline-flex items-center gap-1 ml-3">
+                                    <Badge variant="secondary" className="h-4 w-4"></Badge> Medio cuarto (½)
+                                  </span>
                                 </div>
                               </div>
                             ))}
@@ -838,7 +1037,7 @@ export default function StatisticsPage() {
                         <div className="space-y-4">
                           {[...formationStats]
                             .sort((a, b) => b.total_goals_conceded - a.total_goals_conceded)
-                            .slice(0, 5)
+                            .slice(0, 3)
                             .map((fs, index) => (
                               <div key={fs.formation_key} className="border rounded-lg p-4 space-y-2 border-orange-200">
                                 <div className="flex items-center justify-between">
@@ -854,9 +1053,23 @@ export default function StatisticsPage() {
                                   </div>
                                 </div>
                                 <div className="flex flex-wrap gap-2">
-                                  {fs.player_names.map((name, i) => (
-                                    <Badge key={i} variant="secondary">{name}</Badge>
+                                  {fs.players_with_fractions.map((player, i) => (
+                                    <Badge 
+                                      key={i} 
+                                      variant={player.fraction === 'FULL' ? 'default' : 'secondary'}
+                                      className={player.fraction === 'FULL' ? 'bg-blue-600' : ''}
+                                    >
+                                      {player.name} {player.fraction === 'HALF' && '(½)'}
+                                    </Badge>
                                   ))}
+                                </div>
+                                <div className="text-xs text-muted-foreground mt-2">
+                                  <span className="inline-flex items-center gap-1">
+                                    <Badge variant="default" className="bg-blue-600 h-4 w-4"></Badge> Cuarto completo
+                                  </span>
+                                  <span className="inline-flex items-center gap-1 ml-3">
+                                    <Badge variant="secondary" className="h-4 w-4"></Badge> Medio cuarto (½)
+                                  </span>
                                 </div>
                               </div>
                             ))}
@@ -865,58 +1078,143 @@ export default function StatisticsPage() {
                     </CardContent>
                   </Card>
 
-                  {/* Tabla Resumen de Todas las Formaciones */}
+                  {/* Top 7 Jugadores con Más Cuartos Ganados */}
                   <Card>
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
-                        <BarChart3 className="h-5 w-5" />
-                        <span>Resumen de Todas las Formaciones por Cuarto</span>
+                        <Trophy className="h-5 w-5 text-green-500" />
+                        <span>Top 7 Jugadores con Más Cuartos Ganados</span>
                       </CardTitle>
                       <CardDescription>
-                        Vista completa de todas las formaciones utilizadas en cuartos
+                        Jugadores individuales que más cuartos ganaron
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
                       {formationStats.length === 0 ? (
-                        <p className="text-center text-muted-foreground py-8">No hay datos de formaciones</p>
+                        <p className="text-center text-muted-foreground py-8">No hay datos disponibles</p>
                       ) : (
                         <Table>
                           <TableHeader>
                             <TableRow>
-                              <TableHead>Jugadores</TableHead>
-                              <TableHead className="text-center">Cuartos</TableHead>
-                              <TableHead className="text-center">V-E-D</TableHead>
-                              <TableHead className="text-center">Goles</TableHead>
-                              <TableHead className="text-center">% Victorias</TableHead>
+                              <TableHead>Posición</TableHead>
+                              <TableHead 
+                                className="cursor-pointer hover:bg-muted/50"
+                                onClick={() => handlePlayerWinsSort('name')}
+                              >
+                                Jugador
+                                {getPlayerQuarterSortIcon('name', playerWinsSortField, playerWinsSortDirection)}
+                              </TableHead>
+                              <TableHead 
+                                className="text-center cursor-pointer hover:bg-muted/50"
+                                onClick={() => handlePlayerWinsSort('quarters_won')}
+                              >
+                                Cuartos Ganados
+                                {getPlayerQuarterSortIcon('quarters_won', playerWinsSortField, playerWinsSortDirection)}
+                              </TableHead>
+                              <TableHead 
+                                className="text-center cursor-pointer hover:bg-muted/50"
+                                onClick={() => handlePlayerWinsSort('quarters_played')}
+                              >
+                                Cuartos Jugados
+                                {getPlayerQuarterSortIcon('quarters_played', playerWinsSortField, playerWinsSortDirection)}
+                              </TableHead>
+                              <TableHead 
+                                className="text-center cursor-pointer hover:bg-muted/50"
+                                onClick={() => handlePlayerWinsSort('win_percentage')}
+                              >
+                                % Victorias
+                                {getPlayerQuarterSortIcon('win_percentage', playerWinsSortField, playerWinsSortDirection)}
+                              </TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {formationStats.map((fs) => (
-                              <TableRow key={fs.formation_key}>
+                            {getSortedPlayerWins(getTopPlayersByQuarterWins(formationStats)).slice(0, 7).map((player, index) => (
+                              <TableRow key={player.player_name}>
                                 <TableCell>
-                                  <div className="flex flex-wrap gap-1 max-w-md">
-                                    {fs.player_names.map((name, i) => (
-                                      <Badge key={i} variant="outline" className="text-xs">{name}</Badge>
-                                    ))}
-                                  </div>
+                                  {index === 0 && <Trophy className="h-5 w-5 text-yellow-500 inline mr-2" />}
+                                  {index + 1}
                                 </TableCell>
-                                <TableCell className="text-center">{fs.matches_played}</TableCell>
+                                <TableCell className="font-medium">{player.player_name}</TableCell>
                                 <TableCell className="text-center">
-                                  <span className="text-green-600 font-semibold">{fs.wins}</span>-
-                                  <span className="text-gray-600">{fs.draws}</span>-
-                                  <span className="text-red-600 font-semibold">{fs.losses}</span>
+                                  <Badge className="bg-green-500">{player.quarters_won}</Badge>
                                 </TableCell>
-                                <TableCell className="text-center">
-                                  <div className="flex items-center justify-center gap-2">
-                                    <Badge className="bg-green-500">{fs.total_goals_scored}</Badge>
-                                    <span>-</span>
-                                    <Badge variant="destructive">{fs.total_goals_conceded}</Badge>
-                                  </div>
-                                </TableCell>
+                                <TableCell className="text-center">{player.quarters_played}</TableCell>
                                 <TableCell className="text-center">
                                   <div className="flex flex-col items-center gap-1">
-                                    <span className="font-bold">{fs.win_percentage.toFixed(1)}%</span>
-                                    <Progress value={fs.win_percentage} className="w-20" />
+                                    <span className="font-bold">{player.win_percentage.toFixed(1)}%</span>
+                                    <Progress value={player.win_percentage} className="w-20" />
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Top 7 Jugadores con Más Cuartos Perdidos */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <TrendingDown className="h-5 w-5 text-red-500" />
+                        <span>Top 7 Jugadores con Más Cuartos Perdidos</span>
+                      </CardTitle>
+                      <CardDescription>
+                        Jugadores individuales que más cuartos perdieron
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      {formationStats.length === 0 ? (
+                        <p className="text-center text-muted-foreground py-8">No hay datos disponibles</p>
+                      ) : (
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Posición</TableHead>
+                              <TableHead 
+                                className="cursor-pointer hover:bg-muted/50"
+                                onClick={() => handlePlayerLossesSort('name')}
+                              >
+                                Jugador
+                                {getPlayerQuarterSortIcon('name', playerLossesSortField, playerLossesSortDirection)}
+                              </TableHead>
+                              <TableHead 
+                                className="text-center cursor-pointer hover:bg-muted/50"
+                                onClick={() => handlePlayerLossesSort('quarters_lost')}
+                              >
+                                Cuartos Perdidos
+                                {getPlayerQuarterSortIcon('quarters_lost', playerLossesSortField, playerLossesSortDirection)}
+                              </TableHead>
+                              <TableHead 
+                                className="text-center cursor-pointer hover:bg-muted/50"
+                                onClick={() => handlePlayerLossesSort('quarters_played')}
+                              >
+                                Cuartos Jugados
+                                {getPlayerQuarterSortIcon('quarters_played', playerLossesSortField, playerLossesSortDirection)}
+                              </TableHead>
+                              <TableHead 
+                                className="text-center cursor-pointer hover:bg-muted/50"
+                                onClick={() => handlePlayerLossesSort('loss_percentage')}
+                              >
+                                % Derrotas
+                                {getPlayerQuarterSortIcon('loss_percentage', playerLossesSortField, playerLossesSortDirection)}
+                              </TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {getSortedPlayerLosses(getTopPlayersByQuarterLosses(formationStats)).slice(0, 7).map((player, index) => (
+                              <TableRow key={player.player_name}>
+                                <TableCell>{index + 1}</TableCell>
+                                <TableCell className="font-medium">{player.player_name}</TableCell>
+                                <TableCell className="text-center">
+                                  <Badge variant="destructive">{player.quarters_lost}</Badge>
+                                </TableCell>
+                                <TableCell className="text-center">{player.quarters_played}</TableCell>
+                                <TableCell className="text-center">
+                                  <div className="flex flex-col items-center gap-1">
+                                    <span className="font-bold text-red-600">{player.loss_percentage.toFixed(1)}%</span>
+                                    <Progress value={player.loss_percentage} className="w-20" />
                                   </div>
                                 </TableCell>
                               </TableRow>
