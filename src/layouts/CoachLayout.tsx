@@ -2,17 +2,20 @@ import { useState } from "react";
 import { Link, useLocation, Outlet } from "react-router-dom";
 import { Menu, Users, ArrowLeft, Calendar, Trophy, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/cn";
-
-const coachNavItems = [
-  { to: "/coach/players", label: "Jugadores", icon: Users },
-  { to: "/coach/trainings", label: "Entrenamientos", icon: Calendar },
-  { to: "/coach/matches", label: "Partidos", icon: Trophy },
-  { to: "/estadisticas", label: "Estadísticas", icon: BarChart3 },
-];
+import { useTranslation } from "@/hooks/useTranslation";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 export function CoachLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const { pathname } = useLocation();
+  const { t } = useTranslation();
+
+  const coachNavItems = [
+    { to: "/coach/players", label: t('nav.players'), icon: Users },
+    { to: "/coach/trainings", label: t('nav.training'), icon: Calendar },
+    { to: "/coach/matches", label: t('nav.matches'), icon: Trophy },
+    { to: "/estadisticas", label: t('nav.statistics'), icon: BarChart3 },
+  ];
 
   return (
     <div className="h-full flex">
@@ -59,7 +62,7 @@ export function CoachLayout() {
             className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-accent text-muted"
           >
             <ArrowLeft size={18}/>
-            {!collapsed && <span>Volver a la App</span>}
+            {!collapsed && <span>{t('common.back')}</span>}
           </Link>
         </div>
       </aside>
@@ -68,7 +71,8 @@ export function CoachLayout() {
       <div className="flex-1 flex flex-col">
         {/* Coach Header */}
         <header className="h-14 border-b border-border flex items-center justify-between px-4">
-          <h1 className="text-lg font-semibold">Panel de Entrenador</h1>
+          <h1 className="text-lg font-semibold">{t('nav.dashboard')}</h1>
+          <LanguageSwitcher />
         </header>
 
         {/* Content */}

@@ -1,35 +1,38 @@
 import { Link } from "react-router-dom";
 import { UserCheck, Calendar, Trophy } from "lucide-react";
-
-const coachOptions = [
-  { 
-    to: "/coach/players", 
-    label: "Jugadores", 
-    description: "Gestión de jugadores del equipo",
-    icon: UserCheck,
-    color: "bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/20"
-  },
-  { 
-    to: "/coach/trainings", 
-    label: "Entrenamientos", 
-    description: "Gestión de sesiones de entrenamiento",
-    icon: Calendar,
-    color: "bg-green-500/10 hover:bg-green-500/20 border-green-500/20"
-  },
-  { 
-    to: "/coach/matches", 
-    label: "Partidos", 
-    description: "Gestión de partidos y convocatorias",
-    icon: Trophy,
-    color: "bg-purple-500/10 hover:bg-purple-500/20 border-purple-500/20"
-  },
-];
+import { useTranslation } from "@/hooks/useTranslation";
 
 export default function CoachDashboard() {
+  const { t } = useTranslation();
+
+  const coachOptions = [
+    { 
+      to: "/coach/players", 
+      label: t('nav.players'),
+      description: "Gestión de jugadores del equipo",
+      icon: UserCheck,
+      color: "bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/20"
+    },
+    { 
+      to: "/coach/trainings", 
+      label: t('nav.training'),
+      description: "Gestión de sesiones de entrenamiento",
+      icon: Calendar,
+      color: "bg-green-500/10 hover:bg-green-500/20 border-green-500/20"
+    },
+    { 
+      to: "/coach/matches", 
+      label: t('nav.matches'),
+      description: "Gestión de partidos y convocatorias",
+      icon: Trophy,
+      color: "bg-purple-500/10 hover:bg-purple-500/20 border-purple-500/20"
+    },
+  ];
+
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold mb-2">Panel de Entrenador</h2>
+        <h2 className="text-2xl font-bold mb-2">{t('dashboard.welcome')}</h2>
         <p className="text-muted-foreground">
           Gestiona tu equipo, entrenamientos y partidos
         </p>

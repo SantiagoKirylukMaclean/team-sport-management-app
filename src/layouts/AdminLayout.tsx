@@ -2,19 +2,22 @@ import { useState } from "react";
 import { Link, useLocation, Outlet } from "react-router-dom";
 import { Menu, Trophy, Building, Users, ArrowLeft, UserPlus, Mail } from "lucide-react";
 import { cn } from "@/lib/cn";
-
-const adminNavItems = [
-  { to: "/admin/sports", label: "Sports", icon: Trophy },
-  { to: "/admin/clubs", label: "Clubs", icon: Building },
-  { to: "/admin/teams", label: "Teams", icon: Users },
-  { to: "/admin/invite-user", label: "Invite Coach/Admin", icon: UserPlus },
-  { to: "/admin/invite-player", label: "Invite Player", icon: Users },
-  { to: "/admin/invitations", label: "Invitations", icon: Mail },
-];
+import { useTranslation } from "@/hooks/useTranslation";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 export function AdminLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const { pathname } = useLocation();
+  const { t } = useTranslation();
+
+  const adminNavItems = [
+    { to: "/admin/sports", label: t('admin.sports'), icon: Trophy },
+    { to: "/admin/clubs", label: t('admin.clubs'), icon: Building },
+    { to: "/admin/teams", label: t('admin.teams'), icon: Users },
+    { to: "/admin/invite-user", label: t('admin.inviteCoachAdmin'), icon: UserPlus },
+    { to: "/admin/invite-player", label: t('admin.invitePlayer'), icon: Users },
+    { to: "/admin/invitations", label: t('admin.invitations'), icon: Mail },
+  ];
 
   return (
     <div className="h-full flex">
@@ -31,7 +34,7 @@ export function AdminLayout() {
           >
             <Menu size={18}/>
           </button>
-          {!collapsed && <span className="text-sm font-medium">Super Admin Panel</span>}
+          {!collapsed && <span className="text-sm font-medium">{t('admin.panel')}</span>}
         </div>
 
         {/* Navigation */}
@@ -61,7 +64,7 @@ export function AdminLayout() {
             className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-accent text-muted"
           >
             <ArrowLeft size={18}/>
-            {!collapsed && <span>Back to App</span>}
+            {!collapsed && <span>{t('common.back')}</span>}
           </Link>
         </div>
       </aside>
@@ -70,7 +73,8 @@ export function AdminLayout() {
       <div className="flex-1 flex flex-col">
         {/* Admin Header */}
         <header className="h-14 border-b border-border flex items-center justify-between px-4">
-          <h1 className="text-lg font-semibold">Administration</h1>
+          <h1 className="text-lg font-semibold">{t('admin.title')}</h1>
+          <LanguageSwitcher />
         </header>
 
         {/* Content */}
