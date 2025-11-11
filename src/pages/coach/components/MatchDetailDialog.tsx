@@ -13,7 +13,7 @@ import {
   type Match,
   type MatchPlayerPeriod 
 } from '@/services/matches'
-import { listPlayers, type Player } from '@/services/players'
+import { getPlayersByTeam, type PlayerWithTeam as Player } from '@/services/players'
 import { CheckCircle2, Circle, CircleDot } from 'lucide-react'
 
 type MatchDetailDialogProps = {
@@ -45,7 +45,7 @@ export function MatchDetailDialog({
     setLoading(true)
     try {
       const [playersRes, callUpsRes, periodsRes] = await Promise.all([
-        listPlayers(teamId),
+        getPlayersByTeam(teamId),
         listMatchCallUpsWithPeriods(match.id),
         listMatchPeriods(match.id),
       ])

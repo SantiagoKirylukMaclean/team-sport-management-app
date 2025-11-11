@@ -8,7 +8,7 @@ import { Pencil, Trash2, Plus, Users, ArrowUpDown, ArrowUp, ArrowDown } from 'lu
 import { useToast } from '@/hooks/use-toast'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { PlayerFormDialog } from './components/PlayerFormDialog'
-import { listPlayers, deletePlayer, getTeamPlayerStatistics, type Player, type PlayerStatistics } from '@/services/players'
+import { getPlayersByTeam, deletePlayer, getTeamPlayerStatistics, type PlayerWithTeam as Player, type PlayerStatistics } from '@/services/players'
 import { listCoachTeams, type Team } from '@/services/teams'
 
 type SortColumn = 'name' | 'number' | 'training_attendance' | 'match_attendance' | 'avg_periods'
@@ -81,7 +81,7 @@ export default function PlayersPage() {
     setPlayersLoading(true)
     try {
       const [playersResult, statsResult] = await Promise.all([
-        listPlayers(selectedTeamId),
+        getPlayersByTeam(selectedTeamId),
         getTeamPlayerStatistics(selectedTeamId)
       ])
       

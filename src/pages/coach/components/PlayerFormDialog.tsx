@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { useToast } from '@/hooks/use-toast'
-import { createPlayer, updatePlayer, type Player } from '@/services/players'
+import { createPlayer, updatePlayer, type PlayerWithTeam as Player } from '@/services/players'
 
 const playerSchema = z.object({
   full_name: z.string().min(2, 'Mínimo 2 caracteres').max(120, 'Máximo 120 caracteres'),

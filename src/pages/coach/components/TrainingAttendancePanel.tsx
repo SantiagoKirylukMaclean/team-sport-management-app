@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import LoadingSpinner from '@/components/ui/loading-spinner'
 import EmptyState from '@/components/ui/empty-state'
 import { useToast } from '@/hooks/use-toast'
-import { listPlayers, type Player } from '@/services/players'
+import { getPlayersByTeam, type PlayerWithTeam as Player } from '@/services/players'
 import { listTrainingAttendance, upsertTrainingAttendance } from '@/services/trainings'
 
 interface TrainingAttendancePanelProps {
@@ -41,7 +41,7 @@ export function TrainingAttendancePanel({
     try {
       // Fetch players and attendance in parallel
       const [playersResult, attendanceResult] = await Promise.all([
-        listPlayers(teamId),
+        getPlayersByTeam(teamId),
         listTrainingAttendance(trainingId)
       ])
 

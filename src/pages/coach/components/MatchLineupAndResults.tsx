@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
-import { listPlayers, type Player } from '@/services/players'
+import { getPlayersByTeam, type PlayerWithTeam as Player } from '@/services/players'
 import {
   listMatchPeriods,
   upsertMatchPeriod,
@@ -112,7 +112,7 @@ export function MatchLineupAndResults({ open, onOpenChange, match, teamId }: Pro
     setLoading(true)
     try {
       const [playersRes, periodsRes, callUpsRes, resultsRes, goalsRes] = await Promise.all([
-        listPlayers(teamId),
+        getPlayersByTeam(teamId),
         listMatchPeriods(match.id),
         listMatchCallUps(match.id),
         listMatchQuarterResults(match.id),
@@ -196,7 +196,7 @@ export function MatchLineupAndResults({ open, onOpenChange, match, teamId }: Pro
   const updatePlayerPositions = async () => {
     try {
       const [playersRes, periodsRes, callUpsRes] = await Promise.all([
-        listPlayers(teamId),
+        getPlayersByTeam(teamId),
         listMatchPeriods(match.id),
         listMatchCallUps(match.id),
       ])

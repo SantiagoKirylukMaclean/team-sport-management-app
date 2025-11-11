@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useToast } from '@/hooks/use-toast'
-import { listPlayers, type Player } from '@/services/players'
+import { getPlayersByTeam, type PlayerWithTeam as Player } from '@/services/players'
 import { listMatchCallUps, setMatchCallUps } from '@/services/matches'
 import { Loader2 } from 'lucide-react'
 
@@ -32,7 +32,7 @@ export function MatchCallUpDialog({ matchId, teamId, open, onOpenChange, onSucce
     setLoading(true)
     try {
       const [playersRes, callUpsRes] = await Promise.all([
-        listPlayers(teamId),
+        getPlayersByTeam(teamId),
         listMatchCallUps(matchId)
       ])
 
