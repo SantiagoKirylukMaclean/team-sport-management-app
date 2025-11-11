@@ -14,7 +14,10 @@ import {
   BarChart3,
   Award,
   Activity,
-  TrendingDown
+  TrendingDown,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { useAuth } from '@/contexts/AuthContext'
@@ -34,6 +37,9 @@ import {
   type TeamOverallStats
 } from '@/services/statistics'
 
+type SortField = 'name' | 'jersey' | 'matches' | 'match_pct' | 'quarters' | 'trainings' | 'training_pct'
+type SortDirection = 'asc' | 'desc' | null
+
 export default function StatisticsPage() {
   const { toast } = useToast()
   const { role } = useAuth()
@@ -51,6 +57,10 @@ export default function StatisticsPage() {
   const [quarterPerformance, setQuarterPerformance] = useState<QuarterPerformance[]>([])
   const [matchResults, setMatchResults] = useState<MatchResult[]>([])
   const [overallStats, setOverallStats] = useState<TeamOverallStats | null>(null)
+
+  // Sorting state
+  const [sortField, setSortField] = useState<SortField | null>(null)
+  const [sortDirection, setSortDirection] = useState<SortDirection>(null)
 
   useEffect(() => {
     loadTeams()
@@ -129,6 +139,65 @@ export default function StatisticsPage() {
     } finally {
       setStatsLoading(false)
     }
+  }
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      // Cycle through: asc -> desc -> null
+      if (sortDirection === 'asc') {
+        setSortDirection('desc')
+      } else if (sortDirection === 'desc') {
+        setSortDirection(null)
+        setSortField(null)
+      }
+    } else {
+      setSortField(field)
+      setSortDirection('asc')
+    }
+  }
+
+  const getSortIcon = (field: SortField) => {
+    if (sortField !== field) {
+      return <ArrowUpDown className="h-4 w-4 ml-1 inline opacity-50" />
+    }
+    if (sortDirection === 'asc') {
+      return <ArrowUp className="h-4 w-4 ml-1 inline" />
+    }
+    return <ArrowDown className="h-4 w-4 ml-1 inline" />
+  }
+
+  const getSortedPlayerStats = () => {
+    if (!sortField || !sortDirection) return playerStats
+
+    return [...playerStats].sort((a, b) => {
+      let comparison = 0
+
+      switch (sortField) {
+        case 'name':
+          comparison = a.full_name.localeCompare(b.full_name)
+          break
+        case 'jersey':
+          comparison = (a.jersey_number || 999) - (b.jersey_number || 999)
+          break
+        case 'matches':
+          comparison = a.matches_called_up - b.matches_called_up
+          break
+        case 'match_pct':
+          comparison = a.match_attendance_pct - b.match_attendance_pct
+          break
+        case 'quarters':
+          comparison = a.avg_periods_played - b.avg_periods_played
+          break
+        case 'trainings':
+          comparison = a.trainings_attended - b.trainings_attended
+          break
+        case 'training_pct':
+          comparison = a.training_attendance_pct - b.training_attendance_pct
+          break
+      }
+
+      return sortDirection === 'asc' ? comparison : -comparison
+    })
   }
 
   const getResultBadge = (result: 'win' | 'loss' | 'draw') => {
@@ -307,17 +376,45 @@ export default function StatisticsPage() {
                         <Table>
                           <TableHeader>
                             <TableRow>
-                              <TableHead>Jugador</TableHead>
-                              <TableHead className="text-center">#</TableHead>
-                              <TableHead className="text-center">Partidos</TableHead>
-                              <TableHead className="text-center">% Convocado</TableHead>
-                              <TableHead className="text-center">Prom. Cuartos</TableHead>
-                              <TableHead className="text-center">Entrenamientos</TableHead>
-                              <TableHead className="text-center">% Asistencia</TableHead>
+                              <TableHead 
+                                className="cursor-pointer hover:bg-muted/50"
+                                onClick={() => handleSort('name')}
+                              >
+                                Jugador
+                                {getSortIcon('name')}
+                              </TableHead>
+                              <TableHead 
+                                className="text-center cursor-pointer hover:bg-muted/50"
+                                onClick={() => handleSort('jersey')}
+                              >
+                                #
+                                {getSortIcon('jersey')}
+                              </TableHead>
+                              <TableHead 
+                                className="text-center cursor-pointer hover:bg-muted/50"
+                                onClick={() => handleSort('match_pct')}
+                              >
+                                Partidos
+                                {getSortIcon('match_pct')}
+                              </TableHead>
+                              <TableHead 
+                                className="text-center cursor-pointer hover:bg-muted/50"
+                                onClick={() => handleSort('quarters')}
+                              >
+                                Prom. Cuartos
+                                {getSortIcon('quarters')}
+                              </TableHead>
+                              <TableHead 
+                                className="text-center cursor-pointer hover:bg-muted/50"
+                                onClick={() => handleSort('training_pct')}
+                              >
+                                Entrenamientos
+                                {getSortIcon('training_pct')}
+                              </TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {playerStats.map((stat) => (
+                            {getSortedPlayerStats().map((stat) => (
                               <TableRow key={stat.player_id}>
                                 <TableCell className="font-medium">{stat.full_name}</TableCell>
                                 <TableCell className="text-center">
@@ -326,23 +423,23 @@ export default function StatisticsPage() {
                                   ) : '-'}
                                 </TableCell>
                                 <TableCell className="text-center">
-                                  {stat.matches_called_up}/{stat.total_matches}
-                                </TableCell>
-                                <TableCell className="text-center">
-                                  <Badge variant={stat.match_attendance_pct >= 75 ? 'default' : 'secondary'}>
-                                    {stat.match_attendance_pct}%
-                                  </Badge>
+                                  <div className="flex flex-col items-center gap-1">
+                                    <span>{stat.matches_called_up}/{stat.total_matches}</span>
+                                    <Badge variant={stat.match_attendance_pct >= 75 ? 'default' : 'secondary'}>
+                                      {stat.match_attendance_pct}%
+                                    </Badge>
+                                  </div>
                                 </TableCell>
                                 <TableCell className="text-center font-bold">
                                   {stat.avg_periods_played.toFixed(2)}
                                 </TableCell>
                                 <TableCell className="text-center">
-                                  {stat.trainings_attended}/{stat.total_trainings}
-                                </TableCell>
-                                <TableCell className="text-center">
-                                  <Badge variant={stat.training_attendance_pct >= 75 ? 'default' : 'secondary'}>
-                                    {stat.training_attendance_pct}%
-                                  </Badge>
+                                  <div className="flex flex-col items-center gap-1">
+                                    <span>{stat.trainings_attended}/{stat.total_trainings}</span>
+                                    <Badge variant={stat.training_attendance_pct >= 75 ? 'default' : 'secondary'}>
+                                      {stat.training_attendance_pct}%
+                                    </Badge>
+                                  </div>
                                 </TableCell>
                               </TableRow>
                             ))}
