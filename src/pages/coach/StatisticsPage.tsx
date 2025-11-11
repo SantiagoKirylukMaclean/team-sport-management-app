@@ -620,14 +620,193 @@ export default function StatisticsPage() {
 
                 {/* Formations Tab */}
                 <TabsContent value="formations" className="space-y-4">
+                  {/* Mejores Formaciones - Victorias */}
                   <Card>
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
-                        <Trophy className="h-5 w-5" />
-                        <span>Formaciones Más Efectivas</span>
+                        <Trophy className="h-5 w-5 text-green-500" />
+                        <span>Formaciones con Más Victorias por Cuarto</span>
                       </CardTitle>
                       <CardDescription>
-                        Análisis de rendimiento según formación inicial
+                        Los 7 jugadores en cancha con los que más cuartos ganamos
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      {formationStats.length === 0 ? (
+                        <p className="text-center text-muted-foreground py-8">No hay datos de formaciones</p>
+                      ) : (
+                        <div className="space-y-4">
+                          {[...formationStats]
+                            .sort((a, b) => b.wins - a.wins)
+                            .slice(0, 5)
+                            .map((fs, index) => (
+                              <div key={fs.formation_key} className="border rounded-lg p-4 space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    {index === 0 && <Trophy className="h-5 w-5 text-yellow-500" />}
+                                    <span className="font-bold text-lg">#{index + 1}</span>
+                                    <Badge className="bg-green-500">{fs.wins} Cuartos Ganados</Badge>
+                                    <Badge variant="outline">{fs.matches_played} cuartos jugados</Badge>
+                                  </div>
+                                  <div className="text-right">
+                                    <div className="font-bold text-green-600">{fs.win_percentage.toFixed(1)}% victorias</div>
+                                    <div className="text-sm text-muted-foreground">{fs.wins}V - {fs.draws}E - {fs.losses}D</div>
+                                  </div>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                  {fs.player_names.map((name, i) => (
+                                    <Badge key={i} variant="secondary">{name}</Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Formaciones con Más Goles a Favor */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Target className="h-5 w-5 text-blue-500" />
+                        <span>Formaciones con Más Goles a Favor por Cuarto</span>
+                      </CardTitle>
+                      <CardDescription>
+                        Los 7 jugadores en cancha con los que más goles hacemos
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      {formationStats.length === 0 ? (
+                        <p className="text-center text-muted-foreground py-8">No hay datos de formaciones</p>
+                      ) : (
+                        <div className="space-y-4">
+                          {[...formationStats]
+                            .sort((a, b) => b.total_goals_scored - a.total_goals_scored)
+                            .slice(0, 5)
+                            .map((fs, index) => (
+                              <div key={fs.formation_key} className="border rounded-lg p-4 space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    {index === 0 && <Award className="h-5 w-5 text-yellow-500" />}
+                                    <span className="font-bold text-lg">#{index + 1}</span>
+                                    <Badge className="bg-blue-500">{fs.total_goals_scored} Goles</Badge>
+                                    <Badge variant="outline">{fs.matches_played} cuartos jugados</Badge>
+                                  </div>
+                                  <div className="text-right">
+                                    <div className="font-bold text-blue-600">{(fs.total_goals_scored / fs.matches_played).toFixed(1)} goles/cuarto</div>
+                                    <div className="text-sm text-muted-foreground">Diferencia: {fs.goal_difference > 0 ? '+' : ''}{fs.goal_difference}</div>
+                                  </div>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                  {fs.player_names.map((name, i) => (
+                                    <Badge key={i} variant="secondary">{name}</Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Formaciones con Más Derrotas */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <TrendingDown className="h-5 w-5 text-red-500" />
+                        <span>Formaciones con Más Derrotas por Cuarto</span>
+                      </CardTitle>
+                      <CardDescription>
+                        Los 7 jugadores en cancha con los que más cuartos perdemos
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      {formationStats.length === 0 ? (
+                        <p className="text-center text-muted-foreground py-8">No hay datos de formaciones</p>
+                      ) : (
+                        <div className="space-y-4">
+                          {[...formationStats]
+                            .sort((a, b) => b.losses - a.losses)
+                            .slice(0, 5)
+                            .map((fs, index) => (
+                              <div key={fs.formation_key} className="border rounded-lg p-4 space-y-2 border-red-200">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-bold text-lg">#{index + 1}</span>
+                                    <Badge variant="destructive">{fs.losses} Cuartos Perdidos</Badge>
+                                    <Badge variant="outline">{fs.matches_played} cuartos jugados</Badge>
+                                  </div>
+                                  <div className="text-right">
+                                    <div className="font-bold text-red-600">{((fs.losses / fs.matches_played) * 100).toFixed(1)}% derrotas</div>
+                                    <div className="text-sm text-muted-foreground">{fs.wins}V - {fs.draws}E - {fs.losses}D</div>
+                                  </div>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                  {fs.player_names.map((name, i) => (
+                                    <Badge key={i} variant="secondary">{name}</Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Formaciones con Más Goles en Contra */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Activity className="h-5 w-5 text-orange-500" />
+                        <span>Formaciones con Más Goles en Contra por Cuarto</span>
+                      </CardTitle>
+                      <CardDescription>
+                        Los 7 jugadores en cancha con los que más goles recibimos
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      {formationStats.length === 0 ? (
+                        <p className="text-center text-muted-foreground py-8">No hay datos de formaciones</p>
+                      ) : (
+                        <div className="space-y-4">
+                          {[...formationStats]
+                            .sort((a, b) => b.total_goals_conceded - a.total_goals_conceded)
+                            .slice(0, 5)
+                            .map((fs, index) => (
+                              <div key={fs.formation_key} className="border rounded-lg p-4 space-y-2 border-orange-200">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-bold text-lg">#{index + 1}</span>
+                                    <Badge className="bg-orange-500">{fs.total_goals_conceded} Goles en Contra</Badge>
+                                    <Badge variant="outline">{fs.matches_played} cuartos jugados</Badge>
+                                  </div>
+                                  <div className="text-right">
+                                    <div className="font-bold text-orange-600">{(fs.total_goals_conceded / fs.matches_played).toFixed(1)} goles/cuarto</div>
+                                    <div className="text-sm text-muted-foreground">Diferencia: {fs.goal_difference > 0 ? '+' : ''}{fs.goal_difference}</div>
+                                  </div>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                  {fs.player_names.map((name, i) => (
+                                    <Badge key={i} variant="secondary">{name}</Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Tabla Resumen de Todas las Formaciones */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <BarChart3 className="h-5 w-5" />
+                        <span>Resumen de Todas las Formaciones por Cuarto</span>
+                      </CardTitle>
+                      <CardDescription>
+                        Vista completa de todas las formaciones utilizadas en cuartos
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -637,35 +816,41 @@ export default function StatisticsPage() {
                         <Table>
                           <TableHeader>
                             <TableRow>
-                              <TableHead>Formación</TableHead>
-                              <TableHead className="text-center">Partidos</TableHead>
-                              <TableHead className="text-center">% Victorias</TableHead>
+                              <TableHead>Jugadores</TableHead>
+                              <TableHead className="text-center">Cuartos</TableHead>
                               <TableHead className="text-center">V-E-D</TableHead>
                               <TableHead className="text-center">Goles</TableHead>
-                              <TableHead className="text-center">Diferencia</TableHead>
+                              <TableHead className="text-center">% Victorias</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
                             {formationStats.map((fs) => (
                               <TableRow key={fs.formation_key}>
-                                <TableCell className="font-medium">{fs.formation_key}</TableCell>
+                                <TableCell>
+                                  <div className="flex flex-wrap gap-1 max-w-md">
+                                    {fs.player_names.map((name, i) => (
+                                      <Badge key={i} variant="outline" className="text-xs">{name}</Badge>
+                                    ))}
+                                  </div>
+                                </TableCell>
                                 <TableCell className="text-center">{fs.matches_played}</TableCell>
+                                <TableCell className="text-center">
+                                  <span className="text-green-600 font-semibold">{fs.wins}</span>-
+                                  <span className="text-gray-600">{fs.draws}</span>-
+                                  <span className="text-red-600 font-semibold">{fs.losses}</span>
+                                </TableCell>
+                                <TableCell className="text-center">
+                                  <div className="flex items-center justify-center gap-2">
+                                    <Badge className="bg-green-500">{fs.total_goals_scored}</Badge>
+                                    <span>-</span>
+                                    <Badge variant="destructive">{fs.total_goals_conceded}</Badge>
+                                  </div>
+                                </TableCell>
                                 <TableCell className="text-center">
                                   <div className="flex flex-col items-center gap-1">
                                     <span className="font-bold">{fs.win_percentage.toFixed(1)}%</span>
                                     <Progress value={fs.win_percentage} className="w-20" />
                                   </div>
-                                </TableCell>
-                                <TableCell className="text-center">
-                                  {fs.wins}-{fs.draws}-{fs.losses}
-                                </TableCell>
-                                <TableCell className="text-center">
-                                  {fs.total_goals_scored} - {fs.total_goals_conceded}
-                                </TableCell>
-                                <TableCell className="text-center">
-                                  <span className={`font-bold ${fs.goal_difference >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                    {fs.goal_difference > 0 ? '+' : ''}{fs.goal_difference}
-                                  </span>
                                 </TableCell>
                               </TableRow>
                             ))}

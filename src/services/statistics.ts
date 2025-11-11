@@ -26,6 +26,7 @@ export type PlayerGoalStats = {
 
 export type FormationStats = {
   formation_key: string
+  player_names: string[]
   matches_played: number
   wins: number
   losses: number
@@ -136,6 +137,16 @@ export async function getPlayerGoalStats(teamId: number) {
 // ============ FORMATION STATISTICS ============
 
 export async function getFormationStatistics(teamId: number) {
+  // Obtener todos los jugadores del equipo
+  const { data: players, error: playersError } = await supabase
+    .from('players')
+    .select('id, full_name, jersey_number')
+    .eq('team_id', teamId)
+
+  if (playersError) return { data: null, error: playersError }
+
+  const playerMap = new Map(players?.map(p => [p.id, p]) || [])
+
   // Obtener todos los partidos con sus resultados y formaciones
   const { data: matches, error: matchError } = await supabase
     .from('matches')
@@ -153,44 +164,58 @@ export async function getFormationStatistics(teamId: number) {
   const formationMap = new Map<string, FormationStats>()
 
   matches?.forEach((match: any) => {
-    // Calcular resultado total del partido
     const quarterResults = match.match_quarter_results || []
-    const teamGoals = quarterResults.reduce((sum: number, qr: any) => sum + qr.team_goals, 0)
-    const opponentGoals = quarterResults.reduce((sum: number, qr: any) => sum + qr.opponent_goals, 0)
+    const playerPeriods = match.match_player_periods || []
 
-    // Determinar formación (jugadores titulares en período 1)
-    const period1Players = (match.match_player_periods || [])
-      .filter((p: any) => p.period === 1)
-      .map((p: any) => p.player_id)
-      .sort((a: number, b: number) => a - b)
+    // Analizar cada cuarto
+    for (let quarter = 1; quarter <= 4; quarter++) {
+      // Obtener resultado de este cuarto
+      const quarterResult = quarterResults.find((qr: any) => qr.quarter === quarter)
+      if (!quarterResult) continue
 
-    const formationKey = period1Players.length > 0 
-      ? `${period1Players.length} jugadores` 
-      : 'Sin formación'
+      // Obtener jugadores que jugaron en este cuarto (período)
+      const quarterPlayers = playerPeriods
+        .filter((p: any) => p.period === quarter)
+        .map((p: any) => p.player_id)
+        .sort((a: number, b: number) => a - b)
 
-    if (!formationMap.has(formationKey)) {
-      formationMap.set(formationKey, {
-        formation_key: formationKey,
-        matches_played: 0,
-        wins: 0,
-        losses: 0,
-        draws: 0,
-        win_percentage: 0,
-        total_goals_scored: 0,
-        total_goals_conceded: 0,
-        goal_difference: 0
-      })
+      if (quarterPlayers.length === 0) continue
+
+      // Crear clave única con IDs de jugadores
+      const formationKey = quarterPlayers.join('-')
+
+      // Obtener nombres de jugadores
+      const playerNames = quarterPlayers
+        .map((id: number) => {
+          const player = playerMap.get(id)
+          return player ? `${player.full_name}${player.jersey_number ? ` (#${player.jersey_number})` : ''}` : `ID:${id}`
+        })
+
+      if (!formationMap.has(formationKey)) {
+        formationMap.set(formationKey, {
+          formation_key: formationKey,
+          player_names: playerNames,
+          matches_played: 0,
+          wins: 0,
+          losses: 0,
+          draws: 0,
+          win_percentage: 0,
+          total_goals_scored: 0,
+          total_goals_conceded: 0,
+          goal_difference: 0
+        })
+      }
+
+      const stats = formationMap.get(formationKey)!
+      stats.matches_played++
+      stats.total_goals_scored += quarterResult.team_goals
+      stats.total_goals_conceded += quarterResult.opponent_goals
+      stats.goal_difference += (quarterResult.team_goals - quarterResult.opponent_goals)
+
+      if (quarterResult.team_goals > quarterResult.opponent_goals) stats.wins++
+      else if (quarterResult.team_goals < quarterResult.opponent_goals) stats.losses++
+      else stats.draws++
     }
-
-    const stats = formationMap.get(formationKey)!
-    stats.matches_played++
-    stats.total_goals_scored += teamGoals
-    stats.total_goals_conceded += opponentGoals
-    stats.goal_difference += (teamGoals - opponentGoals)
-
-    if (teamGoals > opponentGoals) stats.wins++
-    else if (teamGoals < opponentGoals) stats.losses++
-    else stats.draws++
   })
 
   // Calcular porcentajes
