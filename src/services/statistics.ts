@@ -138,9 +138,8 @@ export async function getPlayerGoalStats(teamId: number) {
     }
   })
 
-  // Filtrar solo jugadores con goles o asistencias
+  // Devolver todos los jugadores, ordenados por goles+asistencias
   const result = Array.from(statsMap.values())
-    .filter(stat => stat.total_goals > 0 || stat.total_assists > 0)
     .sort((a, b) => {
       const totalA = a.total_goals + a.total_assists
       const totalB = b.total_goals + b.total_assists
