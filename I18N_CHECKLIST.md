@@ -20,10 +20,10 @@
 ## 📄 Páginas por Traducir
 
 ### Admin Pages
-- [ ] AdminDashboard.tsx
-- [ ] SportsPage.tsx
-- [ ] ClubsPage.tsx
-- [ ] TeamsPage.tsx
+- [x] AdminDashboard.tsx
+- [x] SportsPage.tsx
+- [x] ClubsPage.tsx
+- [x] TeamsPage.tsx
 - [ ] UsersPage.tsx
 - [ ] InviteUserPage.tsx
 - [ ] InvitePlayerPage.tsx
@@ -133,11 +133,13 @@ Para cada componente:
 
 **Configuración:** 100% ✅  
 **Layouts:** 100% ✅  
-**Páginas:** ~5% 🟡  
+**Páginas Admin:** 50% 🟡 (4/8 completadas)
+**Páginas Coach:** ~10% 🟡  
+**Páginas Main:** 0% 🔴  
 **Componentes:** ~5% 🟡  
-**Traducciones:** ~30% 🟡  
+**Traducciones:** ~40% 🟡  
 
-**Total Estimado:** ~15% completado
+**Total Estimado:** ~25% completado
 
 ## 💡 Tips
 
@@ -157,5 +159,5 @@ Para cada componente:
 
 ---
 
-**Última actualización:** Configuración inicial completada
-**Próximo paso:** Traducir PlayersPage.tsx y sus componentes
+**Última actualización:** Páginas principales del admin traducidas (Dashboard, Sports, Clubs, Teams)
+**Próximo paso:** Traducir UsersPage y páginas de invitaciones del admin

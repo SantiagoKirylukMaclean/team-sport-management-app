@@ -32,8 +32,14 @@ import {
   Key,
   Loader2,
   AlertCircle,
-  CheckCircle2
+  CheckCircle2,
+  Trophy,
+  Building,
+  Users as UsersIcon,
+  UserPlus,
+  Mail
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import type { AppRole } from '@/types/db';
 
 interface UserProfile {
@@ -473,6 +479,59 @@ export default function UsersPage() {
         <p className="text-muted-foreground">
           Administra usuarios, roles y permisos del sistema
         </p>
+      </div>
+
+      {/* Navigation Menu */}
+      <div className="flex gap-2 flex-wrap border-b pb-4">
+        <Link 
+          to="/admin/sports"
+          className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-accent text-sm transition-colors"
+        >
+          <Trophy className="w-4 h-4" />
+          <span>Deportes</span>
+        </Link>
+        <Link 
+          to="/admin/clubs"
+          className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-accent text-sm transition-colors"
+        >
+          <Building className="w-4 h-4" />
+          <span>Clubs</span>
+        </Link>
+        <Link 
+          to="/admin/teams"
+          className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-accent text-sm transition-colors"
+        >
+          <UsersIcon className="w-4 h-4" />
+          <span>Equipos</span>
+        </Link>
+        <Link 
+          to="/admin/invite-user"
+          className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-accent text-sm transition-colors"
+        >
+          <UserPlus className="w-4 h-4" />
+          <span>Invitar Coach/Admin</span>
+        </Link>
+        <Link 
+          to="/admin/invite-player"
+          className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-accent text-sm transition-colors"
+        >
+          <UsersIcon className="w-4 h-4" />
+          <span>Invitar Jugador</span>
+        </Link>
+        <Link 
+          to="/admin/invitations"
+          className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-accent text-sm transition-colors"
+        >
+          <Mail className="w-4 h-4" />
+          <span>Invitaciones</span>
+        </Link>
+        <Link 
+          to="/admin/users"
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent text-sm transition-colors"
+        >
+          <UsersIcon className="w-4 h-4" />
+          <span>Usuarios</span>
+        </Link>
       </div>
 
       {/* Message Alert */}

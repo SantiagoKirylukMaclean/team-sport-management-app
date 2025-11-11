@@ -17,6 +17,7 @@ export function AdminLayout() {
     { to: "/admin/invite-user", label: t('admin.inviteCoachAdmin'), icon: UserPlus },
     { to: "/admin/invite-player", label: t('admin.invitePlayer'), icon: Users },
     { to: "/admin/invitations", label: t('admin.invitations'), icon: Mail },
+    { to: "/admin/users", label: t('admin.users') || 'Usuarios', icon: Users },
   ];
 
   return (

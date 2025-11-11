@@ -1,58 +1,68 @@
 import { Link } from "react-router-dom";
 import { Trophy, Building, Users, UserPlus, Mail, UserCog } from "lucide-react";
-
-const adminOptions = [
-  { 
-    to: "/admin/sports", 
-    label: "Deportes", 
-    description: "Gestión de deportes del sistema",
-    icon: Trophy,
-    color: "bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/20"
-  },
-  { 
-    to: "/admin/clubs", 
-    label: "Clubs", 
-    description: "Administración de clubs deportivos",
-    icon: Building,
-    color: "bg-green-500/10 hover:bg-green-500/20 border-green-500/20"
-  },
-  { 
-    to: "/admin/teams", 
-    label: "Teams", 
-    description: "Gestión de equipos",
-    icon: Users,
-    color: "bg-purple-500/10 hover:bg-purple-500/20 border-purple-500/20"
-  },
-  { 
-    to: "/admin/users", 
-    label: "Usuarios", 
-    description: "Administrar usuarios, roles y permisos",
-    icon: UserCog,
-    color: "bg-cyan-500/10 hover:bg-cyan-500/20 border-cyan-500/20"
-  },
-  { 
-    to: "/admin/invite-user", 
-    label: "Invite User", 
-    description: "Invitar nuevos usuarios al sistema",
-    icon: UserPlus,
-    color: "bg-orange-500/10 hover:bg-orange-500/20 border-orange-500/20"
-  },
-  { 
-    to: "/admin/invitations", 
-    label: "Invitations", 
-    description: "Gestión de invitaciones enviadas",
-    icon: Mail,
-    color: "bg-pink-500/10 hover:bg-pink-500/20 border-pink-500/20"
-  },
-];
+import { useTranslation } from "@/hooks/useTranslation";
 
 export default function AdminDashboard() {
+  const { t } = useTranslation();
+
+  const adminOptions = [
+    { 
+      to: "/admin/sports", 
+      label: t('admin.sports'),
+      description: t('admin.sportsManagement'),
+      icon: Trophy,
+      color: "bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/20"
+    },
+    { 
+      to: "/admin/clubs", 
+      label: t('admin.clubs'),
+      description: t('admin.clubsManagement'),
+      icon: Building,
+      color: "bg-green-500/10 hover:bg-green-500/20 border-green-500/20"
+    },
+    { 
+      to: "/admin/teams", 
+      label: t('admin.teams'),
+      description: t('admin.teamsManagement'),
+      icon: Users,
+      color: "bg-purple-500/10 hover:bg-purple-500/20 border-purple-500/20"
+    },
+    { 
+      to: "/admin/users", 
+      label: t('users.title'),
+      description: t('admin.usersManagement'),
+      icon: UserCog,
+      color: "bg-cyan-500/10 hover:bg-cyan-500/20 border-cyan-500/20"
+    },
+    { 
+      to: "/admin/invite-user", 
+      label: t('admin.inviteCoachAdmin'),
+      description: t('admin.inviteNewUsers'),
+      icon: UserPlus,
+      color: "bg-orange-500/10 hover:bg-orange-500/20 border-orange-500/20"
+    },
+    { 
+      to: "/admin/invite-player", 
+      label: t('admin.invitePlayer'),
+      description: t('admin.invitePlayersDescription'),
+      icon: Users,
+      color: "bg-teal-500/10 hover:bg-teal-500/20 border-teal-500/20"
+    },
+    { 
+      to: "/admin/invitations", 
+      label: t('admin.invitations'),
+      description: t('admin.manageInvitations'),
+      icon: Mail,
+      color: "bg-pink-500/10 hover:bg-pink-500/20 border-pink-500/20"
+    },
+  ];
+
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold mb-2">Panel de Administración</h2>
+        <h2 className="text-2xl font-bold mb-2">{t('admin.panel')}</h2>
         <p className="text-muted-foreground">
-          Gestiona todos los aspectos del sistema desde aquí
+          {t('admin.manageSystem')}
         </p>
       </div>
 

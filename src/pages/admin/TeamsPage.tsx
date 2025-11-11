@@ -4,6 +4,7 @@ import { usePageTitle } from '@/hooks/usePageTitle'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
+import { useTranslation } from '@/hooks/useTranslation'
 import { listSports, type Sport } from '@/services/sports'
 import { listClubs, type Club } from '@/services/clubs'
 import { listTeams, type Team } from '@/services/teams'
@@ -15,6 +16,7 @@ export default function TeamsPage() {
   usePageTitle('Teams Management')
   
   const { toast } = useToast()
+  const { t } = useTranslation()
   const [sports, setSports] = useState<Sport[]>([])
   const [clubs, setClubs] = useState<Club[]>([])
   const [teams, setTeams] = useState<Team[]>([])
@@ -70,7 +72,7 @@ export default function TeamsPage() {
     } catch (err: any) {
       setError(err.message)
       toast({
-        title: "Error",
+        title: t('common.error'),
         description: `Error al cargar datos: ${err.message}`,
         variant: "destructive"
       })
@@ -89,7 +91,7 @@ export default function TeamsPage() {
       setTeams(result.data || [])
     } catch (err: any) {
       toast({
-        title: "Error",
+        title: t('common.error'),
         description: `Error al cargar equipos: ${err.message}`,
         variant: "destructive"
       })
@@ -123,7 +125,7 @@ export default function TeamsPage() {
     return (
       <div className="p-6">
         <div className="flex items-center justify-center h-64">
-          <div className="text-lg">Cargando...</div>
+          <div className="text-lg">{t('common.loading')}</div>
         </div>
       </div>
     )
@@ -132,9 +134,9 @@ export default function TeamsPage() {
   if (error) {
     return (
       <div className="p-6">
-        <div className="text-red-600">Error: {error}</div>
+        <div className="text-red-600">{t('common.error')}: {error}</div>
         <Button onClick={loadInitialData} className="mt-4">
-          Reintentar
+          {t('admin.retry')}
         </Button>
       </div>
     )
@@ -143,29 +145,29 @@ export default function TeamsPage() {
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Gestión de Equipos</h1>
+        <h1 className="text-2xl font-bold">{t('admin.teamsManagement')}</h1>
         <Button onClick={() => setShowTeamForm(true)}>
-          Nuevo Equipo
+          {t('admin.newTeam')}
         </Button>
       </div>
 
       {/* Filtros */}
       <Card>
         <CardHeader>
-          <CardTitle>Filtros</CardTitle>
+          <CardTitle>{t('admin.filters')}</CardTitle>
         </CardHeader>
         <CardContent className="flex gap-4">
           <div className="flex-1">
-            <label className="block text-sm font-medium mb-2">Deporte</label>
+            <label className="block text-sm font-medium mb-2">{t('admin.sport')}</label>
             <Select 
               value={selectedSportId?.toString() || "all"} 
               onValueChange={(value) => setSelectedSportId(value === "all" ? null : parseInt(value))}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Todos los deportes" />
+                <SelectValue placeholder={t('admin.allSports')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todos los deportes</SelectItem>
+                <SelectItem value="all">{t('admin.allSports')}</SelectItem>
                 {sports.map(sport => (
                   <SelectItem key={sport.id} value={sport.id.toString()}>
                     {sport.name}
@@ -176,16 +178,16 @@ export default function TeamsPage() {
           </div>
 
           <div className="flex-1">
-            <label className="block text-sm font-medium mb-2">Club</label>
+            <label className="block text-sm font-medium mb-2">{t('admin.club')}</label>
             <Select 
               value={selectedClubId?.toString() || "all"} 
               onValueChange={(value) => setSelectedClubId(value === "all" ? null : parseInt(value))}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Todos los clubes" />
+                <SelectValue placeholder={t('admin.allClubs')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todos los clubes</SelectItem>
+                <SelectItem value="all">{t('admin.allClubs')}</SelectItem>
                 {filteredClubs.map(club => (
                   <SelectItem key={club.id} value={club.id.toString()}>
                     {club.name}

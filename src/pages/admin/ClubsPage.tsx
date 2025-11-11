@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { toast } from '@/hooks/use-toast'
+import { useTranslation } from '@/hooks/useTranslation'
 import { Plus } from 'lucide-react'
 import { listClubs, deleteClub, type Club } from '@/services/clubs'
 import { listSports, type Sport } from '@/services/sports'
@@ -21,6 +22,8 @@ import { ConfirmDialog } from '@/components/ConfirmDialog'
 
 const ClubsPage: React.FC = () => {
   usePageTitle('Clubs Management')
+  
+  const { t } = useTranslation()
   
   const [clubs, setClubs] = useState<Club[]>([])
   const [sports, setSports] = useState<Sport[]>([])
@@ -44,7 +47,7 @@ const ClubsPage: React.FC = () => {
     } catch (error) {
       console.error('Error fetching sports:', error)
       toast({
-        title: 'Error',
+        title: t('common.error'),
         description: 'No se pudieron cargar los deportes.',
         variant: 'destructive',
       })
@@ -75,7 +78,7 @@ const ClubsPage: React.FC = () => {
     } catch (error) {
       console.error('Error fetching clubs:', error)
       toast({
-        title: 'Error',
+        title: t('common.error'),
         description: 'No se pudieron cargar los clubes.',
         variant: 'destructive',
       })
@@ -123,8 +126,8 @@ const ClubsPage: React.FC = () => {
       if (error) throw error
       
       toast({
-        title: 'Club eliminado',
-        description: 'El club se eliminó correctamente.',
+        title: t('admin.clubDeleted'),
+        description: t('admin.clubDeletedSuccess'),
       })
       
       // Refresh the list
@@ -135,13 +138,13 @@ const ClubsPage: React.FC = () => {
       // Handle specific database errors
       if (error.code === '23503' || error.message?.includes('foreign key constraint')) {
         toast({
-          title: 'Error',
-          description: 'No se puede borrar el club porque tiene equipos asociados.',
+          title: t('common.error'),
+          description: t('admin.cannotDeleteClub'),
           variant: 'destructive',
         })
       } else {
         toast({
-          title: 'Error',
+          title: t('common.error'),
           description: 'No se pudo eliminar el club. Intentá de nuevo.',
           variant: 'destructive',
         })
@@ -165,15 +168,15 @@ const ClubsPage: React.FC = () => {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Clubes</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t('admin.clubs')}</h1>
           <p className="text-muted-foreground">
-            Gestión de clubes del sistema
+            {t('admin.clubsManagement')}
           </p>
         </div>
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Cargando clubes...</p>
+            <p className="text-muted-foreground">{t('admin.loadingClubs')}</p>
           </div>
         </div>
       </div>
@@ -184,29 +187,29 @@ const ClubsPage: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Clubes</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t('admin.clubs')}</h1>
           <p className="text-muted-foreground">
-            Gestión de clubes del sistema ({clubs.length} clubes)
+            {t('admin.clubsManagement')} ({clubs.length} {t('admin.clubsCount')})
           </p>
         </div>
         <Button onClick={handleNewClub}>
           <Plus className="h-4 w-4 mr-2" />
-          Nuevo Club
+          {t('admin.newClub')}
         </Button>
       </div>
 
       {/* Sport Filter */}
       <div className="flex items-center space-x-4">
-        <label className="text-sm font-medium">Filtrar por deporte:</label>
+        <label className="text-sm font-medium">{t('admin.filterBySport')}</label>
         <Select
           value={selectedSportId ? selectedSportId.toString() : 'all'}
           onValueChange={handleSportFilterChange}
         >
           <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Todos los deportes" />
+            <SelectValue placeholder={t('admin.allSports')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todos los deportes</SelectItem>
+            <SelectItem value="all">{t('admin.allSports')}</SelectItem>
             {sports.map((sport) => (
               <SelectItem key={sport.id} value={sport.id.toString()}>
                 {sport.name}
@@ -221,16 +224,16 @@ const ClubsPage: React.FC = () => {
           <CardContent className="flex items-center justify-center py-12">
             <div className="text-center space-y-2">
               <div className="text-4xl mb-4">🏟️</div>
-              <h3 className="text-lg font-semibold">No hay clubes</h3>
+              <h3 className="text-lg font-semibold">{t('admin.noClubs')}</h3>
               <p className="text-muted-foreground">
                 {selectedSportId 
-                  ? 'No hay clubes para el deporte seleccionado.'
-                  : 'Aún no se han registrado clubes en el sistema.'
+                  ? t('admin.noClubsForSport')
+                  : t('admin.noClubsYet')
                 }
               </p>
               <Button onClick={handleNewClub} className="mt-4">
                 <Plus className="h-4 w-4 mr-2" />
-                Crear primer club
+                {t('admin.createFirstClub')}
               </Button>
             </div>
           </CardContent>
@@ -251,7 +254,7 @@ const ClubsPage: React.FC = () => {
                 onClick={loadMore}
                 disabled={loading}
               >
-                {loading ? 'Cargando...' : 'Cargar más'}
+                {loading ? t('common.loading') : t('admin.loadMore')}
               </Button>
             </div>
           )}
@@ -270,15 +273,15 @@ const ClubsPage: React.FC = () => {
       {/* Confirm Delete Dialog */}
       <ConfirmDialog
         open={confirmDialogOpen}
-        title="Eliminar Club"
-        description={`¿Estás seguro de que querés eliminar el club "${deletingClub?.name}"? Esta acción no se puede deshacer.`}
+        title={t('admin.deleteClub')}
+        description={`¿Estás seguro de que querés eliminar el club "${deletingClub?.name}"? ${t('admin.cannotUndo')}`}
         onConfirm={confirmDelete}
         onCancel={() => {
           setConfirmDialogOpen(false)
           setDeletingClub(null)
         }}
         loading={deleteLoading}
-        confirmText="Eliminar"
+        confirmText={t('common.delete')}
         variant="destructive"
       />
     </div>

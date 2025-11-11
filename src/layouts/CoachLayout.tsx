@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation, Outlet } from "react-router-dom";
-import { Menu, Users, ArrowLeft, Calendar, Trophy, BarChart3 } from "lucide-react";
+import { Menu, Users, ArrowLeft, Calendar, Trophy, BarChart3, Building, UserPlus, Mail } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { useTranslation } from "@/hooks/useTranslation";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
@@ -9,6 +9,16 @@ export function CoachLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const { pathname } = useLocation();
   const { t } = useTranslation();
+
+  const adminNavItems = [
+    { to: "/admin/sports", label: t('admin.sports'), icon: Trophy },
+    { to: "/admin/clubs", label: t('admin.clubs'), icon: Building },
+    { to: "/admin/teams", label: t('admin.teams'), icon: Users },
+    { to: "/admin/invite-user", label: t('admin.inviteCoachAdmin'), icon: UserPlus },
+    { to: "/admin/invite-player", label: t('admin.invitePlayer'), icon: Users },
+    { to: "/admin/invitations", label: t('admin.invitations'), icon: Mail },
+    { to: "/admin/users", label: t('admin.users') || 'Usuarios', icon: Users },
+  ];
 
   const coachNavItems = [
     { to: "/coach/players", label: t('nav.players'), icon: Users },
@@ -37,6 +47,40 @@ export function CoachLayout() {
 
         {/* Navigation */}
         <nav className="px-2 space-y-1 flex-1">
+          {/* Admin Links */}
+          {!collapsed && (
+            <div className="text-xs font-semibold text-muted-foreground px-3 py-2 mt-2">
+              ADMINISTRACIÓN
+            </div>
+          )}
+          {adminNavItems.map(({to, label, icon: Icon}) => {
+            const active = pathname === to;
+            return (
+              <Link 
+                key={to} 
+                to={to}
+                className={cn(
+                  "flex items-center gap-3 rounded-xl px-3 py-2 text-sm hover:bg-accent",
+                  active ? "bg-accent" : "text-muted"
+                )}
+              >
+                <Icon size={18}/>
+                {!collapsed && <span>{label}</span>}
+              </Link>
+            );
+          })}
+
+          {/* Divider */}
+          {!collapsed && (
+            <div className="border-t border-border my-3"></div>
+          )}
+          {!collapsed && (
+            <div className="text-xs font-semibold text-muted-foreground px-3 py-2">
+              COACH
+            </div>
+          )}
+
+          {/* Coach Links */}
           {coachNavItems.map(({to, label, icon: Icon}) => {
             const active = pathname === to;
             return (

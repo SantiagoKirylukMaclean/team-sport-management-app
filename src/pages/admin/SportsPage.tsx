@@ -3,6 +3,7 @@ import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useToast } from '@/components/ui/toast'
+import { useTranslation } from '@/hooks/useTranslation'
 import { SportsTable } from './components/SportsTable'
 import { SportFormDialog } from './components/SportFormDialog'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
@@ -22,6 +23,7 @@ const SportsPage: React.FC = () => {
   usePageTitle('Sports Management')
   
   const { toast } = useToast()
+  const { t } = useTranslation()
   
   const [state, setState] = useState<SportsPageState>({
     sports: [],
@@ -70,7 +72,7 @@ const SportsPage: React.FC = () => {
         loading: false
       }))
       toast({
-        title: "Error",
+        title: t('common.error'),
         description: error.message || 'Error al cargar deportes',
         variant: "destructive"
       })
@@ -99,7 +101,7 @@ const SportsPage: React.FC = () => {
       }))
     } catch (error: any) {
       toast({
-        title: "Error",
+        title: t('common.error'),
         description: error.message || 'Error al cargar más deportes',
         variant: "destructive"
       })
@@ -113,7 +115,7 @@ const SportsPage: React.FC = () => {
       
       if (error) {
         if (error.code === '23505' || error.message.includes('unique')) {
-          throw new Error('Ya existe un deporte con ese nombre')
+          throw new Error(t('admin.sportExists'))
         }
         throw error
       }
@@ -125,14 +127,14 @@ const SportsPage: React.FC = () => {
         }))
         
         toast({
-          title: "Éxito",
-          description: "Deporte creado correctamente",
+          title: t('common.success'),
+          description: t('admin.sportCreated'),
           variant: "success"
         })
       }
     } catch (error: any) {
       toast({
-        title: "Error",
+        title: t('common.error'),
         description: error.message || 'Error al crear deporte',
         variant: "destructive"
       })
@@ -149,7 +151,7 @@ const SportsPage: React.FC = () => {
       
       if (error) {
         if (error.code === '23505' || error.message.includes('unique')) {
-          throw new Error('Ya existe un deporte con ese nombre')
+          throw new Error(t('admin.sportExists'))
         }
         throw error
       }
@@ -163,14 +165,14 @@ const SportsPage: React.FC = () => {
         }))
         
         toast({
-          title: "Éxito",
-          description: "Deporte actualizado correctamente",
+          title: t('common.success'),
+          description: t('admin.sportUpdated'),
           variant: "success"
         })
       }
     } catch (error: any) {
       toast({
-        title: "Error",
+        title: t('common.error'),
         description: error.message || 'Error al actualizar deporte',
         variant: "destructive"
       })
@@ -195,15 +197,15 @@ const SportsPage: React.FC = () => {
       }))
       
       toast({
-        title: "Éxito",
-        description: "Deporte eliminado correctamente",
+        title: t('common.success'),
+        description: t('admin.sportDeleted'),
         variant: "success"
       })
       
       setConfirmDialog({ open: false, loading: false })
     } catch (error: any) {
       toast({
-        title: "Error",
+        title: t('common.error'),
         description: error.message || 'Error al eliminar deporte',
         variant: "destructive"
       })
@@ -242,16 +244,16 @@ const SportsPage: React.FC = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Deportes</h1>
+            <h1 className="text-3xl font-bold tracking-tight">{t('admin.sports')}</h1>
             <p className="text-muted-foreground">
-              Gestión de deportes del sistema
+              {t('admin.sportsManagement')}
             </p>
           </div>
         </div>
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Cargando deportes...</p>
+            <p className="text-muted-foreground">{t('admin.loadingSports')}</p>
           </div>
         </div>
       </div>
@@ -262,18 +264,18 @@ const SportsPage: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Deportes</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t('admin.sports')}</h1>
           <p className="text-muted-foreground">
-            Gestión de deportes del sistema ({state.sports.length} deportes)
+            {t('admin.sportsManagement')} ({state.sports.length} {t('admin.sportsCount')})
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Button onClick={() => loadSports(true)} variant="outline" size="sm">
-            Actualizar
+            {t('admin.refresh')}
           </Button>
           <Button onClick={handleNewSport} size="sm">
             <Plus className="h-4 w-4 mr-2" />
-            Nuevo deporte
+            {t('admin.newSport')}
           </Button>
         </div>
       </div>
@@ -292,7 +294,7 @@ const SportsPage: React.FC = () => {
             variant="outline"
             disabled={state.loading}
           >
-            {state.loading ? "Cargando..." : "Cargar más"}
+            {state.loading ? t('common.loading') : t('admin.loadMore')}
           </Button>
         </div>
       )}
@@ -302,18 +304,18 @@ const SportsPage: React.FC = () => {
         onClose={() => setFormDialog({ open: false })}
         onSubmit={handleFormSubmit}
         defaultValues={formDialog.sport ? { name: formDialog.sport.name } : undefined}
-        title={formDialog.sport ? "Editar deporte" : "Nuevo deporte"}
+        title={formDialog.sport ? t('admin.editSport') : t('admin.newSport')}
         description={formDialog.sport ? "Modifica los datos del deporte" : "Ingresa los datos del deporte"}
       />
 
       <ConfirmDialog
         open={confirmDialog.open}
-        title="Eliminar deporte"
-        description={`¿Estás seguro de que quieres eliminar "${confirmDialog.sport?.name}"? Esta acción no se puede deshacer.`}
+        title={t('admin.deleteSport')}
+        description={`${t('admin.confirmDeleteSport')} "${confirmDialog.sport?.name}"? ${t('admin.cannotUndo')}`}
         onConfirm={handleDelete}
         onCancel={() => setConfirmDialog({ open: false, loading: false })}
         loading={confirmDialog.loading}
-        confirmText="Eliminar"
+        confirmText={t('common.delete')}
         variant="destructive"
       />
     </div>
