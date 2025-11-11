@@ -11,7 +11,6 @@ const items = [
   { to: "/asistencia", label: "Asistencia", icon: Settings2 },
   { to: "/campeonato", label: "Campeonato", icon: Trophy },
   { to: "/estadisticas", label: "Estadísticas", icon: BarChart3 },
-  { to: "/estadisticasdores", label: "Mis Estadísticas", icon: BarChart3 },
   { to: "/notes", label: "Notes", icon: NotebookText },
 ];
 
