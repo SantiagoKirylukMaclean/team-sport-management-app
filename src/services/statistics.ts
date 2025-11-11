@@ -24,6 +24,16 @@ export type PlayerGoalStats = {
   total_assists: number
 }
 
+export type QuarterDetail = {
+  match_id: number
+  opponent: string
+  match_date: string
+  quarter: number
+  team_goals: number
+  opponent_goals: number
+  result: 'win' | 'loss' | 'draw'
+}
+
 export type FormationStats = {
   formation_key: string
   player_names: string[]
@@ -35,6 +45,7 @@ export type FormationStats = {
   total_goals_scored: number
   total_goals_conceded: number
   goal_difference: number
+  quarter_details: QuarterDetail[]
 }
 
 export type QuarterPerformance = {
@@ -191,6 +202,23 @@ export async function getFormationStatistics(teamId: number) {
           return player ? `${player.full_name}${player.jersey_number ? ` (#${player.jersey_number})` : ''}` : `ID:${id}`
         })
 
+      // Determinar resultado del cuarto
+      let quarterResultType: 'win' | 'loss' | 'draw'
+      if (quarterResult.team_goals > quarterResult.opponent_goals) quarterResultType = 'win'
+      else if (quarterResult.team_goals < quarterResult.opponent_goals) quarterResultType = 'loss'
+      else quarterResultType = 'draw'
+
+      // Crear detalle del cuarto
+      const quarterDetail: QuarterDetail = {
+        match_id: match.id,
+        opponent: match.opponent,
+        match_date: match.match_date,
+        quarter: quarter,
+        team_goals: quarterResult.team_goals,
+        opponent_goals: quarterResult.opponent_goals,
+        result: quarterResultType
+      }
+
       if (!formationMap.has(formationKey)) {
         formationMap.set(formationKey, {
           formation_key: formationKey,
@@ -202,7 +230,8 @@ export async function getFormationStatistics(teamId: number) {
           win_percentage: 0,
           total_goals_scored: 0,
           total_goals_conceded: 0,
-          goal_difference: 0
+          goal_difference: 0,
+          quarter_details: []
         })
       }
 
@@ -211,6 +240,7 @@ export async function getFormationStatistics(teamId: number) {
       stats.total_goals_scored += quarterResult.team_goals
       stats.total_goals_conceded += quarterResult.opponent_goals
       stats.goal_difference += (quarterResult.team_goals - quarterResult.opponent_goals)
+      stats.quarter_details.push(quarterDetail)
 
       if (quarterResult.team_goals > quarterResult.opponent_goals) stats.wins++
       else if (quarterResult.team_goals < quarterResult.opponent_goals) stats.losses++

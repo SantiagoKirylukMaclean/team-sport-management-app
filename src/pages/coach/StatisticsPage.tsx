@@ -5,6 +5,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
 import { 
   Users, 
   TrendingUp, 
@@ -17,7 +19,8 @@ import {
   TrendingDown,
   ArrowUpDown,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  Info
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { useAuth } from '@/contexts/AuthContext'
@@ -39,6 +42,66 @@ import {
 
 type SortField = 'name' | 'jersey' | 'matches' | 'match_pct' | 'quarters' | 'trainings' | 'training_pct'
 type SortDirection = 'asc' | 'desc' | null
+
+// Componente para mostrar detalles de cuartos
+function QuarterDetailsDialog({ formation }: { formation: FormationStats }) {
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="sm" className="h-8 gap-1">
+          <Info className="h-4 w-4" />
+          Ver detalles
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Detalles de Cuartos Jugados</DialogTitle>
+          <DialogDescription>
+            Información detallada de cada cuarto con esta formación
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-2">
+          <div className="flex flex-wrap gap-2 mb-4">
+            <span className="font-semibold">Jugadores:</span>
+            {formation.player_names.map((name, i) => (
+              <Badge key={i} variant="secondary">{name}</Badge>
+            ))}
+          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Fecha</TableHead>
+                <TableHead>Oponente</TableHead>
+                <TableHead className="text-center">Cuarto</TableHead>
+                <TableHead className="text-center">Resultado</TableHead>
+                <TableHead className="text-center">Goles</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {formation.quarter_details.map((qd, i) => (
+                <TableRow key={i}>
+                  <TableCell>{new Date(qd.match_date).toLocaleDateString()}</TableCell>
+                  <TableCell className="font-medium">{qd.opponent}</TableCell>
+                  <TableCell className="text-center">
+                    <Badge variant="outline">Q{qd.quarter}</Badge>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {qd.result === 'win' && <Badge className="bg-green-500">Victoria</Badge>}
+                    {qd.result === 'loss' && <Badge variant="destructive">Derrota</Badge>}
+                    {qd.result === 'draw' && <Badge variant="secondary">Empate</Badge>}
+                  </TableCell>
+                  <TableCell className="text-center font-bold">
+                    {qd.team_goals} - {qd.opponent_goals}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
 
 export default function StatisticsPage() {
   const { toast } = useToast()
@@ -647,6 +710,7 @@ export default function StatisticsPage() {
                                     <span className="font-bold text-lg">#{index + 1}</span>
                                     <Badge className="bg-green-500">{fs.wins} Cuartos Ganados</Badge>
                                     <Badge variant="outline">{fs.matches_played} cuartos jugados</Badge>
+                                    <QuarterDetailsDialog formation={fs} />
                                   </div>
                                   <div className="text-right">
                                     <div className="font-bold text-green-600">{fs.win_percentage.toFixed(1)}% victorias</div>
@@ -692,6 +756,7 @@ export default function StatisticsPage() {
                                     <span className="font-bold text-lg">#{index + 1}</span>
                                     <Badge className="bg-blue-500">{fs.total_goals_scored} Goles</Badge>
                                     <Badge variant="outline">{fs.matches_played} cuartos jugados</Badge>
+                                    <QuarterDetailsDialog formation={fs} />
                                   </div>
                                   <div className="text-right">
                                     <div className="font-bold text-blue-600">{(fs.total_goals_scored / fs.matches_played).toFixed(1)} goles/cuarto</div>
@@ -736,6 +801,7 @@ export default function StatisticsPage() {
                                     <span className="font-bold text-lg">#{index + 1}</span>
                                     <Badge variant="destructive">{fs.losses} Cuartos Perdidos</Badge>
                                     <Badge variant="outline">{fs.matches_played} cuartos jugados</Badge>
+                                    <QuarterDetailsDialog formation={fs} />
                                   </div>
                                   <div className="text-right">
                                     <div className="font-bold text-red-600">{((fs.losses / fs.matches_played) * 100).toFixed(1)}% derrotas</div>
@@ -780,6 +846,7 @@ export default function StatisticsPage() {
                                     <span className="font-bold text-lg">#{index + 1}</span>
                                     <Badge className="bg-orange-500">{fs.total_goals_conceded} Goles en Contra</Badge>
                                     <Badge variant="outline">{fs.matches_played} cuartos jugados</Badge>
+                                    <QuarterDetailsDialog formation={fs} />
                                   </div>
                                   <div className="text-right">
                                     <div className="font-bold text-orange-600">{(fs.total_goals_conceded / fs.matches_played).toFixed(1)} goles/cuarto</div>
