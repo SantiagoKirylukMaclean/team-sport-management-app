@@ -44,41 +44,63 @@ const SetPassword: React.FC = () => {
   })
 
   useEffect(() => {
+    let mounted = true
+    let timeoutId: NodeJS.Timeout
+
     const verifyRecoveryToken = async () => {
       try {
-        // Get the recovery token from URL
-        const accessToken = searchParams.get('access_token')
-        const type = searchParams.get('type')
+        // First, check current session
+        const { data: { session } } = await supabase.auth.getSession()
 
-        if (!accessToken || type !== 'recovery') {
-          setError('Link de invitación inválido o expirado')
-          setVerifying(false)
+        if (session?.user) {
+          if (mounted) {
+            setEmail(session.user.email || null)
+            setVerifying(false)
+          }
           return
         }
 
-        // Verify the session with the token
-        const { data, error: sessionError } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: searchParams.get('refresh_token') || '',
-        })
+        // If no session yet, wait for auth state change (Supabase processing URL)
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          async (event, session) => {
+            if (!mounted) return
 
-        if (sessionError || !data.user) {
-          setError('Link de invitación inválido o expirado')
-          setVerifying(false)
-          return
+            if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
+              if (session?.user) {
+                setEmail(session.user.email || null)
+                setVerifying(false)
+              }
+            }
+          }
+        )
+
+        // Set a timeout in case the link is invalid
+        timeoutId = setTimeout(() => {
+          if (mounted && verifying) {
+            setError('Link de invitación inválido o expirado')
+            setVerifying(false)
+          }
+        }, 3000)
+
+        return () => {
+          subscription.unsubscribe()
         }
-
-        setEmail(data.user.email || null)
-        setVerifying(false)
       } catch (err) {
         console.error('Error verifying recovery token:', err)
-        setError('Error al verificar el link de invitación')
-        setVerifying(false)
+        if (mounted) {
+          setError('Error al verificar el link de invitación')
+          setVerifying(false)
+        }
       }
     }
 
     verifyRecoveryToken()
-  }, [searchParams])
+
+    return () => {
+      mounted = false
+      if (timeoutId) clearTimeout(timeoutId)
+    }
+  }, [])
 
   const onSubmit = async (values: FormValues) => {
     try {

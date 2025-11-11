@@ -57,6 +57,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/set-password" element={<SetPassword />} />
+            <Route path="/reset-password" element={<SetPassword />} /> {/* Alias for password recovery */}
 
             {/* Protected main app routes */}
             <Route path="/" element={withShell(<Dashboard />)} />
