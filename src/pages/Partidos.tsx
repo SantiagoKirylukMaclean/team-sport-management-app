@@ -198,7 +198,7 @@ const Partidos: React.FC = () => {
           {/* Estadísticas */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             {/* Partidos Jugados */}
-            <div className="bg-black/60 border border-border rounded-xl p-6">
+            <div className="bg-card border border-border rounded-xl p-6">
               <div className="flex items-start justify-between mb-4">
                 <h3 className="text-sm font-medium text-muted-foreground">Partidos Jugados</h3>
                 <Trophy className="h-5 w-5 text-muted-foreground" />
@@ -212,7 +212,7 @@ const Partidos: React.FC = () => {
             </div>
 
             {/* % Victorias */}
-            <div className="bg-black/60 border border-border rounded-xl p-6">
+            <div className="bg-card border border-border rounded-xl p-6">
               <div className="flex items-start justify-between mb-4">
                 <h3 className="text-sm font-medium text-muted-foreground">% Victorias</h3>
                 <TrendingUp className="h-5 w-5 text-muted-foreground" />
@@ -229,7 +229,7 @@ const Partidos: React.FC = () => {
             </div>
 
             {/* Diferencia de Goles */}
-            <div className="bg-black/60 border border-border rounded-xl p-6">
+            <div className="bg-card border border-border rounded-xl p-6">
               <div className="flex items-start justify-between mb-4">
                 <h3 className="text-sm font-medium text-muted-foreground">Diferencia de Goles</h3>
                 <Target className="h-5 w-5 text-muted-foreground" />
