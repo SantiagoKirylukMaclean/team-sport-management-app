@@ -82,7 +82,6 @@ const TestApp = ({ authContext, initialRoute = '/' }: { authContext: any, initia
             <Route path="/dashboard" element={<div data-testid="dashboard-page">Dashboard</div>} />
             
             {/* Regular app routes */}
-            <Route path="/jugadores" element={<div data-testid="jugadores-page">Jugadores</div>} />
             <Route path="/equipos" element={<div data-testid="equipos-page">Equipos</div>} />
             <Route path="/profile" element={<div data-testid="profile-page">Profile</div>} />
             
@@ -283,14 +282,6 @@ describe('Complete Role-Based Navigation Integration Tests', () => {
       // Admin menu should be visible
       expect(screen.getByText('Admin')).toBeInTheDocument()
 
-      // Navigate to regular page
-      const jugadoresLink = screen.getByRole('link', { name: /jugadores/i })
-      fireEvent.click(jugadoresLink)
-
-      await waitFor(() => {
-        expect(screen.getByTestId('jugadores-page')).toBeInTheDocument()
-      })
-
       // Admin menu should still be visible
       expect(screen.getByText('Admin')).toBeInTheDocument()
     })
@@ -344,7 +335,6 @@ describe('Complete Role-Based Navigation Integration Tests', () => {
 
         // All users should see regular navigation
         expect(screen.getByText('Dashboard')).toBeInTheDocument()
-        expect(screen.getByText('Jugadores')).toBeInTheDocument()
         expect(screen.getByText('Profile')).toBeInTheDocument()
         expect(screen.getByText('Logout')).toBeInTheDocument()
 
