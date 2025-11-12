@@ -23,6 +23,7 @@ const Signup = React.lazy(() => import("@/pages/Signup"));
 const SetPassword = React.lazy(() => import("@/pages/SetPassword"));
 const Jugadores = React.lazy(() => import("@/pages/Jugadores"));
 const Partidos = React.lazy(() => import("@/pages/Partidos"));
+const NotFound = React.lazy(() => import("@/pages/NotFound"));
 
 // Admin pages
 const AdminDashboard = React.lazy(() => import("@/pages/admin/AdminDashboard"));
@@ -104,6 +105,9 @@ function App() {
 
             {/* Legacy admin routes - redirect to new structure */}
             <Route path="/admin/equipos" element={<Navigate to="/admin/teams" replace />} />
+
+            {/* Catch-all route for 404 */}
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </ToastProvider>
       </AuthProvider>
