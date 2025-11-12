@@ -67,7 +67,6 @@ function App() {
             <Route path="/entrenamiento" element={withShell(<Entrenamiento />)} />
             <Route path="/asistencia" element={withShell(<Asistencia />)} />
             <Route path="/campeonato" element={withShell(<Campeonato />)} />
-            <Route path="/estadisticas" element={withShell(<StatisticsPage />)} />
             <Route path="/evaluaciones" element={withShell(<MyEvaluations />)} />
             <Route path="/notes" element={withShell(<Notes />)} />
             <Route path="/profile" element={withShell(<Profile />)} />
@@ -99,6 +98,7 @@ function App() {
               <Route path="trainings" element={<TrainingsPage />} />
               <Route path="matches" element={<MatchesPage />} />
               <Route path="evaluations" element={<PlayerEvaluationsPage />} />
+              <Route path="estadisticas" element={<StatisticsPage />} />
             </Route>
 
             {/* Legacy admin routes - redirect to new structure */}

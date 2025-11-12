@@ -25,7 +25,7 @@ export function CoachLayout() {
     { to: "/coach/trainings", label: t('nav.training'), icon: Calendar },
     { to: "/coach/matches", label: t('nav.matches'), icon: Trophy },
     { to: "/coach/evaluations", label: t('nav.evaluations') || 'Evaluaciones', icon: BarChart3 },
-    { to: "/estadisticas", label: t('nav.statistics'), icon: BarChart3 },
+    { to: "/coach/estadisticas", label: t('nav.statistics'), icon: BarChart3 },
   ];
 
   return (

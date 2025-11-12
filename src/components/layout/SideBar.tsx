@@ -9,7 +9,6 @@ const items = [
   { to: "/entrenamiento", label: "Entrenamiento", icon: Timer },
   { to: "/asistencia", label: "Asistencia", icon: Settings2 },
   { to: "/campeonato", label: "Campeonato", icon: Trophy },
-  { to: "/estadisticas", label: "Estadísticas", icon: BarChart3 },
   { to: "/evaluaciones", label: "Mis Evaluaciones", icon: BarChart3 },
   { to: "/notes", label: "Notes", icon: NotebookText },
 ];
