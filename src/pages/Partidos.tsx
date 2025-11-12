@@ -16,7 +16,7 @@ import {
   type MatchQuarterResult 
 } from '@/services/matches'
 import { PartidosDetailDialog } from '@/pages/components/PartidosDetailDialog'
-import { FileText } from 'lucide-react'
+import { FileText, Trophy, TrendingUp, Target } from 'lucide-react'
 
 type MatchWithResult = Match & {
   result?: 'win' | 'draw' | 'loss' | null
@@ -143,6 +143,22 @@ const Partidos: React.FC = () => {
     return null
   }
 
+  // Calcular estadísticas
+  const stats = {
+    totalMatches: matches.filter(m => m.result !== null).length,
+    wins: matches.filter(m => m.result === 'win').length,
+    draws: matches.filter(m => m.result === 'draw').length,
+    losses: matches.filter(m => m.result === 'loss').length,
+    goalsFor: matches.reduce((sum, m) => sum + (m.teamGoals || 0), 0),
+    goalsAgainst: matches.reduce((sum, m) => sum + (m.opponentGoals || 0), 0),
+  }
+
+  const winPercentage = stats.totalMatches > 0 
+    ? ((stats.wins / stats.totalMatches) * 100).toFixed(1) 
+    : '0.0'
+  
+  const goalDifference = stats.goalsFor - stats.goalsAgainst
+
   return (
     <div className="space-y-6">
       <div>
@@ -178,7 +194,59 @@ const Partidos: React.FC = () => {
           No hay partidos registrados para este equipo
         </div>
       ) : (
-        <div className="border rounded-lg overflow-hidden">
+        <>
+          {/* Estadísticas */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            {/* Partidos Jugados */}
+            <div className="bg-black/60 border border-border rounded-xl p-6">
+              <div className="flex items-start justify-between mb-4">
+                <h3 className="text-sm font-medium text-muted-foreground">Partidos Jugados</h3>
+                <Trophy className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <div className="space-y-2">
+                <p className="text-4xl font-bold">{stats.totalMatches}</p>
+                <p className="text-sm text-muted-foreground">
+                  {stats.wins}V - {stats.draws}E - {stats.losses}D
+                </p>
+              </div>
+            </div>
+
+            {/* % Victorias */}
+            <div className="bg-black/60 border border-border rounded-xl p-6">
+              <div className="flex items-start justify-between mb-4">
+                <h3 className="text-sm font-medium text-muted-foreground">% Victorias</h3>
+                <TrendingUp className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <div className="space-y-2">
+                <p className="text-4xl font-bold">{winPercentage}%</p>
+                <div className="w-full bg-muted rounded-full h-2">
+                  <div 
+                    className="bg-primary h-2 rounded-full transition-all" 
+                    style={{ width: `${winPercentage}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Diferencia de Goles */}
+            <div className="bg-black/60 border border-border rounded-xl p-6">
+              <div className="flex items-start justify-between mb-4">
+                <h3 className="text-sm font-medium text-muted-foreground">Diferencia de Goles</h3>
+                <Target className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <div className="space-y-2">
+                <p className={`text-4xl font-bold ${goalDifference > 0 ? 'text-green-500' : goalDifference < 0 ? 'text-red-500' : ''}`}>
+                  {goalDifference > 0 ? '+' : ''}{goalDifference}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {stats.goalsFor} a favor - {stats.goalsAgainst} en contra
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Tabla de partidos */}
+          <div className="border rounded-lg overflow-hidden">
           <table className="w-full">
             <thead className="bg-muted">
               <tr>
@@ -222,6 +290,7 @@ const Partidos: React.FC = () => {
             </tbody>
           </table>
         </div>
+        </>
       )}
 
       {detailMatch && (

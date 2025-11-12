@@ -5,12 +5,9 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { 
-  TrendingUp, 
   Trophy, 
   Target, 
-  Calendar,
   Award,
-  Activity,
   User
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
@@ -166,7 +163,6 @@ export default function Dashboard() {
 
   // Get current player's stats
   const myStats = playerStats.find(s => s.player_id === playerInfo?.id)
-  const myGoalStats = goalStats.find(s => s.player_id === playerInfo?.id)
 
   if (loading) {
     return (
@@ -203,12 +199,16 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">
-          {playerInfo.full_name} - {playerInfo.team_name}
-        </p>
+        <h1 className="text-3xl font-bold tracking-tight mb-2">Dashboard</h1>
+        <div className="flex items-center gap-3">
+          <span className="text-xl font-semibold">{playerInfo.full_name}</span>
+          <Badge variant="outline" className="text-base px-3 py-1">
+            {playerInfo.team_name}
+          </Badge>
+        </div>
       </div>
 
       {statsLoading ? (
@@ -220,67 +220,53 @@ export default function Dashboard() {
         </div>
       ) : (
         <>
-          {/* Player Personal Stats */}
+          {/* Player Personal Stats - 3 Cards */}
           {myStats && (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Partidos</CardTitle>
-                  <Trophy className="h-4 w-4 text-muted-foreground" />
+            <div className="grid gap-4 md:grid-cols-3">
+              <Card className="border-2">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base font-medium text-muted-foreground">Partidos</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{myStats.matches_called_up}</div>
-                  <p className="text-xs text-muted-foreground">
-                    de {myStats.total_matches} totales
-                  </p>
-                  <Progress value={myStats.match_attendance_pct} className="mt-2" />
-                  <p className="text-xs text-muted-foreground mt-1">
+                <CardContent className="space-y-3">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-5xl font-bold">{myStats.matches_called_up}</span>
+                    <span className="text-2xl text-muted-foreground">/{myStats.total_matches}</span>
+                  </div>
+                  <Progress value={myStats.match_attendance_pct} className="h-2" />
+                  <p className="text-sm font-medium">
                     {myStats.match_attendance_pct}% asistencia
                   </p>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Cuartos Jugados</CardTitle>
-                  <Activity className="h-4 w-4 text-muted-foreground" />
+              <Card className="border-2">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base font-medium text-muted-foreground">Cuartos jugados</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{myStats.avg_periods_played.toFixed(1)}</div>
-                  <p className="text-xs text-muted-foreground">
+                <CardContent className="space-y-3">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-5xl font-bold">{myStats.avg_periods_played.toFixed(1)}</span>
+                    <span className="text-2xl text-muted-foreground">/4</span>
+                  </div>
+                  <div className="h-2"></div>
+                  <p className="text-sm text-muted-foreground">
                     promedio por partido
                   </p>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Entrenamientos</CardTitle>
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
+              <Card className="border-2">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base font-medium text-muted-foreground">Entrenamientos</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{myStats.trainings_attended}</div>
-                  <p className="text-xs text-muted-foreground">
-                    de {myStats.total_trainings} totales
-                  </p>
-                  <Progress value={myStats.training_attendance_pct} className="mt-2" />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {myStats.training_attendance_pct}% asistencia
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Goles y Asistencias</CardTitle>
-                  <Award className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {(myGoalStats?.total_goals || 0) + (myGoalStats?.total_assists || 0)}
+                <CardContent className="space-y-3">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-5xl font-bold">{myStats.trainings_attended}</span>
+                    <span className="text-2xl text-muted-foreground">/{myStats.total_trainings}</span>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    {myGoalStats?.total_goals || 0} goles, {myGoalStats?.total_assists || 0} asistencias
+                  <Progress value={myStats.training_attendance_pct} className="h-2" />
+                  <p className="text-sm font-medium">
+                    {myStats.training_attendance_pct}% asistencia
                   </p>
                 </CardContent>
               </Card>
@@ -290,60 +276,67 @@ export default function Dashboard() {
           {/* Team Overall Stats */}
           {overallStats && (
             <>
-              <div>
-                <h2 className="text-2xl font-bold tracking-tight mb-4">Estadísticas del Equipo</h2>
+              <div className="border-l-4 border-primary pl-4">
+                <h2 className="text-2xl font-bold tracking-tight">Equipo de {playerInfo.full_name}</h2>
               </div>
               
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Partidos Jugados</CardTitle>
-                    <Trophy className="h-4 w-4 text-muted-foreground" />
+              <div className="grid gap-4 md:grid-cols-3">
+                <Card className="border-2">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base font-medium text-muted-foreground">Partidos jugados</CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{overallStats.total_matches}</div>
-                    <p className="text-xs text-muted-foreground">
-                      {overallStats.wins}V - {overallStats.draws}E - {overallStats.losses}D
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">% Victorias</CardTitle>
-                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{overallStats.win_percentage.toFixed(1)}%</div>
-                    <Progress value={overallStats.win_percentage} className="mt-2" />
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Diferencia de Goles</CardTitle>
-                    <Target className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className={`text-2xl font-bold ${overallStats.goal_difference >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {overallStats.goal_difference > 0 ? '+' : ''}{overallStats.goal_difference}
+                  <CardContent className="space-y-3">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-5xl font-bold">{overallStats.total_matches}</span>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      {overallStats.total_goals_scored} a favor - {overallStats.total_goals_conceded} en contra
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                      <div className="h-full bg-primary" style={{ width: '100%' }}></div>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {overallStats.wins}V · {overallStats.draws}E · {overallStats.losses}D
                     </p>
                   </CardContent>
                 </Card>
 
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Asistencia Entrenamientos</CardTitle>
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                <Card className="border-2">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base font-medium text-muted-foreground">% victorias</CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{overallStats.avg_training_attendance.toFixed(1)}%</div>
-                    <p className="text-xs text-muted-foreground">
-                      {overallStats.total_trainings} entrenamientos
+                  <CardContent className="space-y-3">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-5xl font-bold">{overallStats.win_percentage.toFixed(0)}</span>
+                      <span className="text-2xl text-muted-foreground">%</span>
+                    </div>
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                      <div className="h-full bg-green-500" style={{ width: `${overallStats.win_percentage}%` }}></div>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {overallStats.wins}V · {overallStats.draws}E · {overallStats.losses}D
                     </p>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-2">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base font-medium text-muted-foreground">GOLES</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-4xl font-bold">{overallStats.total_goals_scored}</span>
+                      <span className="text-sm text-muted-foreground">A FAVOR</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-4xl font-bold">{overallStats.total_goals_conceded}</span>
+                      <span className="text-sm text-muted-foreground">EN CONTRA</span>
+                    </div>
+                    <div className="pt-2 border-t">
+                      <div className="flex items-center justify-between">
+                        <span className={`text-3xl font-bold ${overallStats.goal_difference >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                          {overallStats.goal_difference > 0 ? '+' : ''}{overallStats.goal_difference}
+                        </span>
+                        <span className="text-sm font-medium text-muted-foreground">DIFERENCIA<br/>DE GOL</span>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               </div>
