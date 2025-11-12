@@ -163,6 +163,7 @@ export default function Dashboard() {
 
   // Get current player's stats
   const myStats = playerStats.find(s => s.player_id === playerInfo?.id)
+  const myGoalStats = goalStats.find(s => s.player_id === playerInfo?.id)
 
   if (loading) {
     return (
@@ -220,9 +221,9 @@ export default function Dashboard() {
         </div>
       ) : (
         <>
-          {/* Player Personal Stats - 3 Cards */}
+          {/* Player Personal Stats - 4 Cards */}
           {myStats && (
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-4">
               <Card className="border-2">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base font-medium text-muted-foreground">Partidos</CardTitle>
@@ -268,6 +269,22 @@ export default function Dashboard() {
                   <p className="text-sm font-medium">
                     {myStats.training_attendance_pct}% asistencia
                   </p>
+                </CardContent>
+              </Card>
+
+              <Card className="border-2">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base font-medium text-muted-foreground">Goles y Asistencias</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-5xl font-bold">{myGoalStats?.total_goals || 0}</span>
+                    <span className="text-sm text-muted-foreground">GOLES</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-5xl font-bold">{myGoalStats?.total_assists || 0}</span>
+                    <span className="text-sm text-muted-foreground">ASISTENCIAS</span>
+                  </div>
                 </CardContent>
               </Card>
             </div>

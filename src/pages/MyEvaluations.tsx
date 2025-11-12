@@ -154,13 +154,13 @@ const MyEvaluations: React.FC = () => {
   if (evaluations.length === 0) {
     return (
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold">Mis Evaluaciones</h1>
-        <Card>
+        <h1 className="text-3xl font-bold text-white">Mis Evaluaciones</h1>
+        <Card className="bg-slate-800 border-slate-700">
           <CardContent className="py-12 text-center">
-            <p className="text-slate-500 text-lg">
+            <p className="text-slate-400 text-lg">
               Aún no tienes evaluaciones registradas.
             </p>
-            <p className="text-slate-400 text-sm mt-2">
+            <p className="text-slate-500 text-sm mt-2">
               Tu entrenador podrá evaluar tu progreso próximamente.
             </p>
           </CardContent>
@@ -177,19 +177,19 @@ const MyEvaluations: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Mis Evaluaciones</h1>
-        <p className="text-slate-600 mt-1">
+        <h1 className="text-3xl font-bold text-white">Mis Evaluaciones</h1>
+        <p className="text-slate-400 mt-1">
           Seguimiento de tu desarrollo y progreso
         </p>
       </div>
 
       {/* Hero Section with Large Radar Chart */}
-      <Card className="bg-gradient-to-br from-blue-50 to-indigo-50">
+      <Card className="bg-slate-800 border-slate-700">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-2xl">Tu Perfil de Habilidades</CardTitle>
-              <p className="text-sm text-slate-600 mt-1">
+              <CardTitle className="text-2xl text-white">Tu Perfil de Habilidades</CardTitle>
+              <p className="text-sm text-slate-400 mt-1">
                 Última evaluación: {new Date(latestEvaluation.evaluation_date).toLocaleDateString('es-ES', {
                   year: 'numeric',
                   month: 'long',
@@ -198,10 +198,10 @@ const MyEvaluations: React.FC = () => {
               </p>
             </div>
             <div className="text-right">
-              <div className="text-4xl font-bold text-blue-600">
+              <div className="text-4xl font-bold text-blue-400">
                 {Math.round(radarData.reduce((sum, item) => sum + item.score, 0) / radarData.length)}
               </div>
-              <div className="text-xs text-slate-500">Promedio General</div>
+              <div className="text-xs text-slate-400">Promedio General</div>
             </div>
           </div>
         </CardHeader>
@@ -211,10 +211,10 @@ const MyEvaluations: React.FC = () => {
             <div className="lg:col-span-2 h-96">
               <ResponsiveContainer width="100%" height="100%">
                 <RadarChart data={radarData}>
-                  <PolarGrid stroke="#cbd5e1" />
+                  <PolarGrid stroke="#475569" />
                   <PolarAngleAxis 
                     dataKey="category" 
-                    tick={{ fill: '#475569', fontSize: 12, fontWeight: 500 }}
+                    tick={{ fill: '#cbd5e1', fontSize: 12, fontWeight: 500 }}
                   />
                   <PolarRadiusAxis 
                     angle={90} 
@@ -231,10 +231,11 @@ const MyEvaluations: React.FC = () => {
                   />
                   <Tooltip 
                     contentStyle={{ 
-                      backgroundColor: 'white', 
-                      border: '1px solid #e2e8f0',
+                      backgroundColor: '#1e293b', 
+                      border: '1px solid #475569',
                       borderRadius: '8px',
-                      padding: '8px'
+                      padding: '8px',
+                      color: '#e2e8f0'
                     }}
                   />
                 </RadarChart>
@@ -252,15 +253,15 @@ const MyEvaluations: React.FC = () => {
                              percentage >= 40 ? 'bg-yellow-500' : 'bg-red-500'
                 
                 return (
-                  <div key={score.id} className="flex items-center gap-3 p-2 bg-white rounded-lg shadow-sm">
+                  <div key={score.id} className="flex items-center gap-3 p-2 bg-slate-700 rounded-lg shadow-sm">
                     <div className={`w-12 h-12 ${color} rounded-lg flex items-center justify-center text-white font-bold text-lg`}>
                       {score.score}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-xs font-semibold text-slate-700 truncate">
+                      <div className="text-xs font-semibold text-slate-200 truncate">
                         {criterion.name}
                       </div>
-                      <div className="w-full bg-slate-200 rounded-full h-1.5 mt-1">
+                      <div className="w-full bg-slate-600 rounded-full h-1.5 mt-1">
                         <div
                           className={`${color} h-1.5 rounded-full transition-all`}
                           style={{ width: `${percentage}%` }}
@@ -274,9 +275,9 @@ const MyEvaluations: React.FC = () => {
           </div>
 
           {latestEvaluation.notes && (
-            <div className="mt-6 p-4 bg-white border-l-4 border-blue-500 rounded-lg shadow-sm">
-              <p className="text-sm font-semibold text-slate-700 mb-1">💬 Observaciones del Entrenador:</p>
-              <p className="text-sm text-slate-600">{latestEvaluation.notes}</p>
+            <div className="mt-6 p-4 bg-slate-700 border-l-4 border-blue-500 rounded-lg shadow-sm">
+              <p className="text-sm font-semibold text-slate-200 mb-1">💬 Observaciones del Entrenador:</p>
+              <p className="text-sm text-slate-300">{latestEvaluation.notes}</p>
             </div>
           )}
         </CardContent>
@@ -284,10 +285,10 @@ const MyEvaluations: React.FC = () => {
 
       {/* Progression with Comparison Radar */}
       {progressionData.length > 0 && (
-        <Card>
+        <Card className="bg-slate-800 border-slate-700">
           <CardHeader>
-            <CardTitle>Tu Evolución</CardTitle>
-            <p className="text-sm text-slate-600">Comparación con tu evaluación anterior</p>
+            <CardTitle className="text-white">Tu Evolución</CardTitle>
+            <p className="text-sm text-slate-400">Comparación con tu evaluación anterior</p>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -299,10 +300,10 @@ const MyEvaluations: React.FC = () => {
                     actual: item.latest,
                     anterior: item.previous
                   }))}>
-                    <PolarGrid stroke="#cbd5e1" />
+                    <PolarGrid stroke="#475569" />
                     <PolarAngleAxis 
                       dataKey="category" 
-                      tick={{ fill: '#475569', fontSize: 11 }}
+                      tick={{ fill: '#cbd5e1', fontSize: 11 }}
                     />
                     <PolarRadiusAxis angle={90} domain={[0, 100]} />
                     <Radar
@@ -332,9 +333,9 @@ const MyEvaluations: React.FC = () => {
                 {progressionData.map(item => {
                   const isPositive = item.change > 0
                   const isNegative = item.change < 0
-                  const bgColor = isPositive ? 'bg-green-50 border-green-200' : 
-                                 isNegative ? 'bg-red-50 border-red-200' : 
-                                 'bg-slate-50 border-slate-200'
+                  const bgColor = isPositive ? 'bg-green-900/30 border-green-700' : 
+                                 isNegative ? 'bg-red-900/30 border-red-700' : 
+                                 'bg-slate-700 border-slate-600'
                   
                   return (
                     <div
@@ -342,7 +343,7 @@ const MyEvaluations: React.FC = () => {
                       className={`p-3 border-2 rounded-xl ${bgColor} transition-all hover:shadow-md`}
                     >
                       <div className="flex items-start justify-between mb-2">
-                        <span className="text-xs font-semibold text-slate-700 leading-tight">
+                        <span className="text-xs font-semibold text-slate-200 leading-tight">
                           {item.category}
                         </span>
                         {isPositive ? (
@@ -354,8 +355,8 @@ const MyEvaluations: React.FC = () => {
                         )}
                       </div>
                       <div className="flex items-baseline gap-1">
-                        <span className="text-2xl font-bold text-slate-900">{item.latest}</span>
-                        <span className="text-xs text-slate-500">%</span>
+                        <span className="text-2xl font-bold text-white">{item.latest}</span>
+                        <span className="text-xs text-slate-400">%</span>
                       </div>
                       <div className={`text-xs font-semibold mt-1 ${
                         isPositive ? 'text-green-600' : 
@@ -375,33 +376,34 @@ const MyEvaluations: React.FC = () => {
 
       {/* Timeline Chart */}
       {timelineData.length > 1 && (
-        <Card>
+        <Card className="bg-slate-800 border-slate-700">
           <CardHeader>
-            <CardTitle>Tu Trayectoria</CardTitle>
-            <p className="text-sm text-slate-600">Evolución de tus habilidades a lo largo del tiempo</p>
+            <CardTitle className="text-white">Tu Trayectoria</CardTitle>
+            <p className="text-sm text-slate-400">Evolución de tus habilidades a lo largo del tiempo</p>
           </CardHeader>
           <CardContent>
             <div className="h-96">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={timelineData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#475569" />
                   <XAxis 
                     dataKey="date" 
-                    tick={{ fill: '#64748b', fontSize: 12 }}
-                    stroke="#cbd5e1"
+                    tick={{ fill: '#94a3b8', fontSize: 12 }}
+                    stroke="#64748b"
                   />
                   <YAxis 
                     domain={[0, 100]} 
-                    tick={{ fill: '#64748b', fontSize: 12 }}
-                    stroke="#cbd5e1"
-                    label={{ value: 'Puntuación (%)', angle: -90, position: 'insideLeft', fill: '#64748b' }}
+                    tick={{ fill: '#94a3b8', fontSize: 12 }}
+                    stroke="#64748b"
+                    label={{ value: 'Puntuación (%)', angle: -90, position: 'insideLeft', fill: '#94a3b8' }}
                   />
                   <Tooltip 
                     contentStyle={{ 
-                      backgroundColor: 'white', 
-                      border: '1px solid #e2e8f0',
+                      backgroundColor: '#1e293b', 
+                      border: '1px solid #475569',
                       borderRadius: '8px',
-                      padding: '12px'
+                      padding: '12px',
+                      color: '#e2e8f0'
                     }}
                   />
                   <Legend 
@@ -433,18 +435,18 @@ const MyEvaluations: React.FC = () => {
 
       {/* Detailed History */}
       <div className="space-y-4">
-        <h2 className="text-2xl font-bold">Historial Detallado</h2>
+        <h2 className="text-2xl font-bold text-white">Historial Detallado</h2>
         {evaluations.map(evaluation => (
-          <Card key={evaluation.id}>
+          <Card key={evaluation.id} className="bg-slate-800 border-slate-700">
             <CardHeader>
-              <CardTitle>
+              <CardTitle className="text-white">
                 {new Date(evaluation.evaluation_date).toLocaleDateString('es-ES', {
                   year: 'numeric',
                   month: 'long',
                   day: 'numeric'
                 })}
               </CardTitle>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-slate-400">
                 Evaluado por: {evaluation.coach?.display_name || 'Entrenador'}
               </p>
             </CardHeader>
@@ -458,7 +460,7 @@ const MyEvaluations: React.FC = () => {
 
                 return (
                   <div key={category.id}>
-                    <h4 className="font-semibold mb-3">{category.name}</h4>
+                    <h4 className="font-semibold mb-3 text-white">{category.name}</h4>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                       {categoryScores.map(score => {
                         const criterion = category.criteria.find(c => c.id === score.criterion_id)
@@ -492,9 +494,9 @@ const MyEvaluations: React.FC = () => {
               })}
               
               {evaluation.notes && (
-                <div className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
-                  <p className="text-sm font-medium text-slate-700 mb-1">Observaciones:</p>
-                  <p className="text-sm text-slate-600">{evaluation.notes}</p>
+                <div className="mt-4 p-4 bg-slate-700 rounded-lg border border-slate-600">
+                  <p className="text-sm font-medium text-slate-200 mb-1">Observaciones:</p>
+                  <p className="text-sm text-slate-300">{evaluation.notes}</p>
                 </div>
               )}
             </CardContent>

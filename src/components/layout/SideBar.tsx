@@ -30,7 +30,7 @@ export function Sidebar({ collapsed, onToggle }:{collapsed:boolean; onToggle:()=
         <button onClick={onToggle} className="p-2 rounded-lg hover:bg-accent">
           <Menu size={18}/>
         </button>
-        {!collapsed && <span className="text-sm font-medium">GOAT Racing</span>}
+        {!collapsed && <span className="text-sm font-medium">SportsTech ™</span>}
       </div>
 
       <nav className="px-2 space-y-1">
@@ -89,6 +89,11 @@ export function Sidebar({ collapsed, onToggle }:{collapsed:boolean; onToggle:()=
           <LogOut size={18}/>
           {!collapsed && <span>Logout</span>}
         </button>
+        {!collapsed && (
+          <div className="px-3 py-2 text-xs text-muted-foreground/60 text-center">
+            Powered by KONI | SportsTech ™
+          </div>
+        )}
       </div>
     </aside>
   );
