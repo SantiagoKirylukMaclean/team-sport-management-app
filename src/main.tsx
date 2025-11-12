@@ -21,7 +21,6 @@ const Profile = React.lazy(() => import("@/pages/Profile"));
 const Login = React.lazy(() => import("@/pages/Login"));
 const Signup = React.lazy(() => import("@/pages/Signup"));
 const SetPassword = React.lazy(() => import("@/pages/SetPassword"));
-const Equipos = React.lazy(() => import("@/pages/Equipos"));
 const Jugadores = React.lazy(() => import("@/pages/Jugadores"));
 const Partidos = React.lazy(() => import("@/pages/Partidos"));
 
@@ -65,7 +64,6 @@ function App() {
             <Route path="/" element={withShell(<Dashboard />)} />
             <Route path="/dashboard" element={withShell(<Dashboard />)} />
             <Route path="/jugadores" element={withShell(<Jugadores />)} />
-            <Route path="/equipos" element={withShell(<Equipos />)} />
             <Route path="/partidos" element={withShell(<Partidos />)} />
             <Route path="/entrenamiento" element={withShell(<Entrenamiento />)} />
             <Route path="/asistencia" element={withShell(<Asistencia />)} />
