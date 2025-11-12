@@ -66,6 +66,7 @@ function App() {
             <Route path="/dashboard" element={withShell(<Dashboard />)} />
             <Route path="/jugadores" element={withShell(<Jugadores />)} />
             <Route path="/equipos" element={withShell(<Equipos />)} />
+            <Route path="/partidos" element={withShell(<Partidos />)} />
             <Route path="/entrenamiento" element={withShell(<Entrenamiento />)} />
             <Route path="/asistencia" element={withShell(<Asistencia />)} />
             <Route path="/campeonato" element={withShell(<Campeonato />)} />

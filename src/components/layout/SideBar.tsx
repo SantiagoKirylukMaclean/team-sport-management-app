@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 const items = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/jugadores", label: "Jugadores", icon: UserCheck },
-  { to: "/equipos", label: "Equipos", icon: Users },
+  { to: "/partidos", label: "Partidos", icon: Calendar },
   { to: "/entrenamiento", label: "Entrenamiento", icon: Timer },
   { to: "/asistencia", label: "Asistencia", icon: Settings2 },
   { to: "/campeonato", label: "Campeonato", icon: Trophy },
