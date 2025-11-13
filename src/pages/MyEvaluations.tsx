@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/hooks/use-toast'
 import { Loader2, TrendingUp, TrendingDown, Minus } from 'lucide-react'
 import { 
@@ -71,10 +70,10 @@ const MyEvaluations: React.FC = () => {
 
   const getScoreColor = (score: number, maxScore: number) => {
     const percentage = (score / maxScore) * 100
-    if (percentage >= 80) return 'text-green-600 bg-green-50 border-green-200'
-    if (percentage >= 60) return 'text-blue-600 bg-blue-50 border-blue-200'
-    if (percentage >= 40) return 'text-yellow-600 bg-yellow-50 border-yellow-200'
-    return 'text-red-600 bg-red-50 border-red-200'
+    if (percentage >= 80) return 'text-green-500 bg-green-500/20 border-green-500'
+    if (percentage >= 60) return 'text-blue-500 bg-blue-500/20 border-blue-500'
+    if (percentage >= 40) return 'text-yellow-500 bg-yellow-500/20 border-yellow-500'
+    return 'text-red-500 bg-red-500/20 border-red-500'
   }
 
   const getProgressionData = () => {
@@ -154,17 +153,20 @@ const MyEvaluations: React.FC = () => {
   if (evaluations.length === 0) {
     return (
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold text-white">Mis Evaluaciones</h1>
-        <Card className="bg-slate-800 border-slate-700">
-          <CardContent className="py-12 text-center">
-            <p className="text-slate-400 text-lg">
-              Aún no tienes evaluaciones registradas.
-            </p>
-            <p className="text-slate-500 text-sm mt-2">
-              Tu entrenador podrá evaluar tu progreso próximamente.
-            </p>
-          </CardContent>
-        </Card>
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Mis Evaluaciones</h1>
+          <p className="text-muted-foreground">
+            Seguimiento de tu desarrollo y progreso
+          </p>
+        </div>
+        <div className="bg-card border border-border rounded-xl p-12 text-center">
+          <p className="text-muted-foreground text-lg">
+            Aún no tienes evaluaciones registradas.
+          </p>
+          <p className="text-muted-foreground text-sm mt-2">
+            Tu entrenador podrá evaluar tu progreso próximamente.
+          </p>
+        </div>
       </div>
     )
   }
@@ -177,19 +179,19 @@ const MyEvaluations: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-white">Mis Evaluaciones</h1>
-        <p className="text-slate-400 mt-1">
+        <h1 className="text-3xl font-bold tracking-tight">Mis Evaluaciones</h1>
+        <p className="text-muted-foreground">
           Seguimiento de tu desarrollo y progreso
         </p>
       </div>
 
       {/* Hero Section with Large Radar Chart */}
-      <Card className="bg-slate-800 border-slate-700">
-        <CardHeader>
+      <div className="bg-card border border-border rounded-xl p-6">
+        <div className="mb-6">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-2xl text-white">Tu Perfil de Habilidades</CardTitle>
-              <p className="text-sm text-slate-400 mt-1">
+              <h2 className="text-2xl font-bold">Tu Perfil de Habilidades</h2>
+              <p className="text-sm text-muted-foreground mt-1">
                 Última evaluación: {new Date(latestEvaluation.evaluation_date).toLocaleDateString('es-ES', {
                   year: 'numeric',
                   month: 'long',
@@ -201,11 +203,11 @@ const MyEvaluations: React.FC = () => {
               <div className="text-4xl font-bold text-blue-400">
                 {Math.round(radarData.reduce((sum, item) => sum + item.score, 0) / radarData.length)}
               </div>
-              <div className="text-xs text-slate-400">Promedio General</div>
+              <div className="text-xs text-muted-foreground">Promedio General</div>
             </div>
           </div>
-        </CardHeader>
-        <CardContent>
+        </div>
+        <div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Large Radar Chart */}
             <div className="lg:col-span-2 h-96">
@@ -253,15 +255,15 @@ const MyEvaluations: React.FC = () => {
                              percentage >= 40 ? 'bg-yellow-500' : 'bg-red-500'
                 
                 return (
-                  <div key={score.id} className="flex items-center gap-3 p-2 bg-slate-700 rounded-lg shadow-sm">
+                  <div key={score.id} className="flex items-center gap-3 p-2 bg-muted rounded-lg">
                     <div className={`w-12 h-12 ${color} rounded-lg flex items-center justify-center text-white font-bold text-lg`}>
                       {score.score}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-xs font-semibold text-slate-200 truncate">
+                      <div className="text-xs font-semibold truncate">
                         {criterion.name}
                       </div>
-                      <div className="w-full bg-slate-600 rounded-full h-1.5 mt-1">
+                      <div className="w-full bg-background rounded-full h-1.5 mt-1">
                         <div
                           className={`${color} h-1.5 rounded-full transition-all`}
                           style={{ width: `${percentage}%` }}
@@ -275,22 +277,22 @@ const MyEvaluations: React.FC = () => {
           </div>
 
           {latestEvaluation.notes && (
-            <div className="mt-6 p-4 bg-slate-700 border-l-4 border-blue-500 rounded-lg shadow-sm">
-              <p className="text-sm font-semibold text-slate-200 mb-1">💬 Observaciones del Entrenador:</p>
-              <p className="text-sm text-slate-300">{latestEvaluation.notes}</p>
+            <div className="mt-6 p-4 bg-muted border-l-4 border-blue-500 rounded-lg">
+              <p className="text-sm font-semibold mb-1">💬 Observaciones del Entrenador:</p>
+              <p className="text-sm text-muted-foreground">{latestEvaluation.notes}</p>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Progression with Comparison Radar */}
       {progressionData.length > 0 && (
-        <Card className="bg-slate-800 border-slate-700">
-          <CardHeader>
-            <CardTitle className="text-white">Tu Evolución</CardTitle>
-            <p className="text-sm text-slate-400">Comparación con tu evaluación anterior</p>
-          </CardHeader>
-          <CardContent>
+        <div className="bg-card border border-border rounded-xl p-6">
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold">Tu Evolución</h2>
+            <p className="text-sm text-muted-foreground">Comparación con tu evaluación anterior</p>
+          </div>
+          <div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Comparison Radar Chart */}
               <div className="h-80">
@@ -333,9 +335,9 @@ const MyEvaluations: React.FC = () => {
                 {progressionData.map(item => {
                   const isPositive = item.change > 0
                   const isNegative = item.change < 0
-                  const bgColor = isPositive ? 'bg-green-900/30 border-green-700' : 
-                                 isNegative ? 'bg-red-900/30 border-red-700' : 
-                                 'bg-slate-700 border-slate-600'
+                  const bgColor = isPositive ? 'bg-green-500/20 border-green-500' : 
+                                 isNegative ? 'bg-red-500/20 border-red-500' : 
+                                 'bg-muted border-border'
                   
                   return (
                     <div
@@ -343,7 +345,7 @@ const MyEvaluations: React.FC = () => {
                       className={`p-3 border-2 rounded-xl ${bgColor} transition-all hover:shadow-md`}
                     >
                       <div className="flex items-start justify-between mb-2">
-                        <span className="text-xs font-semibold text-slate-200 leading-tight">
+                        <span className="text-xs font-semibold leading-tight">
                           {item.category}
                         </span>
                         {isPositive ? (
@@ -355,13 +357,13 @@ const MyEvaluations: React.FC = () => {
                         )}
                       </div>
                       <div className="flex items-baseline gap-1">
-                        <span className="text-2xl font-bold text-white">{item.latest}</span>
-                        <span className="text-xs text-slate-400">%</span>
+                        <span className="text-2xl font-bold">{item.latest}</span>
+                        <span className="text-xs text-muted-foreground">%</span>
                       </div>
                       <div className={`text-xs font-semibold mt-1 ${
-                        isPositive ? 'text-green-600' : 
-                        isNegative ? 'text-red-600' : 
-                        'text-slate-400'
+                        isPositive ? 'text-green-500' : 
+                        isNegative ? 'text-red-500' : 
+                        'text-muted-foreground'
                       }`}>
                         {item.change > 0 ? '+' : ''}{item.change}% vs anterior
                       </div>
@@ -370,18 +372,18 @@ const MyEvaluations: React.FC = () => {
                 })}
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
       {/* Timeline Chart */}
       {timelineData.length > 1 && (
-        <Card className="bg-slate-800 border-slate-700">
-          <CardHeader>
-            <CardTitle className="text-white">Tu Trayectoria</CardTitle>
-            <p className="text-sm text-slate-400">Evolución de tus habilidades a lo largo del tiempo</p>
-          </CardHeader>
-          <CardContent>
+        <div className="bg-card border border-border rounded-xl p-6">
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold">Tu Trayectoria</h2>
+            <p className="text-sm text-muted-foreground">Evolución de tus habilidades a lo largo del tiempo</p>
+          </div>
+          <div>
             <div className="h-96">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={timelineData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
@@ -429,28 +431,28 @@ const MyEvaluations: React.FC = () => {
                 </LineChart>
               </ResponsiveContainer>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
       {/* Detailed History */}
       <div className="space-y-4">
-        <h2 className="text-2xl font-bold text-white">Historial Detallado</h2>
+        <h2 className="text-2xl font-bold">Historial Detallado</h2>
         {evaluations.map(evaluation => (
-          <Card key={evaluation.id} className="bg-slate-800 border-slate-700">
-            <CardHeader>
-              <CardTitle className="text-white">
+          <div key={evaluation.id} className="bg-card border border-border rounded-xl p-6">
+            <div className="mb-6">
+              <h3 className="text-xl font-bold">
                 {new Date(evaluation.evaluation_date).toLocaleDateString('es-ES', {
                   year: 'numeric',
                   month: 'long',
                   day: 'numeric'
                 })}
-              </CardTitle>
-              <p className="text-sm text-slate-400">
+              </h3>
+              <p className="text-sm text-muted-foreground">
                 Evaluado por: {evaluation.coach?.display_name || 'Entrenador'}
               </p>
-            </CardHeader>
-            <CardContent className="space-y-4">
+            </div>
+            <div className="space-y-4">
               {evaluationStructure.map(category => {
                 const categoryScores = evaluation.scores.filter(s =>
                   category.criteria.some(c => c.id === s.criterion_id)
@@ -460,7 +462,7 @@ const MyEvaluations: React.FC = () => {
 
                 return (
                   <div key={category.id}>
-                    <h4 className="font-semibold mb-3 text-white">{category.name}</h4>
+                    <h4 className="font-semibold mb-3">{category.name}</h4>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                       {categoryScores.map(score => {
                         const criterion = category.criteria.find(c => c.id === score.criterion_id)
@@ -494,13 +496,13 @@ const MyEvaluations: React.FC = () => {
               })}
               
               {evaluation.notes && (
-                <div className="mt-4 p-4 bg-slate-700 rounded-lg border border-slate-600">
-                  <p className="text-sm font-medium text-slate-200 mb-1">Observaciones:</p>
-                  <p className="text-sm text-slate-300">{evaluation.notes}</p>
+                <div className="mt-4 p-4 bg-muted rounded-lg border border-border">
+                  <p className="text-sm font-medium mb-1">Observaciones:</p>
+                  <p className="text-sm text-muted-foreground">{evaluation.notes}</p>
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         ))}
       </div>
     </div>
