@@ -31,7 +31,6 @@ import {
   type MatchGoal,
 } from '@/services/matches'
 import { listPositions, type Position } from '@/services/positions'
-import { PositionSelectDialog } from './PositionSelectDialog'
 import { supabase } from '@/lib/supabase'
 import { AlertTriangle, ArrowLeftRight, X, Plus, Trash2 } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -46,6 +45,7 @@ type Props = {
 type PlayerWithPeriod = Player & {
   currentPeriod: PeriodFraction | null
   positionId: number | null
+  fieldZone: FieldZone | null
 }
 
 type FieldPosition = {
@@ -53,11 +53,49 @@ type FieldPosition = {
   y: number
 }
 
+type FieldZone = 
+  | 'PORTERO'
+  | 'DEFENSA_IZQUIERDA'
+  | 'DEFENSA_CENTRAL'
+  | 'DEFENSA_DERECHA'
+  | 'VOLANTE_IZQUIERDO'
+  | 'VOLANTE_CENTRAL'
+  | 'VOLANTE_DERECHO'
+  | 'DELANTERO_IZQUIERDO'
+  | 'DELANTERO_CENTRO'
+  | 'DELANTERO_DERECHO'
+
+const ZONE_POSITIONS: Record<FieldZone, FieldPosition> = {
+  PORTERO: { x: 50, y: 88.5 },
+  DEFENSA_IZQUIERDA: { x: 16.65, y: 72 },
+  DEFENSA_CENTRAL: { x: 50, y: 72 },
+  DEFENSA_DERECHA: { x: 83.35, y: 72 },
+  VOLANTE_IZQUIERDO: { x: 16.65, y: 49.5 },
+  VOLANTE_CENTRAL: { x: 50, y: 49.5 },
+  VOLANTE_DERECHO: { x: 83.35, y: 49.5 },
+  DELANTERO_IZQUIERDO: { x: 16.65, y: 27 },
+  DELANTERO_CENTRO: { x: 50, y: 27 },
+  DELANTERO_DERECHO: { x: 83.35, y: 27 },
+}
+
+const ZONE_LABELS: Record<FieldZone, string> = {
+  PORTERO: 'Portero',
+  DEFENSA_IZQUIERDA: 'Defensa izquierda',
+  DEFENSA_CENTRAL: 'Defensa central',
+  DEFENSA_DERECHA: 'Defensa derecha',
+  VOLANTE_IZQUIERDO: 'Volante izquierdo',
+  VOLANTE_CENTRAL: 'Volante central',
+  VOLANTE_DERECHO: 'Volante Derecho',
+  DELANTERO_IZQUIERDO: 'Delantero izquierdo',
+  DELANTERO_CENTRO: 'Delantero centro',
+  DELANTERO_DERECHO: 'Delantero derecho',
+}
+
 export function MatchLineupAndResults({ open, onOpenChange, match, teamId }: Props) {
   const { toast } = useToast()
   const [players, setPlayers] = useState<PlayerWithPeriod[]>([])
   const [selectedPeriod, setSelectedPeriod] = useState<1 | 2 | 3 | 4>(1)
-  const [fieldPlayers, setFieldPlayers] = useState<Map<number, FieldPosition>>(new Map())
+  const [fieldPlayers, setFieldPlayers] = useState<Map<number, FieldZone>>(new Map())
   const [benchPlayers, setBenchPlayers] = useState<Set<number>>(new Set())
   const [draggedPlayer, setDraggedPlayer] = useState<number | null>(null)
   const [touchStartPos, setTouchStartPos] = useState<{ x: number; y: number } | null>(null)
@@ -76,8 +114,6 @@ export function MatchLineupAndResults({ open, onOpenChange, match, teamId }: Pro
   
   // Estados para posiciones
   const [positions, setPositions] = useState<Position[]>([])
-  const [showPositionDialog, setShowPositionDialog] = useState(false)
-  const [playerForPosition, setPlayerForPosition] = useState<number | null>(null)
 
   useEffect(() => {
     if (open) {
@@ -171,6 +207,7 @@ export function MatchLineupAndResults({ open, onOpenChange, match, teamId }: Pro
           ...p,
           currentPeriod: playerPeriods[selectedPeriod] || null,
           positionId: periodData?.position_id || null,
+          fieldZone: periodData?.field_zone as FieldZone || null,
         }
       })
 
@@ -182,17 +219,19 @@ export function MatchLineupAndResults({ open, onOpenChange, match, teamId }: Pro
       const playersOut = new Set(currentSubs.map(s => s.player_out))
       const playersIn = new Set(currentSubs.map(s => s.player_in))
       
-      const newField = new Map<number, FieldPosition>()
+      const newField = new Map<number, FieldZone>()
       const newBench = new Set<number>()
       
       mapped.forEach((player) => {
         if (player.currentPeriod === 'FULL' && !playersOut.has(player.id)) {
-          const existingCount = newField.size
-          newField.set(player.id, getDefaultPosition(existingCount))
+          // Usar la zona guardada si existe, sino usar zona por defecto
+          const zone = player.fieldZone || getDefaultZone(newField.size)
+          newField.set(player.id, zone)
         }
         else if (player.currentPeriod === 'HALF' && playersIn.has(player.id)) {
-          const existingCount = newField.size
-          newField.set(player.id, getDefaultPosition(existingCount))
+          // Usar la zona guardada si existe, sino usar zona por defecto
+          const zone = player.fieldZone || getDefaultZone(newField.size)
+          newField.set(player.id, zone)
         }
         else if (player.currentPeriod === 'HALF' && playersOut.has(player.id)) {
           newBench.add(player.id)
@@ -249,6 +288,7 @@ export function MatchLineupAndResults({ open, onOpenChange, match, teamId }: Pro
           ...p,
           currentPeriod: playerPeriods[selectedPeriod] || null,
           positionId: periodData?.position_id || null,
+          fieldZone: periodData?.field_zone as FieldZone || null,
         }
       })
 
@@ -260,17 +300,19 @@ export function MatchLineupAndResults({ open, onOpenChange, match, teamId }: Pro
       const playersOut = new Set(currentSubs.map(s => s.player_out))
       const playersIn = new Set(currentSubs.map(s => s.player_in))
       
-      const newField = new Map<number, FieldPosition>()
+      const newField = new Map<number, FieldZone>()
       const newBench = new Set<number>()
       
       mapped.forEach((player) => {
         if (player.currentPeriod === 'FULL' && !playersOut.has(player.id)) {
-          const existingCount = newField.size
-          newField.set(player.id, getDefaultPosition(existingCount))
+          // Usar la zona guardada si existe, sino usar zona por defecto
+          const zone = player.fieldZone || getDefaultZone(newField.size)
+          newField.set(player.id, zone)
         }
         else if (player.currentPeriod === 'HALF' && playersIn.has(player.id)) {
-          const existingCount = newField.size
-          newField.set(player.id, getDefaultPosition(existingCount))
+          // Usar la zona guardada si existe, sino usar zona por defecto
+          const zone = player.fieldZone || getDefaultZone(newField.size)
+          newField.set(player.id, zone)
         }
         else {
           newBench.add(player.id)
@@ -288,12 +330,44 @@ export function MatchLineupAndResults({ open, onOpenChange, match, teamId }: Pro
     }
   }
 
-  const getDefaultPosition = (index: number): FieldPosition => {
-    const formations = [
-      { x: 50, y: 85 }, { x: 25, y: 65 }, { x: 50, y: 65 }, { x: 75, y: 65 },
-      { x: 35, y: 40 }, { x: 65, y: 40 }, { x: 50, y: 20 },
+  const getDefaultZone = (index: number): FieldZone => {
+    const zones: FieldZone[] = [
+      'PORTERO',
+      'DEFENSA_IZQUIERDA',
+      'DEFENSA_CENTRAL',
+      'DEFENSA_DERECHA',
+      'VOLANTE_IZQUIERDO',
+      'VOLANTE_CENTRAL',
+      'VOLANTE_DERECHO',
     ]
-    return formations[index % formations.length] || { x: 50, y: 50 }
+    return zones[index % zones.length] || 'VOLANTE_CENTRAL'
+  }
+  
+  const getZoneFromPosition = (x: number, y: number): FieldZone | null => {
+    // Dividir la cancha en zonas basadas en coordenadas
+    // Ajustado para coincidir con la cuadrícula 3x3 + zona de portero
+    // Y: 0-38.5% = Delanteros, 38.5-61% = Volantes, 61-83.5% = Defensas, 83.5-100% = Portero
+    // X: 0-33.33% = Izquierda, 33.33-66.66% = Centro, 66.66-100% = Derecha
+    
+    if (y > 83.5) {
+      // Zona de portero (toda la fila superior)
+      return 'PORTERO'
+    } else if (y > 61) {
+      // Zona defensiva (segunda fila)
+      if (x < 33.33) return 'DEFENSA_IZQUIERDA'
+      if (x < 66.66) return 'DEFENSA_CENTRAL'
+      return 'DEFENSA_DERECHA'
+    } else if (y > 38.5) {
+      // Zona de volantes (tercera fila)
+      if (x < 33.33) return 'VOLANTE_IZQUIERDO'
+      if (x < 66.66) return 'VOLANTE_CENTRAL'
+      return 'VOLANTE_DERECHO'
+    } else {
+      // Zona delantera (cuarta fila)
+      if (x < 33.33) return 'DELANTERO_IZQUIERDO'
+      if (x < 66.66) return 'DELANTERO_CENTRO'
+      return 'DELANTERO_DERECHO'
+    }
   }
 
   const handleDragStart = (playerId: number) => {
@@ -338,20 +412,23 @@ export function MatchLineupAndResults({ open, onOpenChange, match, teamId }: Pro
           variant: 'destructive',
         })
       } else {
-        const newField = new Map(fieldPlayers)
-        newField.set(draggedPlayer, { x, y })
-        setFieldPlayers(newField)
+        const zone = getZoneFromPosition(x, y)
+        if (zone) {
+          const newField = new Map(fieldPlayers)
+          newField.set(draggedPlayer, zone)
+          setFieldPlayers(newField)
 
-        const newBench = new Set(benchPlayers)
-        newBench.delete(draggedPlayer)
-        setBenchPlayers(newBench)
+          const newBench = new Set(benchPlayers)
+          newBench.delete(draggedPlayer)
+          setBenchPlayers(newBench)
 
-        const isInSubstitution = substitutions.some(
-          sub => sub.player_out === draggedPlayer || sub.player_in === draggedPlayer
-        )
-        if (!isInSubstitution) {
-          setPlayerForPosition(draggedPlayer)
-          setShowPositionDialog(true)
+          // Obtener el período actual del jugador
+          const player = players.find(p => p.id === draggedPlayer)
+          const currentPeriod = player?.currentPeriod || 'FULL'
+          
+          // Asignar posición automáticamente basada en la zona
+          const positionId = getPositionIdFromZone(zone)
+          updatePlayerPeriod(draggedPlayer, currentPeriod, positionId, zone)
         }
       }
     }
@@ -399,6 +476,26 @@ export function MatchLineupAndResults({ open, onOpenChange, match, teamId }: Pro
     }
   }
 
+  const getPositionIdFromZone = (zone: FieldZone): number | null => {
+    // Mapear zonas a IDs de posiciones
+    const zoneToPositionMap: Record<FieldZone, string> = {
+      PORTERO: 'Portero',
+      DEFENSA_IZQUIERDA: 'Defensa',
+      DEFENSA_CENTRAL: 'Defensa',
+      DEFENSA_DERECHA: 'Defensa',
+      VOLANTE_IZQUIERDO: 'Volante',
+      VOLANTE_CENTRAL: 'Volante',
+      VOLANTE_DERECHO: 'Volante',
+      DELANTERO_IZQUIERDO: 'Delantero',
+      DELANTERO_CENTRO: 'Delantero',
+      DELANTERO_DERECHO: 'Delantero',
+    }
+    
+    const positionName = zoneToPositionMap[zone]
+    const position = positions.find(p => p.name === positionName)
+    return position?.id || null
+  }
+
   const handleFieldDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
     if (!draggedPlayer) return
@@ -425,22 +522,24 @@ export function MatchLineupAndResults({ open, onOpenChange, match, teamId }: Pro
       return
     }
 
+    const zone = getZoneFromPosition(x, y)
+    if (!zone) return
+
     const newField = new Map(fieldPlayers)
-    newField.set(draggedPlayer, { x, y })
+    newField.set(draggedPlayer, zone)
     setFieldPlayers(newField)
 
     const newBench = new Set(benchPlayers)
     newBench.delete(draggedPlayer)
     setBenchPlayers(newBench)
 
-    const isInSubstitution = substitutions.some(
-      sub => sub.player_out === draggedPlayer || sub.player_in === draggedPlayer
-    )
-    if (!isInSubstitution) {
-      // Mostrar diálogo para seleccionar posición
-      setPlayerForPosition(draggedPlayer)
-      setShowPositionDialog(true)
-    }
+    // Obtener el período actual del jugador
+    const player = players.find(p => p.id === draggedPlayer)
+    const currentPeriod = player?.currentPeriod || 'FULL'
+    
+    // Asignar posición automáticamente basada en la zona
+    const positionId = getPositionIdFromZone(zone)
+    updatePlayerPeriod(draggedPlayer, currentPeriod, positionId, zone)
   }
 
   const handleBenchDrop = async (e: React.DragEvent<HTMLDivElement>) => {
@@ -486,14 +585,14 @@ export function MatchLineupAndResults({ open, onOpenChange, match, teamId }: Pro
     }
   }
 
-  const updatePlayerPeriod = async (playerId: number, fraction: PeriodFraction, positionId?: number | null) => {
+  const updatePlayerPeriod = async (playerId: number, fraction: PeriodFraction, positionId?: number | null, fieldZone?: FieldZone | null) => {
     try {
-      const { error } = await upsertMatchPeriod(match.id, playerId, selectedPeriod, fraction, positionId)
+      const { error } = await upsertMatchPeriod(match.id, playerId, selectedPeriod, fraction, positionId, fieldZone)
       if (error) throw error
 
       setPlayers((prev) =>
         prev.map((p) =>
-          p.id === playerId ? { ...p, currentPeriod: fraction, positionId: positionId || null } : p
+          p.id === playerId ? { ...p, currentPeriod: fraction, positionId: positionId || null, fieldZone: fieldZone || null } : p
         )
       )
     } catch (err: any) {
@@ -505,18 +604,7 @@ export function MatchLineupAndResults({ open, onOpenChange, match, teamId }: Pro
     }
   }
 
-  const handlePositionConfirm = async (positionId: number | null) => {
-    if (!playerForPosition) return
-    
-    const playerId = playerForPosition
-    
-    // Cerrar el diálogo primero
-    setShowPositionDialog(false)
-    setPlayerForPosition(null)
-    
-    // Luego actualizar el período
-    await updatePlayerPeriod(playerId, 'FULL', positionId)
-  }
+
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
@@ -553,9 +641,19 @@ export function MatchLineupAndResults({ open, onOpenChange, match, teamId }: Pro
     const playerOut = player1InField ? selectedPlayerForSub : playerId
     const playerIn = player1InField ? playerId : selectedPlayerForSub
 
+    // Obtener la zona del jugador que sale
+    const playerOutZone = fieldPlayers.get(playerOut)
+    const playerOutData = players.find(p => p.id === playerOut)
+
     try {
       const { error } = await applyMatchSubstitution(match.id, selectedPeriod, playerOut, playerIn)
       if (error) throw error
+
+      // Si el jugador que sale tenía una zona, asignarla al jugador que entra
+      if (playerOutZone && playerOutData) {
+        const positionId = playerOutData.positionId
+        await updatePlayerPeriod(playerIn, 'HALF', positionId, playerOutZone)
+      }
 
       toast({
         title: 'Cambio aplicado',
@@ -798,20 +896,54 @@ export function MatchLineupAndResults({ open, onOpenChange, match, teamId }: Pro
                 </h3>
                 <div
                   id="soccer-field"
-                  className="relative w-full h-[450px] bg-gradient-to-b from-green-600 to-green-700 rounded-lg border-4 border-white overflow-hidden"
+                  className="relative w-full h-[500px] bg-gradient-to-b from-green-600 to-green-700 rounded-lg border-4 border-white overflow-hidden"
                   onDrop={handleFieldDrop}
                   onDragOver={handleDragOver}
                 >
-                  <div className="absolute inset-0">
-                    <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-white/50" />
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 border-2 border-white/50 rounded-full" />
-                    <div className="absolute top-0 left-1/4 right-1/4 h-16 border-2 border-white/50 border-t-0" />
-                    <div className="absolute bottom-0 left-1/4 right-1/4 h-16 border-2 border-white/50 border-b-0" />
+                  {/* Líneas de la cancha */}
+                  <div className="absolute inset-0 pointer-events-none">
+                    <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-white/40" />
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 border-2 border-white/40 rounded-full" />
+                    <div className="absolute top-0 left-1/4 right-1/4 h-16 border-2 border-white/40 border-t-0" />
+                    <div className="absolute bottom-0 left-1/4 right-1/4 h-16 border-2 border-white/40 border-b-0" />
+                    
+                    {/* Líneas divisorias de zonas - Ajustadas para cuadrícula perfecta */}
+                    <div className="absolute left-0 right-0 h-px bg-white/25" style={{ top: '38.5%' }} />
+                    <div className="absolute left-0 right-0 h-px bg-white/25" style={{ top: '61%' }} />
+                    <div className="absolute left-0 right-0 h-px bg-white/25" style={{ top: '83.5%' }} />
+                    <div className="absolute top-0 bottom-0 w-px bg-white/25" style={{ left: '33.33%' }} />
+                    <div className="absolute top-0 bottom-0 w-px bg-white/25" style={{ left: '66.66%' }} />
                   </div>
 
-                  {Array.from(fieldPlayers.entries()).map(([playerId, pos]) => {
+                  {/* Zonas de drop con etiquetas */}
+                  {(Object.keys(ZONE_POSITIONS) as FieldZone[]).map((zone) => {
+                    const pos = ZONE_POSITIONS[zone]
+                    const hasPlayer = Array.from(fieldPlayers.values()).includes(zone)
+                    
+                    return (
+                      <div
+                        key={zone}
+                        className="absolute -translate-x-1/2 -translate-y-1/2"
+                        style={{
+                          left: `${pos.x}%`,
+                          top: `${pos.y}%`,
+                          pointerEvents: 'none',
+                        }}
+                      >
+                        {!hasPlayer && (
+                          <div className="text-[10px] text-center px-2 py-1 rounded bg-white/30 text-white">
+                            {ZONE_LABELS[zone]}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+
+                  {/* Jugadores */}
+                  {Array.from(fieldPlayers.entries()).map(([playerId, zone]) => {
                     const player = getPlayerById(playerId)
                     if (!player) return null
+                    const pos = ZONE_POSITIONS[zone]
                     const isSelected = selectedPlayerForSub === playerId
                     const isInSubstitution = substitutions.some(
                       sub => sub.player_out === playerId || sub.player_in === playerId
@@ -832,7 +964,7 @@ export function MatchLineupAndResults({ open, onOpenChange, match, teamId }: Pro
                             handlePlayerClickForSubstitution(playerId)
                           }
                         }}
-                        className={`absolute -translate-x-1/2 -translate-y-1/2 ${
+                        className={`absolute -translate-x-1/2 -translate-y-1/2 z-10 ${
                           substitutionMode 
                             ? 'cursor-pointer' 
                             : calledUpCount >= 7 ? 'cursor-move' : 'cursor-not-allowed opacity-50'
@@ -842,25 +974,23 @@ export function MatchLineupAndResults({ open, onOpenChange, match, teamId }: Pro
                           top: `${pos.y}%`,
                         }}
                       >
-                        <div className={`rounded-full w-10 h-10 flex items-center justify-center shadow-lg border-2 ${
+                        <div className={`rounded-full w-12 h-12 flex items-center justify-center shadow-lg border-2 ${
                           isSelected 
                             ? 'bg-yellow-500 border-yellow-300 ring-2 ring-yellow-400' 
                             : isInSubstitution
                             ? 'bg-orange-500 border-white'
                             : 'bg-blue-600 border-white hover:bg-blue-700'
                         } text-white`}>
-                          <span className="text-xs font-bold">
+                          <span className="text-sm font-bold">
                             {player.jersey_number || player.full_name.substring(0, 2)}
                           </span>
                         </div>
-                        <div className="text-[10px] text-center mt-0.5 bg-black/50 text-white px-1 rounded max-w-[80px]">
-                          <div className="truncate">{player.full_name}</div>
+                        <div className="text-[10px] text-center mt-0.5 bg-black/70 text-white px-1.5 py-0.5 rounded max-w-[90px]">
+                          <div className="truncate font-medium">{player.full_name}</div>
                           {isInSubstitution && <div className="text-orange-300">(HALF)</div>}
-                          {player.positionId && (
-                            <div className="text-yellow-300 truncate">
-                              {positions.find(p => p.id === player.positionId)?.name}
-                            </div>
-                          )}
+                          <div className="text-yellow-300 text-[9px] truncate">
+                            {ZONE_LABELS[zone]}
+                          </div>
                         </div>
                       </div>
                     )
@@ -1073,21 +1203,6 @@ export function MatchLineupAndResults({ open, onOpenChange, match, teamId }: Pro
         </div>
       </DialogContent>
     </Dialog>
-    
-    {playerForPosition && (
-      <PositionSelectDialog
-        open={showPositionDialog}
-        onOpenChange={(isOpen) => {
-          setShowPositionDialog(isOpen)
-          if (!isOpen) {
-            setPlayerForPosition(null)
-          }
-        }}
-        positions={positions}
-        playerName={getPlayerById(playerForPosition)?.full_name || ''}
-        onConfirm={handlePositionConfirm}
-      />
-    )}
     </>
   )
 }
