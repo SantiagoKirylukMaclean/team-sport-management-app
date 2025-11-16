@@ -60,6 +60,7 @@ export function MatchLineupAndResults({ open, onOpenChange, match, teamId }: Pro
   const [fieldPlayers, setFieldPlayers] = useState<Map<number, FieldPosition>>(new Map())
   const [benchPlayers, setBenchPlayers] = useState<Set<number>>(new Set())
   const [draggedPlayer, setDraggedPlayer] = useState<number | null>(null)
+  const [touchStartPos, setTouchStartPos] = useState<{ x: number; y: number } | null>(null)
   const [loading, setLoading] = useState(false)
   const [calledUpCount, setCalledUpCount] = useState(0)
   const [substitutions, setSubstitutions] = useState<MatchSubstitution[]>([])
@@ -303,6 +304,101 @@ export function MatchLineupAndResults({ open, onOpenChange, match, teamId }: Pro
     setDraggedPlayer(null)
   }
 
+  const handleTouchStart = (e: React.TouchEvent, playerId: number) => {
+    if (substitutionMode) return
+    if (calledUpCount < 7) return
+    
+    const touch = e.touches[0]
+    setTouchStartPos({ x: touch.clientX, y: touch.clientY })
+    setDraggedPlayer(playerId)
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!draggedPlayer || !touchStartPos) return
+    e.preventDefault()
+  }
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!draggedPlayer || !touchStartPos) return
+    
+    const touch = e.changedTouches[0]
+    const element = document.elementFromPoint(touch.clientX, touch.clientY)
+    
+    // Verificar si se soltó en la cancha
+    const fieldElement = document.getElementById('soccer-field')
+    if (fieldElement && fieldElement.contains(element)) {
+      const rect = fieldElement.getBoundingClientRect()
+      const x = ((touch.clientX - rect.left) / rect.width) * 100
+      const y = ((touch.clientY - rect.top) / rect.height) * 100
+      
+      if (!fieldPlayers.has(draggedPlayer) && fieldPlayers.size >= 7) {
+        toast({
+          title: 'Límite alcanzado',
+          description: 'Solo puedes tener 7 jugadores en el campo',
+          variant: 'destructive',
+        })
+      } else {
+        const newField = new Map(fieldPlayers)
+        newField.set(draggedPlayer, { x, y })
+        setFieldPlayers(newField)
+
+        const newBench = new Set(benchPlayers)
+        newBench.delete(draggedPlayer)
+        setBenchPlayers(newBench)
+
+        const isInSubstitution = substitutions.some(
+          sub => sub.player_out === draggedPlayer || sub.player_in === draggedPlayer
+        )
+        if (!isInSubstitution) {
+          setPlayerForPosition(draggedPlayer)
+          setShowPositionDialog(true)
+        }
+      }
+    }
+    
+    // Verificar si se soltó en el banco
+    const benchElement = document.getElementById('bench-area')
+    if (benchElement && benchElement.contains(element)) {
+      handleBenchDropAsync()
+    }
+    
+    setDraggedPlayer(null)
+    setTouchStartPos(null)
+  }
+
+  const handleBenchDropAsync = async () => {
+    if (!draggedPlayer) return
+
+    try {
+      const { error } = await supabase
+        .from('match_player_periods')
+        .delete()
+        .match({ match_id: match.id, player_id: draggedPlayer, period: selectedPeriod })
+
+      if (error) throw error
+
+      const newBench = new Set(benchPlayers)
+      newBench.add(draggedPlayer)
+      setBenchPlayers(newBench)
+
+      const newField = new Map(fieldPlayers)
+      newField.delete(draggedPlayer)
+      setFieldPlayers(newField)
+
+      setPlayers((prev) =>
+        prev.map((p) =>
+          p.id === draggedPlayer ? { ...p, currentPeriod: null } : p
+        )
+      )
+    } catch (err: any) {
+      toast({
+        title: 'Error',
+        description: err.message || 'Error al actualizar jugador',
+        variant: 'destructive',
+      })
+    }
+  }
+
   const handleFieldDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
     if (!draggedPlayer) return
@@ -412,8 +508,14 @@ export function MatchLineupAndResults({ open, onOpenChange, match, teamId }: Pro
   const handlePositionConfirm = async (positionId: number | null) => {
     if (!playerForPosition) return
     
-    await updatePlayerPeriod(playerForPosition, 'FULL', positionId)
+    const playerId = playerForPosition
+    
+    // Cerrar el diálogo primero
+    setShowPositionDialog(false)
     setPlayerForPosition(null)
+    
+    // Luego actualizar el período
+    await updatePlayerPeriod(playerId, 'FULL', positionId)
   }
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -587,8 +689,9 @@ export function MatchLineupAndResults({ open, onOpenChange, match, teamId }: Pro
   const { teamTotal, opponentTotal } = getTotalScore()
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Formación y Resultado - {match.opponent}</DialogTitle>
         </DialogHeader>
@@ -694,7 +797,8 @@ export function MatchLineupAndResults({ open, onOpenChange, match, teamId }: Pro
                   Cancha ({fieldPlayers.size}/7 jugadores)
                 </h3>
                 <div
-                  className="relative w-full h-[300px] bg-gradient-to-b from-green-600 to-green-700 rounded-lg border-4 border-white overflow-hidden"
+                  id="soccer-field"
+                  className="relative w-full h-[450px] bg-gradient-to-b from-green-600 to-green-700 rounded-lg border-4 border-white overflow-hidden"
                   onDrop={handleFieldDrop}
                   onDragOver={handleDragOver}
                 >
@@ -718,6 +822,9 @@ export function MatchLineupAndResults({ open, onOpenChange, match, teamId }: Pro
                         draggable={calledUpCount >= 7 && !substitutionMode}
                         onDragStart={() => handleDragStart(playerId)}
                         onDragEnd={handleDragEnd}
+                        onTouchStart={(e) => handleTouchStart(e, playerId)}
+                        onTouchMove={handleTouchMove}
+                        onTouchEnd={handleTouchEnd}
                         onClick={(e) => {
                           e.stopPropagation()
                           e.preventDefault()
@@ -766,6 +873,7 @@ export function MatchLineupAndResults({ open, onOpenChange, match, teamId }: Pro
                     Banco {substitutionMode && '(Click para cambio)'}
                   </h3>
                   <div
+                    id="bench-area"
                     className={`border-2 border-dashed rounded-lg p-2 min-h-[60px] ${
                       substitutionMode ? 'bg-yellow-50 border-yellow-300' : 'bg-gray-50'
                     }`}
@@ -791,6 +899,9 @@ export function MatchLineupAndResults({ open, onOpenChange, match, teamId }: Pro
                               draggable={calledUpCount >= 7 && !substitutionMode}
                               onDragStart={() => handleDragStart(playerId)}
                               onDragEnd={handleDragEnd}
+                              onTouchStart={(e) => handleTouchStart(e, playerId)}
+                              onTouchMove={handleTouchMove}
+                              onTouchEnd={handleTouchEnd}
                               onClick={(e) => {
                                 e.stopPropagation()
                                 e.preventDefault()
@@ -961,17 +1072,23 @@ export function MatchLineupAndResults({ open, onOpenChange, match, teamId }: Pro
           </Button>
         </div>
       </DialogContent>
-      
-      {playerForPosition && (
-        <PositionSelectDialog
-          open={showPositionDialog}
-          onOpenChange={setShowPositionDialog}
-          positions={positions}
-          playerName={getPlayerById(playerForPosition)?.full_name || ''}
-          onConfirm={handlePositionConfirm}
-        />
-      )}
     </Dialog>
+    
+    {playerForPosition && (
+      <PositionSelectDialog
+        open={showPositionDialog}
+        onOpenChange={(isOpen) => {
+          setShowPositionDialog(isOpen)
+          if (!isOpen) {
+            setPlayerForPosition(null)
+          }
+        }}
+        positions={positions}
+        playerName={getPlayerById(playerForPosition)?.full_name || ''}
+        onConfirm={handlePositionConfirm}
+      />
+    )}
+    </>
   )
 }
 

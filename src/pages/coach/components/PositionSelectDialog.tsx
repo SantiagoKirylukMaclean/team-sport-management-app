@@ -34,20 +34,31 @@ export function PositionSelectDialog({
 }: Props) {
   const [selectedPosition, setSelectedPosition] = useState<string | undefined>(undefined)
 
-  const handleConfirm = () => {
+  const handleConfirm = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
     onConfirm(selectedPosition ? parseInt(selectedPosition) : null)
     setSelectedPosition(undefined)
-    onOpenChange(false)
   }
 
-  const handleCancel = () => {
+  const handleCancel = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
     setSelectedPosition(undefined)
     onOpenChange(false)
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+    <Dialog open={open} onOpenChange={(isOpen) => {
+      if (!isOpen) {
+        onOpenChange(false)
+      }
+    }} modal={true}>
+      <DialogContent 
+        className="sm:max-w-md" 
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>Seleccionar Posición</DialogTitle>
         </DialogHeader>
