@@ -31,7 +31,6 @@ import {
   type MatchGoal,
 } from '@/services/matches'
 import { listPositions, type Position } from '@/services/positions'
-import { PositionSelectDialog } from './PositionSelectDialog'
 import { supabase } from '@/lib/supabase'
 import { AlertTriangle, ArrowLeftRight, X, Plus, Trash2 } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -165,11 +164,9 @@ export function MatchLineupAndResults({ open, onOpenChange, match, teamId }: Pro
 
       const mapped: PlayerWithPeriod[] = calledUpPlayers.map((p: Player) => {
         const playerPeriods = allPeriodsMap.get(p.id) || {}
-        const periodData = periodsData.find((pd: any) => pd.player_id === p.id && pd.period === selectedPeriod)
         return {
           ...p,
           currentPeriod: playerPeriods[selectedPeriod] || null,
-          positionId: periodData?.position_id || null,
         }
       })
 
@@ -243,11 +240,9 @@ export function MatchLineupAndResults({ open, onOpenChange, match, teamId }: Pro
 
       const mapped: PlayerWithPeriod[] = calledUpPlayers.map((p: Player) => {
         const playerPeriods = allPeriodsMap.get(p.id) || {}
-        const periodData = periodsData.find((pd: any) => pd.player_id === p.id && pd.period === selectedPeriod)
         return {
           ...p,
           currentPeriod: playerPeriods[selectedPeriod] || null,
-          positionId: periodData?.position_id || null,
         }
       })
 
@@ -341,9 +336,7 @@ export function MatchLineupAndResults({ open, onOpenChange, match, teamId }: Pro
       sub => sub.player_out === draggedPlayer || sub.player_in === draggedPlayer
     )
     if (!isInSubstitution) {
-      // Mostrar diálogo para seleccionar posición
-      setPlayerForPosition(draggedPlayer)
-      setShowPositionDialog(true)
+      updatePlayerPeriod(draggedPlayer, 'FULL')
     }
   }
 
@@ -390,14 +383,14 @@ export function MatchLineupAndResults({ open, onOpenChange, match, teamId }: Pro
     }
   }
 
-  const updatePlayerPeriod = async (playerId: number, fraction: PeriodFraction, positionId?: number | null) => {
+  const updatePlayerPeriod = async (playerId: number, fraction: PeriodFraction) => {
     try {
-      const { error } = await upsertMatchPeriod(match.id, playerId, selectedPeriod, fraction, positionId)
+      const { error } = await upsertMatchPeriod(match.id, playerId, selectedPeriod, fraction)
       if (error) throw error
 
       setPlayers((prev) =>
         prev.map((p) =>
-          p.id === playerId ? { ...p, currentPeriod: fraction, positionId: positionId || null } : p
+          p.id === playerId ? { ...p, currentPeriod: fraction } : p
         )
       )
     } catch (err: any) {
@@ -407,13 +400,6 @@ export function MatchLineupAndResults({ open, onOpenChange, match, teamId }: Pro
         variant: 'destructive',
       })
     }
-  }
-
-  const handlePositionConfirm = async (positionId: number | null) => {
-    if (!playerForPosition) return
-    
-    await updatePlayerPeriod(playerForPosition, 'FULL', positionId)
-    setPlayerForPosition(null)
   }
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -746,14 +732,9 @@ export function MatchLineupAndResults({ open, onOpenChange, match, teamId }: Pro
                             {player.jersey_number || player.full_name.substring(0, 2)}
                           </span>
                         </div>
-                        <div className="text-[10px] text-center mt-0.5 bg-black/50 text-white px-1 rounded max-w-[80px]">
-                          <div className="truncate">{player.full_name}</div>
-                          {isInSubstitution && <div className="text-orange-300">(HALF)</div>}
-                          {player.positionId && (
-                            <div className="text-yellow-300 truncate">
-                              {positions.find(p => p.id === player.positionId)?.name}
-                            </div>
-                          )}
+                        <div className="text-[10px] text-center mt-0.5 bg-black/50 text-white px-1 rounded whitespace-nowrap max-w-[80px] truncate">
+                          {player.full_name}
+                          {isInSubstitution && ' (HALF)'}
                         </div>
                       </div>
                     )
@@ -961,16 +942,6 @@ export function MatchLineupAndResults({ open, onOpenChange, match, teamId }: Pro
           </Button>
         </div>
       </DialogContent>
-      
-      {playerForPosition && (
-        <PositionSelectDialog
-          open={showPositionDialog}
-          onOpenChange={setShowPositionDialog}
-          positions={positions}
-          playerName={getPlayerById(playerForPosition)?.full_name || ''}
-          onConfirm={handlePositionConfirm}
-        />
-      )}
     </Dialog>
   )
 }

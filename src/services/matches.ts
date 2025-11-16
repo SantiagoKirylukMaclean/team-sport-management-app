@@ -56,13 +56,14 @@ export type MatchPlayerPeriod = {
   player_id: number
   period: number
   fraction: PeriodFraction
+  position_id: number | null
   created_at: string
 }
 
 export async function listMatchPeriods(matchId: number) {
   return supabase
     .from('match_player_periods')
-    .select('match_id,player_id,period,fraction,created_at')
+    .select('match_id,player_id,period,fraction,position_id,created_at')
     .eq('match_id', matchId)
 }
 
@@ -70,7 +71,8 @@ export async function upsertMatchPeriod(
   matchId: number,
   playerId: number,
   period: 1 | 2 | 3 | 4,
-  fraction: PeriodFraction
+  fraction: PeriodFraction,
+  positionId?: number | null
 ) {
   // Upsert manual por PK compuesta
   const { error: delErr } = await supabase
@@ -82,8 +84,14 @@ export async function upsertMatchPeriod(
   }
   return supabase
     .from('match_player_periods')
-    .insert({ match_id: matchId, player_id: playerId, period, fraction })
-    .select('match_id,player_id,period,fraction,created_at')
+    .insert({ 
+      match_id: matchId, 
+      player_id: playerId, 
+      period, 
+      fraction,
+      position_id: positionId || null
+    })
+    .select('match_id,player_id,period,fraction,position_id,created_at')
     .single()
 }
 
