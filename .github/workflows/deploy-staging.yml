@@ -41,7 +41,7 @@ jobs:
       - name: Run Supabase migrations
         run: |
           echo "🔄 Linking to Supabase project: $SUPABASE_PROJECT_ID"
-          supabase link --project-ref $SUPABASE_PROJECT_ID
+          supabase link --project-ref $SUPABASE_PROJECT_ID --password $SUPABASE_ACCESS_TOKEN
           echo "📦 Applying database migrations..."
           supabase db push
           echo "✅ Migrations applied successfully"
