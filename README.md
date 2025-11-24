@@ -41,45 +41,58 @@ This application includes a comprehensive user invitation system that allows SUP
 
 ### Prerequisites
 
-- Node.js 18+ and npm/yarn
-- Supabase CLI
-- Git
+- **Docker Desktop** - [Download here](https://www.docker.com/products/docker-desktop)
+- **Supabase CLI** - Install via Homebrew: `brew install supabase/tap/supabase`
+- **Node.js 18+** and npm/yarn
+- **Git**
 
-### Installation
+### Quick Start
 
-1. **Clone the repository**
+1. **Clone and install**
    ```bash
    git clone <repository-url>
-   cd sports-team-management
-   ```
-
-2. **Install dependencies**
-   ```bash
+   cd team-sport-management-app
    npm install
    ```
 
-3. **Set up Supabase**
+2. **Validate your setup**
    ```bash
-   # Initialize Supabase (if not already done)
-   supabase init
-   
-   # Start local development
+   ./scripts/validate-local-setup.sh
+   ```
+
+3. **Start Supabase**
+   ```bash
    supabase start
-   
-   # Apply database migrations
-   supabase db reset
    ```
+   *First time? This takes 5-10 minutes to download Docker images.*
 
-4. **Configure environment variables**
+4. **Configure environment**
    ```bash
-   cp .env.example .env.local
-   # Edit .env.local with your Supabase credentials
+   cp .env.local.example .env.local
+   # Edit .env.local with the anon key from `supabase status`
    ```
 
-5. **Start development server**
+5. **Start development**
    ```bash
    npm run dev
    ```
+
+### Local Development Documentation
+
+- **[Getting Started Guide](docs/GETTING_STARTED.md)** - Complete setup walkthrough
+- **[Workflow Guide](docs/WORKFLOW_GUIDE.md)** - Complete development workflow (Local → Staging → Production)
+- **[Local Development Guide](docs/LOCAL_DEVELOPMENT.md)** - Comprehensive development guide
+- **[Quick Reference](docs/SUPABASE_QUICK_REFERENCE.md)** - Command cheat sheet
+- **[Troubleshooting](docs/SUPABASE_TROUBLESHOOTING.md)** - Fix common issues
+- **[Supabase Directory](supabase/README.md)** - Understanding the supabase/ folder
+
+### Development Environments
+
+| Environment | Purpose | Supabase | Branch |
+|-------------|---------|----------|--------|
+| **Local** | Development | Docker (localhost) | feature/* |
+| **Staging** | Testing | wuinfsedukvxlkfvlpna | stage |
+| **Production** | Live | fkjbvwbnbxslornufhlp | main |
 
 ### Database Setup
 

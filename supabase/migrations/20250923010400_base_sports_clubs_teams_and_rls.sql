@@ -69,7 +69,8 @@ $$;
 -- profiles se asume ya tiene sus policies
 
 -- SPORTS
-create policy if not exists "sports superadmin all" on public.sports
+drop policy if exists "sports superadmin all" on public.sports;
+create policy "sports superadmin all" on public.sports
   for all using ( public.is_superadmin() ) with check ( public.is_superadmin() );
 
 -- Lectura transitiva de sports para coach/admin con teams del sport
@@ -87,7 +88,8 @@ create policy "sports coach read by team" on public.sports
   );
 
 -- CLUBS
-create policy if not exists "clubs superadmin all" on public.clubs
+drop policy if exists "clubs superadmin all" on public.clubs;
+create policy "clubs superadmin all" on public.clubs
   for all using ( public.is_superadmin() ) with check ( public.is_superadmin() );
 
 drop policy if exists "clubs coach read by team" on public.clubs;
@@ -103,7 +105,8 @@ create policy "clubs coach read by team" on public.clubs
   );
 
 -- TEAMS
-create policy if not exists "teams superadmin all" on public.teams
+drop policy if exists "teams superadmin all" on public.teams;
+create policy "teams superadmin all" on public.teams
   for all using ( public.is_superadmin() ) with check ( public.is_superadmin() );
 
 drop policy if exists "teams coach read own" on public.teams;
@@ -111,7 +114,8 @@ create policy "teams coach read own" on public.teams
   for select using ( public.is_coach_of_team(public.teams.id) );
 
 -- USER_TEAM_ROLES
-create policy if not exists "utr superadmin all" on public.user_team_roles
+drop policy if exists "utr superadmin all" on public.user_team_roles;
+create policy "utr superadmin all" on public.user_team_roles
   for all using ( public.is_superadmin() ) with check ( public.is_superadmin() );
 
 drop policy if exists "utr self read" on public.user_team_roles;

@@ -1,0 +1,95 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches:
+      - stage
+  pull_request:
+    branches:
+      - stage
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: staging
+    
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN_STAGING }}
+      SUPABASE_PROJECT_ID: wuinfsedukvxlkfvlpna
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+      
+      - name: Run Supabase migrations
+        run: |
+          echo "🔄 Linking to Supabase project: $SUPABASE_PROJECT_ID"
+          supabase link --project-ref $SUPABASE_PROJECT_ID
+          echo "📦 Applying database migrations..."
+          supabase db push
+          echo "✅ Migrations applied successfully"
+      
+      - name: Deploy Supabase Edge Functions
+        if: success()
+        run: |
+          echo "⚡ Deploying Edge Functions to Supabase project: $SUPABASE_PROJECT_ID"
+          supabase functions deploy --project-ref $SUPABASE_PROJECT_ID
+          echo "✅ Edge Functions deployed successfully"
+      
+      - name: Deploy to Vercel Preview
+        if: success()
+        run: |
+          vercel pull --yes --environment=preview --token=$VERCEL_TOKEN
+          vercel build --token=$VERCEL_TOKEN
+          vercel deploy --prebuilt --token=$VERCEL_TOKEN > deployment-url.txt
+          echo "Deployment URL: $(cat deployment-url.txt)"
+      
+      - name: Deployment Summary
+        if: always()
+        run: |
+          echo "## 🚀 Staging Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -f deployment-url.txt ]; then
+            DEPLOYMENT_URL=$(cat deployment-url.txt)
+            echo "### ✅ Deployment Successful" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "| Component | Status | Details |" >> $GITHUB_STEP_SUMMARY
+            echo "|-----------|--------|---------|" >> $GITHUB_STEP_SUMMARY
+            echo "| 📦 Database Migrations | ✅ Applied | Project: \`$SUPABASE_PROJECT_ID\` |" >> $GITHUB_STEP_SUMMARY
+            echo "| ⚡ Edge Functions | ✅ Deployed | Project: \`$SUPABASE_PROJECT_ID\` |" >> $GITHUB_STEP_SUMMARY
+            echo "| 🌐 Vercel Preview | ✅ Deployed | [View Deployment]($DEPLOYMENT_URL) |" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Preview URL:** $DEPLOYMENT_URL" >> $GITHUB_STEP_SUMMARY
+            
+            echo "✅ Staging Deployment Complete"
+            echo "📦 Migrations applied to Supabase project: $SUPABASE_PROJECT_ID"
+            echo "⚡ Edge Functions deployed"
+            echo "🚀 Vercel Preview URL: $DEPLOYMENT_URL"
+          else
+            echo "### ❌ Deployment Failed" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "The deployment did not complete successfully. Please check the workflow logs for details." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Supabase Project:** \`$SUPABASE_PROJECT_ID\`" >> $GITHUB_STEP_SUMMARY
+            
+            echo "❌ Staging Deployment Failed"
+            echo "Please check the workflow logs for details."
+          fi
