@@ -57,6 +57,9 @@ jobs:
           supabase functions deploy --project-ref $SUPABASE_PROJECT_ID
           echo "✅ Edge Functions deployed successfully"
       
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+      
       - name: Deploy to Vercel Preview
         run: |
           set -e
