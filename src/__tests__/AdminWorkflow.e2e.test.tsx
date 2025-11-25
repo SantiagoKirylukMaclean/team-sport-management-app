@@ -1,13 +1,11 @@
 import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { MemoryRouter, Routes, Route } from 'react-router-dom'
+import { MemoryRouter } from 'react-router-dom'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { Sidebar } from '@/components/layout/Sidebar'
 import AdminGuard from '@/components/RouteGuards/AdminGuard'
-import { AdminLayout } from '@/layouts/AdminLayout'
 import SportsPage from '@/pages/admin/SportsPage'
 import ClubsPage from '@/pages/admin/ClubsPage'
-import TeamsPage from '@/pages/admin/TeamsPage'
 import { mockUsers } from '@/test/utils'
 
 // Mock Supabase
@@ -64,7 +62,7 @@ describe('Admin Workflow End-to-End Tests', () => {
 
       render(
         <MemoryRouter>
-          <Sidebar collapsed={false} onToggle={() => {}} />
+          <Sidebar collapsed={false} onToggle={() => { }} />
         </MemoryRouter>
       )
 
@@ -94,7 +92,7 @@ describe('Admin Workflow End-to-End Tests', () => {
 
       const { supabase } = await import('@/lib/supabase')
       const mockSupabase = supabase as any
-      
+
       mockSupabase.from.mockReturnValue({
         select: () => ({
           order: () => ({
@@ -166,7 +164,7 @@ describe('Admin Workflow End-to-End Tests', () => {
 
       const { supabase } = await import('@/lib/supabase')
       const mockSupabase = supabase as any
-      
+
       // Mock empty data response
       mockSupabase.from.mockReturnValue({
         select: () => ({
@@ -261,7 +259,7 @@ describe('Admin Workflow End-to-End Tests', () => {
 
       render(
         <MemoryRouter>
-          <Sidebar collapsed={false} onToggle={() => {}} />
+          <Sidebar collapsed={false} onToggle={() => { }} />
         </MemoryRouter>
       )
 
@@ -273,7 +271,7 @@ describe('Admin Workflow End-to-End Tests', () => {
 
       render(
         <MemoryRouter>
-          <Sidebar collapsed={false} onToggle={() => {}} />
+          <Sidebar collapsed={false} onToggle={() => { }} />
         </MemoryRouter>
       )
 
@@ -285,7 +283,7 @@ describe('Admin Workflow End-to-End Tests', () => {
 
       render(
         <MemoryRouter>
-          <Sidebar collapsed={false} onToggle={() => {}} />
+          <Sidebar collapsed={false} onToggle={() => { }} />
         </MemoryRouter>
       )
 
@@ -297,7 +295,7 @@ describe('Admin Workflow End-to-End Tests', () => {
 
       render(
         <MemoryRouter>
-          <Sidebar collapsed={false} onToggle={() => {}} />
+          <Sidebar collapsed={false} onToggle={() => { }} />
         </MemoryRouter>
       )
 
@@ -309,7 +307,7 @@ describe('Admin Workflow End-to-End Tests', () => {
 
       render(
         <MemoryRouter>
-          <Sidebar collapsed={false} onToggle={() => {}} />
+          <Sidebar collapsed={false} onToggle={() => { }} />
         </MemoryRouter>
       )
 
@@ -323,17 +321,17 @@ describe('Admin Workflow End-to-End Tests', () => {
 
       // Mock clubs with sport relationships
       const mockClubsWithSports = [
-        { 
-          id: '1', 
-          name: 'FC Barcelona', 
-          sport_id: '1', 
+        {
+          id: '1',
+          name: 'FC Barcelona',
+          sport_id: '1',
           created_at: '2024-01-01T00:00:00Z',
           sports: { name: 'Football' }
         },
-        { 
-          id: '2', 
-          name: 'Lakers', 
-          sport_id: '2', 
+        {
+          id: '2',
+          name: 'Lakers',
+          sport_id: '2',
           created_at: '2024-01-02T00:00:00Z',
           sports: { name: 'Basketball' }
         }
@@ -341,7 +339,7 @@ describe('Admin Workflow End-to-End Tests', () => {
 
       const { supabase } = await import('@/lib/supabase')
       const mockSupabase = supabase as any
-      
+
       mockSupabase.from.mockReturnValue({
         select: () => ({
           order: () => ({
@@ -371,7 +369,7 @@ describe('Admin Workflow End-to-End Tests', () => {
 
     it('should verify complete admin workflow integration', async () => {
       // This test verifies the complete workflow from authentication to data display
-      
+
       // Step 1: Set super admin user
       mockUseAuth.mockReturnValue(createMockAuthContext(mockUsers.superAdmin, 'super_admin'))
 
@@ -382,7 +380,7 @@ describe('Admin Workflow End-to-End Tests', () => {
 
       const { supabase } = await import('@/lib/supabase')
       const mockSupabase = supabase as any
-      
+
       mockSupabase.from.mockReturnValue({
         select: () => ({
           order: () => ({
