@@ -56,10 +56,13 @@ jobs:
       - name: Deploy to Vercel Preview
         if: success()
         run: |
+          echo "🚀 Setting up Vercel project configuration..."
+          mkdir -p .vercel
+          echo '{"projectId":"'$VERCEL_PROJECT_ID'","orgId":"'$VERCEL_ORG_ID'"}' > .vercel/project.json
+          
           echo "🚀 Deploying to Vercel Preview..."
           DEPLOYMENT_URL=$(vercel deploy \
             --token=$VERCEL_TOKEN \
-            --scope=$VERCEL_ORG_ID \
             --yes \
             2>&1 | tee /dev/stderr | grep -oP 'https://[^\s]+' | tail -1)
           echo "$DEPLOYMENT_URL" > deployment-url.txt
