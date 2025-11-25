@@ -8,14 +8,14 @@ import { Progress } from '@/components/ui/progress'
 import { Users, TrendingUp } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { useAuth } from '@/contexts/AuthContext'
-import { getTeamPlayerStatistics, type PlayerStatistics } from '@/services/players'
+import { getTeamPlayerStatistics, type PlayerStatistics } from '@/services/statistics'
 import { listCoachTeams, type Team } from '@/services/teams'
 
 export default function PlayerMatchStatsPage() {
   const { toast } = useToast()
   const { role, user } = useAuth()
   const navigate = useNavigate()
-  
+
   // State
   const [teams, setTeams] = useState<Team[]>([])
   const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null)
@@ -40,21 +40,22 @@ export default function PlayerMatchStatsPage() {
   const loadTeams = async () => {
     try {
       const result = await listCoachTeams()
-      
+
       if (result.error) {
         throw result.error
       }
 
       setTeams(result.data || [])
-      
+
       // Auto-select first team if available
       if (result.data && result.data.length > 0) {
         setSelectedTeamId(result.data[0].id)
       }
     } catch (err: any) {
+      const error = err as Error
       toast({
         title: "Error",
-        description: `Error al cargar equipos: ${err.message}`,
+        description: `Error al cargar equipos: ${error.message}`,
         variant: "destructive"
       })
     } finally {
@@ -64,17 +65,17 @@ export default function PlayerMatchStatsPage() {
 
   const loadStats = async () => {
     if (!selectedTeamId) return
-    
+
     setStatsLoading(true)
     try {
       const result = await getTeamPlayerStatistics(selectedTeamId)
-      
+
       if (result.error) {
         throw result.error
       }
 
       let stats = result.data || []
-      
+
       // Si es jugador, filtrar solo sus estadísticas
       if (role === 'player' && user) {
         stats = stats.filter((s: PlayerStatistics) => s.player_id.toString() === user.id)
@@ -82,9 +83,10 @@ export default function PlayerMatchStatsPage() {
 
       setPlayerStats(stats)
     } catch (err: any) {
+      const error = err as Error
       toast({
         title: "Error",
-        description: `Error al cargar estadísticas: ${err.message}`,
+        description: `Error al cargar estadísticas: ${error.message}`,
         variant: "destructive"
       })
     } finally {
@@ -167,8 +169,8 @@ export default function PlayerMatchStatsPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <Select 
-              value={selectedTeamId?.toString() || ''} 
+            <Select
+              value={selectedTeamId?.toString() || ''}
               onValueChange={(value) => setSelectedTeamId(parseInt(value))}
             >
               <SelectTrigger className="w-full max-w-md">
@@ -231,7 +233,7 @@ export default function PlayerMatchStatsPage() {
                     .map((stat) => {
                       const periodsPercentage = getPeriodsPercentage(stat.avg_periods_played)
                       return (
-                        <TableRow 
+                        <TableRow
                           key={stat.player_id}
                           className="cursor-pointer hover:bg-accent/50"
                           onClick={() => handlePlayerClick(stat.player_id)}

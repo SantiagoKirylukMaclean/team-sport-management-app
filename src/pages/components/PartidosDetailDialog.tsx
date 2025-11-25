@@ -68,7 +68,7 @@ export function PartidosDetailDialog({
       })
 
       // Obtener información de jugadores
-      let playersMap = new Map<number, string>()
+      const playersMap = new Map<number, string>()
       if (playerIds.size > 0) {
         console.log('Fetching players with IDs:', Array.from(playerIds))
         const { data: playersData, error: playersError } = await supabase

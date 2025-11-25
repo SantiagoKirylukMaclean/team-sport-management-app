@@ -27,14 +27,11 @@ import { AlertCircle, UserPlus, Loader2, AlertTriangle } from 'lucide-react'
 import { TeamMultiSelect } from '@/components/ui/team-multi-select'
 import { InvitationResult } from '@/components/ui/invitation-result'
 import { createInvitation } from '@/services/invites'
-import LoadingSpinner from '@/components/ui/loading-spinner'
-import ErrorDisplay from '@/components/ui/error-display'
-import { 
-  mapInvitationError, 
-  shouldRetryInvitation, 
-  getErrorToastMessage, 
-  getSuccessToastMessage, 
-  getLoadingToastMessage 
+import {
+  mapInvitationError,
+  getErrorToastMessage,
+  getSuccessToastMessage,
+  getLoadingToastMessage
 } from '@/lib/invitation-error-handling'
 import type { InviteUserRequest, InviteUserResponse } from '@/types/db'
 
@@ -76,7 +73,7 @@ type InviteFormData = z.infer<typeof inviteSchema>
 
 export default function InviteUserPage() {
   usePageTitle('Invite User')
-  
+
   const [invitationResult, setInvitationResult] = useState<InviteUserResponse | null>(null)
   const [invitationError, setInvitationError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -123,45 +120,45 @@ export default function InviteUserPage() {
 
       // Show success result
       setInvitationResult(result.data)
-      
+
       // Enhanced success toast with more details
       const successMessage = getSuccessToastMessage(data.email, data.role)
       toast(successMessage)
 
       // Reset form validation state
       form.clearErrors()
-      
+
     } catch (error: any) {
       console.error('Error creating invitation:', error)
-      
+
       // Map error to user-friendly format
       const mappedError = mapInvitationError(error)
-      
+
       // Set error for InvitationResult component to display
       setInvitationError(mappedError.message)
-      
+
       // Show error toast with retry information
       const errorToastMessage = getErrorToastMessage(mappedError, submitAttempts)
       toast(errorToastMessage)
 
       // Add form-level errors for specific validation issues
       if (mappedError.code === 'EMAIL_ERROR') {
-        form.setError('email', { 
-          type: 'server', 
-          message: 'Please check the email address and try again.' 
+        form.setError('email', {
+          type: 'server',
+          message: 'Please check the email address and try again.'
         })
       } else if (mappedError.code === 'TEAM_ERROR') {
-        form.setError('teamIds', { 
-          type: 'server', 
-          message: 'Please select valid teams and try again.' 
+        form.setError('teamIds', {
+          type: 'server',
+          message: 'Please select valid teams and try again.'
         })
       } else if (mappedError.code === 'ROLE_ERROR') {
-        form.setError('role', { 
-          type: 'server', 
-          message: 'Please select a valid role and try again.' 
+        form.setError('role', {
+          type: 'server',
+          message: 'Please select a valid role and try again.'
         })
       }
-      
+
     } finally {
       setIsSubmitting(false)
     }
@@ -340,8 +337,8 @@ export default function InviteUserPage() {
                 >
                   Reset Form
                 </Button>
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   disabled={isSubmitting || !form.formState.isValid}
                   className="min-w-[160px]"
                 >

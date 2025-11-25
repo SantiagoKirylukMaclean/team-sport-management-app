@@ -6,7 +6,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { useToast } from '@/hooks/use-toast'
-import { 
+import {
   listMatchQuarterResults,
   type Match,
   type MatchQuarterResult,
@@ -30,7 +30,6 @@ export function CampeonatoDetailDialog({
   open,
   onOpenChange,
   match,
-  teamId,
 }: CampeonatoDetailDialogProps) {
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
@@ -60,7 +59,7 @@ export function CampeonatoDetailDialog({
       if (goalsRes.error) throw goalsRes.error
 
       const goalsData = goalsRes.data || []
-      
+
       // Obtener IDs únicos de jugadores
       const playerIds = new Set<number>()
       goalsData.forEach(goal => {
@@ -69,17 +68,17 @@ export function CampeonatoDetailDialog({
       })
 
       // Obtener información de jugadores
-      let playersMap = new Map<number, string>()
+      const playersMap = new Map<number, string>()
       if (playerIds.size > 0) {
         console.log('Fetching players with IDs:', Array.from(playerIds))
         const { data: playersData, error: playersError } = await supabase
           .from('players')
           .select('id, full_name')
           .in('id', Array.from(playerIds))
-        
+
         console.log('Players data:', playersData)
         console.log('Players error:', playersError)
-        
+
         if (!playersError && playersData) {
           playersData.forEach(player => {
             playersMap.set(player.id, player.full_name)
@@ -90,8 +89,8 @@ export function CampeonatoDetailDialog({
       // Mapear los goles con la información de los jugadores
       const goalsWithPlayers = goalsData.map(goal => ({
         ...goal,
-        scorer: playersMap.has(goal.scorer_id) 
-          ? { full_name: playersMap.get(goal.scorer_id)! } 
+        scorer: playersMap.has(goal.scorer_id)
+          ? { full_name: playersMap.get(goal.scorer_id)! }
           : null,
         assister: goal.assister_id && playersMap.has(goal.assister_id)
           ? { full_name: playersMap.get(goal.assister_id)! }
@@ -199,7 +198,7 @@ export function CampeonatoDetailDialog({
                 {[1, 2, 3, 4].map((quarter) => {
                   const result = quarterResults.find((r) => r.quarter === quarter)
                   const quarterGoals = getGoalsByQuarter(quarter)
-                  
+
                   return (
                     <div
                       key={quarter}

@@ -8,7 +8,8 @@ import { Pencil, Trash2, Plus, Users, ArrowUpDown, ArrowUp, ArrowDown } from 'lu
 import { useToast } from '@/hooks/use-toast'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { PlayerFormDialog } from './components/PlayerFormDialog'
-import { getPlayersByTeam, deletePlayer, getTeamPlayerStatistics, type PlayerWithTeam as Player, type PlayerStatistics } from '@/services/players'
+import { getPlayersByTeam, deletePlayer, type PlayerWithTeam as Player } from '@/services/players'
+import { getTeamPlayerStatistics, type PlayerStatistics } from '@/services/statistics'
 import { listCoachTeams, type Team } from '@/services/teams'
 
 type SortColumn = 'name' | 'number' | 'training_attendance' | 'match_attendance' | 'avg_periods'
@@ -16,7 +17,7 @@ type SortDirection = 'asc' | 'desc' | null
 
 export default function PlayersPage() {
   const { toast } = useToast()
-  
+
   // State
   const [teams, setTeams] = useState<Team[]>([])
   const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null)
@@ -24,7 +25,7 @@ export default function PlayersPage() {
   const [playerStats, setPlayerStats] = useState<PlayerStatistics[]>([])
   const [loading, setLoading] = useState(true)
   const [playersLoading, setPlayersLoading] = useState(false)
-  
+
   // Dialog states
   const [formDialogOpen, setFormDialogOpen] = useState(false)
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null)
@@ -53,21 +54,22 @@ export default function PlayersPage() {
   const loadTeams = async () => {
     try {
       const result = await listCoachTeams()
-      
+
       if (result.error) {
         throw result.error
       }
 
       setTeams(result.data || [])
-      
+
       // Auto-select first team if available
       if (result.data && result.data.length > 0) {
         setSelectedTeamId(result.data[0].id)
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as Error
       toast({
         title: "Error",
-        description: `Error al cargar equipos: ${err.message}`,
+        description: `Error al cargar equipos: ${error.message}`,
         variant: "destructive"
       })
     } finally {
@@ -77,28 +79,29 @@ export default function PlayersPage() {
 
   const loadPlayers = async () => {
     if (!selectedTeamId) return
-    
+
     setPlayersLoading(true)
     try {
       const [playersResult, statsResult] = await Promise.all([
         getPlayersByTeam(selectedTeamId),
         getTeamPlayerStatistics(selectedTeamId)
       ])
-      
+
       if (playersResult.error) {
         throw playersResult.error
       }
-      
+
       if (statsResult.error) {
         throw statsResult.error
       }
 
       setPlayers(playersResult.data || [])
       setPlayerStats(statsResult.data || [])
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as Error
       toast({
         title: "Error",
-        description: `Error al cargar jugadores: ${err.message}`,
+        description: `Error al cargar jugadores: ${error.message}`,
         variant: "destructive"
       })
     } finally {
@@ -127,7 +130,7 @@ export default function PlayersPage() {
     setDeleteLoading(true)
     try {
       const result = await deletePlayer(deletingPlayer.id)
-      
+
       if (result.error) {
         throw result.error
       }
@@ -140,10 +143,11 @@ export default function PlayersPage() {
       loadPlayers()
       setDeleteDialogOpen(false)
       setDeletingPlayer(null)
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as Error
       toast({
         title: "Error",
-        description: `Error al eliminar jugador: ${err.message}`,
+        description: `Error al eliminar jugador: ${error.message}`,
         variant: "destructive"
       })
     } finally {
@@ -184,29 +188,34 @@ export default function PlayersPage() {
       let compareValue = 0
 
       switch (sortColumn) {
-        case 'name':
+        case 'name': {
           compareValue = a.full_name.localeCompare(b.full_name)
           break
-        case 'number':
+        }
+        case 'number': {
           const numA = a.jersey_number || 999
           const numB = b.jersey_number || 999
           compareValue = numA - numB
           break
-        case 'training_attendance':
+        }
+        case 'training_attendance': {
           const trainingA = statsA ? statsA.training_attendance_pct : -1
           const trainingB = statsB ? statsB.training_attendance_pct : -1
           compareValue = trainingA - trainingB
           break
-        case 'match_attendance':
+        }
+        case 'match_attendance': {
           const matchA = statsA ? statsA.match_attendance_pct : -1
           const matchB = statsB ? statsB.match_attendance_pct : -1
           compareValue = matchA - matchB
           break
-        case 'avg_periods':
+        }
+        case 'avg_periods': {
           const avgA = statsA ? statsA.avg_periods_played : -1
           const avgB = statsB ? statsB.avg_periods_played : -1
           compareValue = avgA - avgB
           break
+        }
       }
 
       return sortDirection === 'asc' ? compareValue : -compareValue
@@ -282,8 +291,8 @@ export default function PlayersPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <Select 
-            value={selectedTeamId?.toString() || ''} 
+          <Select
+            value={selectedTeamId?.toString() || ''}
             onValueChange={(value) => setSelectedTeamId(parseInt(value))}
           >
             <SelectTrigger className="w-full max-w-md">
@@ -338,7 +347,7 @@ export default function PlayersPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead 
+                    <TableHead
                       className="cursor-pointer hover:bg-muted/50 select-none"
                       onClick={() => handleSort('name')}
                     >
@@ -347,7 +356,7 @@ export default function PlayersPage() {
                         <SortIcon column="name" />
                       </div>
                     </TableHead>
-                    <TableHead 
+                    <TableHead
                       className="cursor-pointer hover:bg-muted/50 select-none"
                       onClick={() => handleSort('number')}
                     >
@@ -356,7 +365,7 @@ export default function PlayersPage() {
                         <SortIcon column="number" />
                       </div>
                     </TableHead>
-                    <TableHead 
+                    <TableHead
                       className="text-center cursor-pointer hover:bg-muted/50 select-none"
                       onClick={() => handleSort('training_attendance')}
                     >
@@ -365,7 +374,7 @@ export default function PlayersPage() {
                         <SortIcon column="training_attendance" />
                       </div>
                     </TableHead>
-                    <TableHead 
+                    <TableHead
                       className="text-center cursor-pointer hover:bg-muted/50 select-none"
                       onClick={() => handleSort('match_attendance')}
                     >
@@ -374,7 +383,7 @@ export default function PlayersPage() {
                         <SortIcon column="match_attendance" />
                       </div>
                     </TableHead>
-                    <TableHead 
+                    <TableHead
                       className="text-center cursor-pointer hover:bg-muted/50 select-none"
                       onClick={() => handleSort('avg_periods')}
                     >

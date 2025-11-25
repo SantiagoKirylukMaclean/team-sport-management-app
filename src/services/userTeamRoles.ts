@@ -23,7 +23,7 @@ export async function listAssignments(teamId: number) {
 
   // Enriquecer con perfiles:
   const userIds = [...new Set((data ?? []).map(r => r.user_id))]
-  let profilesMap: Record<string, { display_name: string | null }> = {}
+  const profilesMap: Record<string, { display_name: string | null }> = {}
   
   if (userIds.length) {
     const { data: profiles } = await supabase

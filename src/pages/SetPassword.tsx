@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -27,7 +27,6 @@ type FormValues = z.infer<typeof schema>
 
 const SetPassword: React.FC = () => {
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
   const [verifying, setVerifying] = useState(true)
   const [email, setEmail] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)

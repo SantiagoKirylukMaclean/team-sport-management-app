@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import type { Player } from '@/types/db'
+import type { PlayerStatistics } from './statistics'
 
 /**
  * Service error type for consistent error handling
@@ -141,7 +142,7 @@ export async function getUnlinkedPlayers(
       // Sort by team name first
       const teamCompare = (a.teams?.name || '').localeCompare(b.teams?.name || '')
       if (teamCompare !== 0) return teamCompare
-      
+
       // Then by jersey number (nulls last)
       if (a.jersey_number === null && b.jersey_number !== null) return 1
       if (a.jersey_number !== null && b.jersey_number === null) return -1
@@ -149,7 +150,7 @@ export async function getUnlinkedPlayers(
         const jerseyCompare = a.jersey_number - b.jersey_number
         if (jerseyCompare !== 0) return jerseyCompare
       }
-      
+
       // Finally by full name
       return a.full_name.localeCompare(b.full_name)
     })
@@ -225,20 +226,6 @@ export async function getPlayer(
 }
 
 /**
- * Player statistics type
- */
-export interface PlayerStatistics {
-  player_id: number
-  training_attendance_pct: number
-  trainings_attended: number
-  total_trainings: number
-  match_attendance_pct: number
-  matches_called_up: number
-  total_matches: number
-  avg_periods_played: number
-}
-
-/**
  * Deletes a player by ID
  * 
  * @param playerId - The ID of the player to delete
@@ -290,10 +277,10 @@ export async function getTeamPlayerStatistics(
   teamId: number
 ): Promise<PlayerServiceResult<PlayerStatistics[]>> {
   try {
-    // Get all players for the team
+    // Get all players for the team with their details
     const { data: players, error: playersError } = await supabase
       .from('players')
-      .select('id')
+      .select('id, full_name, jersey_number')
       .eq('team_id', teamId)
 
     if (playersError) {
@@ -315,6 +302,8 @@ export async function getTeamPlayerStatistics(
     }
 
     const playerIds = players.map(p => p.id)
+    // Create a map for quick player lookup
+    const playerMap = new Map(players.map(p => [p.id, p]))
 
     // Get all trainings for the team
     const { data: trainings } = await supabase
@@ -333,7 +322,7 @@ export async function getTeamPlayerStatistics(
         .select('player_id, status, training_id')
         .in('player_id', playerIds)
         .in('training_id', trainingIds)
-      
+
       trainingAttendance = data || []
     }
 
@@ -354,7 +343,7 @@ export async function getTeamPlayerStatistics(
         .select('player_id, match_id')
         .in('player_id', playerIds)
         .in('match_id', matchIds)
-      
+
       callUps = data || []
     }
 
@@ -366,12 +355,14 @@ export async function getTeamPlayerStatistics(
         .select('player_id, period, fraction, match_id')
         .in('player_id', playerIds)
         .in('match_id', matchIds)
-      
+
       periods = data || []
     }
 
     // Calculate statistics for each player
     const statistics: PlayerStatistics[] = playerIds.map(playerId => {
+      const player = playerMap.get(playerId)!
+
       // Training stats
       const playerTrainings = trainingAttendance.filter(ta => ta.player_id === playerId)
       const trainingsAttended = playerTrainings.filter(ta => ta.status === 'on_time' || ta.status === 'late').length
@@ -393,12 +384,15 @@ export async function getTeamPlayerStatistics(
 
       return {
         player_id: playerId,
-        training_attendance_pct: trainingPct,
-        trainings_attended: trainingsAttended,
+        team_id: teamId,
+        full_name: player.full_name,
+        jersey_number: player.jersey_number,
         total_trainings: totalTrainings,
-        match_attendance_pct: matchPct,
-        matches_called_up: matchesCalledUp,
+        trainings_attended: trainingsAttended,
+        training_attendance_pct: trainingPct,
         total_matches: totalMatches,
+        matches_called_up: matchesCalledUp,
+        match_attendance_pct: matchPct,
         avg_periods_played: avgPeriods
       }
     })
@@ -496,11 +490,11 @@ export async function updatePlayer(
 ): Promise<PlayerServiceResult<Player>> {
   try {
     const updateData: any = {}
-    
+
     if (data.full_name !== undefined) {
       updateData.full_name = data.full_name
     }
-    
+
     if (data.jersey_number !== undefined) {
       updateData.jersey_number = data.jersey_number
     }
