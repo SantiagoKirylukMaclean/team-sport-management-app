@@ -25,7 +25,7 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const loadUserProfile = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      
+
       if (!user) {
         setState({ user: null, role: null, loading: false })
         return
@@ -43,10 +43,10 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         return
       }
 
-      setState({ 
-        user, 
-        role: profile.role as AppRole, 
-        loading: false 
+      setState({
+        user,
+        role: profile.role as AppRole,
+        loading: false
       })
     } catch (error) {
       console.error('Unexpected error loading profile:', error)
@@ -64,7 +64,7 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
   useEffect(() => {
     loadUserProfile()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (!session?.user) {
         setState({ user: null, role: null, loading: false })
       } else {

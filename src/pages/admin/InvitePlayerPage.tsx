@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -51,7 +51,7 @@ type InvitePlayerFormData = z.infer<typeof invitePlayerSchema>
 
 export default function InvitePlayerPage() {
   usePageTitle('Invite Player')
-  
+
   const [invitationResult, setInvitationResult] = useState<InviteUserResponse | null>(null)
   const [invitationError, setInvitationError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -72,7 +72,7 @@ export default function InvitePlayerPage() {
 
       // Get player details to get team_id
       const playerResult = await getPlayer(data.playerId)
-      
+
       if (playerResult.error || !playerResult.data) {
         throw new Error('Failed to fetch player details')
       }
@@ -97,26 +97,26 @@ export default function InvitePlayerPage() {
 
       // Show success result
       setInvitationResult(result.data)
-      
+
       toast({
         title: 'Invitation created!',
         description: `${player.full_name} can now use the link to create their account.`,
       })
 
       form.clearErrors()
-      
+
     } catch (error: any) {
       console.error('Error creating player invitation:', error)
-      
+
       const errorMessage = error?.message || 'Failed to create invitation. Please try again.'
       setInvitationError(errorMessage)
-      
+
       toast({
         title: 'Failed to create invitation',
         description: errorMessage,
         variant: 'destructive',
       })
-      
+
     } finally {
       setIsSubmitting(false)
     }
@@ -171,7 +171,7 @@ export default function InvitePlayerPage() {
               <FormField
                 control={form.control}
                 name="playerId"
-                render={({ field }) => (
+                render={({ field }: { field: any }) => (
                   <FormItem>
                     <FormLabel>Player *</FormLabel>
                     <FormControl>
@@ -193,7 +193,7 @@ export default function InvitePlayerPage() {
               <FormField
                 control={form.control}
                 name="email"
-                render={({ field }) => (
+                render={({ field }: { field: any }) => (
                   <FormItem>
                     <FormLabel>Email Address *</FormLabel>
                     <FormControl>
@@ -215,7 +215,7 @@ export default function InvitePlayerPage() {
               <FormField
                 control={form.control}
                 name="redirectTo"
-                render={({ field }) => (
+                render={({ field }: { field: any }) => (
                   <FormItem>
                     <FormLabel>Redirect URL (Optional)</FormLabel>
                     <FormControl>
@@ -243,8 +243,8 @@ export default function InvitePlayerPage() {
                 >
                   Reset Form
                 </Button>
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   disabled={isSubmitting}
                   className="min-w-[160px]"
                 >

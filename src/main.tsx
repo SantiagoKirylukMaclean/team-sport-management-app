@@ -41,7 +41,6 @@ const TrainingsPage = React.lazy(() => import("@/pages/coach/TrainingsPage"));
 const MatchesPage = React.lazy(() => import("@/pages/coach/MatchesPage"));
 
 // Stats page (accessible to all roles)
-const PlayerMatchStatsPage = React.lazy(() => import("@/pages/PlayerMatchStatsPage"));
 const StatisticsPage = React.lazy(() => import("@/pages/coach/StatisticsPage"));
 const MyEvaluations = React.lazy(() => import("@/pages/MyEvaluations"));
 const PlayerEvaluationsPage = React.lazy(() => import("@/pages/coach/PlayerEvaluationsPage"));

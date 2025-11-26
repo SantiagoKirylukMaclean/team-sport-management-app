@@ -7,16 +7,14 @@ export type Team = {
   created_at: string;
 }
 
-export async function listTeams({ 
-  from = 0, 
-  to = 24, 
-  clubId, 
-  sportId 
-}: { 
-  from?: number; 
-  to?: number; 
-  clubId?: number; 
-  sportId?: number; 
+export async function listTeams({
+  from = 0,
+  to = 24,
+  clubId
+}: {
+  from?: number;
+  to?: number;
+  clubId?: number;
 } = {}) {
   let q = supabase.from('teams')
     .select('id,name,created_at,club_id')

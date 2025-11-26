@@ -1,5 +1,5 @@
 import React from 'react'
-import { render, RenderOptions } from '@testing-library/react'
+import { render, type RenderOptions } from '@testing-library/react'
 import { BrowserRouter } from 'react-router-dom'
 import { AuthProvider } from '@/contexts/AuthContext'
 
@@ -7,7 +7,7 @@ import { AuthProvider } from '@/contexts/AuthContext'
 const mockSupabaseClient = {
   auth: {
     getSession: () => Promise.resolve({ data: { session: null }, error: null }),
-    onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+    onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => { } } } }),
   },
   from: () => ({
     select: () => ({

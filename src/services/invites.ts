@@ -2,8 +2,7 @@ import { supabase } from '@/lib/supabase'
 import type {
   PendingInvite,
   InviteUserRequest,
-  InviteUserResponse,
-  InviteFormData
+  InviteUserResponse
 } from '@/types/db'
 
 /**
@@ -50,7 +49,7 @@ export async function createInvitation(
 
     // Get the current session to include the JWT token
     const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-    
+
     if (sessionError || !session) {
       return {
         data: null,
@@ -135,9 +134,9 @@ export async function createInvitation(
         error: null
       }
 
-    } catch (timeoutError) {
+    } catch (timeoutError: any) {
       clearTimeout(timeoutId)
-      if (timeoutError.name === 'AbortError') {
+      if (timeoutError?.name === 'AbortError') {
         return {
           data: null,
           error: {
@@ -157,7 +156,7 @@ export async function createInvitation(
 
     if (err instanceof Error) {
       details = err.message
-      
+
       if (err.message.includes('fetch')) {
         message = 'Network error'
         details = 'Failed to connect to the server. Please check your internet connection.'

@@ -13,7 +13,7 @@ const playerSchema = z.object({
   full_name: z.string().min(2, 'Mínimo 2 caracteres').max(120, 'Máximo 120 caracteres'),
   jersey_number: z
     .union([
-      z.number().int().min(0, 'Debe ser mayor o igual a 0').max(999, 'Debe ser menor a 1000'), 
+      z.number().int().min(0, 'Debe ser mayor o igual a 0').max(999, 'Debe ser menor a 1000'),
       z.nan()
     ])
     .transform(v => (Number.isNaN(v) ? null : v))
@@ -30,12 +30,12 @@ interface PlayerFormDialogProps {
   teamId: number
 }
 
-export function PlayerFormDialog({ 
-  open, 
-  onClose, 
-  onSave, 
-  player, 
-  teamId 
+export function PlayerFormDialog({
+  open,
+  onClose,
+  onSave,
+  player,
+  teamId
 }: PlayerFormDialogProps) {
   const { toast } = useToast()
   const isEditing = !!player
@@ -68,7 +68,7 @@ export function PlayerFormDialog({
   const onSubmit = async (data: PlayerFormData) => {
     try {
       let result
-      
+
       if (isEditing && player) {
         result = await updatePlayer(player.id, data)
       } else {
@@ -129,13 +129,13 @@ export function PlayerFormDialog({
             <FormField
               control={form.control}
               name="full_name"
-              render={({ field }) => (
+              render={({ field }: { field: any }) => (
                 <FormItem>
                   <FormLabel>Nombre Completo</FormLabel>
                   <FormControl>
-                    <Input 
-                      placeholder="Nombre completo del jugador" 
-                      {...field} 
+                    <Input
+                      placeholder="Nombre completo del jugador"
+                      {...field}
                     />
                   </FormControl>
                   <FormMessage />
@@ -146,11 +146,11 @@ export function PlayerFormDialog({
             <FormField
               control={form.control}
               name="jersey_number"
-              render={({ field }) => (
+              render={({ field }: { field: any }) => (
                 <FormItem>
                   <FormLabel>Número de Camiseta (opcional)</FormLabel>
                   <FormControl>
-                    <Input 
+                    <Input
                       type="number"
                       placeholder="0-999"
                       min="0"
@@ -172,12 +172,12 @@ export function PlayerFormDialog({
               <Button type="button" variant="outline" onClick={onClose}>
                 Cancelar
               </Button>
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 disabled={form.formState.isSubmitting}
               >
-                {form.formState.isSubmitting 
-                  ? (isEditing ? 'Actualizando...' : 'Creando...') 
+                {form.formState.isSubmitting
+                  ? (isEditing ? 'Actualizando...' : 'Creando...')
                   : (isEditing ? 'Actualizar' : 'Crear')
                 }
               </Button>
