@@ -36,13 +36,9 @@ const InvitePlayerPage = React.lazy(() => import("@/pages/admin/InvitePlayerPage
 const InvitationManagementPage = React.lazy(() => import("@/pages/admin/InvitationManagementPage"));
 
 // Coach pages
-const CoachDashboard = React.lazy(() => import("@/pages/coach/CoachDashboard"));
 const PlayersPage = React.lazy(() => import("@/pages/coach/PlayersPage"));
 const TrainingsPage = React.lazy(() => import("@/pages/coach/TrainingsPage"));
 const MatchesPage = React.lazy(() => import("@/pages/coach/MatchesPage"));
-
-// Stats page (accessible to all roles)
-const StatisticsPage = React.lazy(() => import("@/pages/coach/StatisticsPage"));
 const MyEvaluations = React.lazy(() => import("@/pages/MyEvaluations"));
 const PlayerEvaluationsPage = React.lazy(() => import("@/pages/coach/PlayerEvaluationsPage"));
 
@@ -93,12 +89,11 @@ function App() {
                 <CoachLayout />
               </CoachGuard>
             }>
-              <Route index element={<CoachDashboard />} />
+              <Route index element={<Navigate to="/dashboard" replace />} />
               <Route path="players" element={<PlayersPage />} />
               <Route path="trainings" element={<TrainingsPage />} />
               <Route path="matches" element={<MatchesPage />} />
               <Route path="evaluations" element={<PlayerEvaluationsPage />} />
-              <Route path="estadisticas" element={<StatisticsPage />} />
             </Route>
 
             {/* Legacy admin routes - redirect to new structure */}
