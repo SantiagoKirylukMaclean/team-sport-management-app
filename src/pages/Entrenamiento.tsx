@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Loader2, Calendar, Timer, FileText, CheckCircle2, XCircle, Clock, Eye } from 'lucide-react'
+import CoachTrainingDashboard from './coach/CoachTrainingDashboard'
 
 interface TrainingSession {
   id: number
@@ -23,7 +24,7 @@ interface TrainingSession {
 }
 
 const Entrenamiento: React.FC = () => {
-  const { user } = useAuth()
+  const { user, role } = useAuth()
   const [loading, setLoading] = useState(true)
   const [trainingSessions, setTrainingSessions] = useState<TrainingSession[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -31,8 +32,14 @@ const Entrenamiento: React.FC = () => {
   const [dialogOpen, setDialogOpen] = useState(false)
 
   useEffect(() => {
-    loadTrainingSessions()
-  }, [user])
+    if (role !== 'coach') {
+      loadTrainingSessions()
+    }
+  }, [user, role])
+
+  if (role === 'coach') {
+    return <CoachTrainingDashboard />
+  }
 
   const loadTrainingSessions = async () => {
     if (!user) return

@@ -25,6 +25,7 @@ import {
   type MatchResult,
   type TeamOverallStats
 } from '@/services/statistics'
+import StatisticsPage from '@/pages/coach/StatisticsPage'
 
 type PlayerInfo = {
   id: number
@@ -36,7 +37,7 @@ type PlayerInfo = {
 
 export default function Dashboard() {
   const { toast } = useToast()
-  const { user } = useAuth()
+  const { user, role } = useAuth()
   
   // State
   const [loading, setLoading] = useState(true)
@@ -51,14 +52,22 @@ export default function Dashboard() {
   const [overallStats, setOverallStats] = useState<TeamOverallStats | null>(null)
 
   useEffect(() => {
-    loadPlayerInfo()
-  }, [user])
+    // Solo cargar datos de jugador si no es coach/admin
+    if (role !== 'coach' && role !== 'admin') {
+      loadPlayerInfo()
+    }
+  }, [user, role])
 
   useEffect(() => {
     if (playerInfo?.team_id) {
       loadAllStatistics()
     }
   }, [playerInfo])
+  
+  // Si es coach o admin, mostrar estadísticas directamente
+  if (role === 'coach' || role === 'admin') {
+    return <StatisticsPage />
+  }
 
   const loadPlayerInfo = async () => {
     if (!user?.id) {
