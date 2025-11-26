@@ -6,6 +6,7 @@ import "./i18n/config"; // Inicializa i18n
 import AppShell from "@/components/layout/AppShell";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ToastProvider } from "@/components/ui/toast";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import { Routes, Route, Navigate } from "react-router-dom";
 import AdminGuard from "@/components/RouteGuards/AdminGuard";
 import CoachGuard from "@/components/RouteGuards/CoachGuard";
@@ -114,6 +115,8 @@ function App() {
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <App />
+    <ThemeProvider>
+      <App />
+    </ThemeProvider>
   </React.StrictMode>
 );
