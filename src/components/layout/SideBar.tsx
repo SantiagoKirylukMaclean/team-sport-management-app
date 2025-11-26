@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Trophy, Timer, Settings2, NotebookText, User, Menu, LogOut, LayoutDashboard, Shield, Users, Calendar, BarChart3 } from "lucide-react";
+import { Trophy, Timer, NotebookText, User, Menu, LogOut, LayoutDashboard, Shield, Users, Calendar, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -7,7 +7,6 @@ const items = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/partidos", label: "Partidos", icon: Calendar },
   { to: "/entrenamiento", label: "Entrenamiento", icon: Timer },
-  { to: "/asistencia", label: "Asistencia", icon: Settings2 },
   { to: "/campeonato", label: "Campeonato", icon: Trophy },
   { to: "/evaluaciones", label: "Mis Evaluaciones", icon: BarChart3 },
   { to: "/notes", label: "Notes", icon: NotebookText },

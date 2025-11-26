@@ -15,7 +15,6 @@ import { CoachLayout } from "@/layouts/CoachLayout";
 
 const Dashboard = React.lazy(() => import("@/pages/Dashboard"));
 const Entrenamiento = React.lazy(() => import("@/pages/Entrenamiento"));
-const Asistencia = React.lazy(() => import("@/pages/Asistencia"));
 const Campeonato = React.lazy(() => import("@/pages/Campeonato"));
 const Notes = React.lazy(() => import("@/pages/Notes"));
 const Profile = React.lazy(() => import("@/pages/Profile"));
@@ -61,7 +60,6 @@ function App() {
             <Route path="/dashboard" element={withShell(<Dashboard />)} />
             <Route path="/partidos" element={withShell(<Partidos />)} />
             <Route path="/entrenamiento" element={withShell(<Entrenamiento />)} />
-            <Route path="/asistencia" element={withShell(<Asistencia />)} />
             <Route path="/campeonato" element={withShell(<Campeonato />)} />
             <Route path="/evaluaciones" element={withShell(<MyEvaluations />)} />
             <Route path="/notes" element={withShell(<Notes />)} />
