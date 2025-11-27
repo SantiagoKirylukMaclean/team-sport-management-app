@@ -57,6 +57,7 @@ export type MatchPlayerPeriod = {
   period: number
   fraction: PeriodFraction
   position_id: number | null
+  field_zone: string | null
   created_at: string
 }
 
@@ -85,10 +86,10 @@ export async function upsertMatchPeriod(
   }
   return supabase
     .from('match_player_periods')
-    .insert({ 
-      match_id: matchId, 
-      player_id: playerId, 
-      period, 
+    .insert({
+      match_id: matchId,
+      player_id: playerId,
+      period,
       fraction,
       position_id: positionId || null,
       field_zone: fieldZone || null
@@ -129,12 +130,12 @@ export async function removePlayerFromCallUp(matchId: number, playerId: number) 
 export async function setMatchCallUps(matchId: number, playerIds: number[]) {
   // Primero eliminar todas las convocatorias existentes
   await supabase.from('match_call_ups').delete().eq('match_id', matchId)
-  
+
   // Luego insertar las nuevas
   if (playerIds.length === 0) {
     return { data: [], error: null }
   }
-  
+
   return supabase
     .from('match_call_ups')
     .insert(playerIds.map(playerId => ({ match_id: matchId, player_id: playerId })))
@@ -180,11 +181,11 @@ export async function listMatchSubstitutions(matchId: number, period?: number) {
     .from('match_substitutions')
     .select('id,match_id,period,player_out,player_in,created_at')
     .eq('match_id', matchId)
-  
+
   if (period !== undefined) {
     query = query.eq('period', period)
   }
-  
+
   return query.order('created_at', { ascending: true })
 }
 
@@ -266,11 +267,11 @@ export async function listMatchGoals(matchId: number, quarter?: number) {
     .from('match_goals')
     .select('id,match_id,quarter,scorer_id,assister_id,created_at')
     .eq('match_id', matchId)
-  
+
   if (quarter !== undefined) {
     query = query.eq('quarter', quarter)
   }
-  
+
   return query.order('created_at', { ascending: true })
 }
 
