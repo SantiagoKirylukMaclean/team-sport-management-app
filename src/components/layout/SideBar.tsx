@@ -20,11 +20,15 @@ export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle:
   const showAdminSection = role === 'super_admin';
   // Show coach section for coach, admin, and super_admin users
   const showCoachSection = role === 'coach' || role === 'admin' || role === 'super_admin';
+  const linkBaseClasses = "flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-colors";
+
   return (
-    <aside className={cn(
-      "h-full bg-black/60 border-r border-border flex flex-col transition-[width] duration-200",
-      collapsed ? "w-16" : "w-64"
-    )}>
+    <aside
+      className={cn(
+        "h-full bg-card border-r border-border flex flex-col transition-[width] duration-200 text-foreground",
+        collapsed ? "w-16" : "w-64"
+      )}
+    >
       <div className="flex items-center h-14 px-3 justify-between">
         <button onClick={onToggle} className="p-2 rounded-lg hover:bg-accent">
           <Menu size={18} />
@@ -36,11 +40,14 @@ export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle:
         {items.map(({ to, label, icon: Icon }) => {
           const active = pathname === to;
           return (
-            <Link key={to} to={to}
+            <Link
+              key={to}
+              to={to}
               className={cn(
-                "flex items-center gap-3 rounded-xl px-3 py-2 text-sm hover:bg-accent",
-                active ? "bg-accent" : "text-muted"
-              )}>
+                linkBaseClasses,
+                active ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+            >
               <Icon size={18} />
               {!collapsed && <span>{label}</span>}
             </Link>
@@ -52,8 +59,10 @@ export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle:
           <Link
             to="/coach"
             className={cn(
-              "flex items-center gap-3 rounded-xl px-3 py-2 text-sm hover:bg-accent",
-              pathname.startsWith("/coach") ? "bg-accent" : "text-muted"
+              linkBaseClasses,
+              pathname.startsWith("/coach")
+                ? "bg-muted text-foreground"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
             )}
           >
             <Users size={18} />
@@ -66,8 +75,10 @@ export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle:
           <Link
             to="/admin"
             className={cn(
-              "flex items-center gap-3 rounded-xl px-3 py-2 text-sm hover:bg-accent",
-              pathname.startsWith("/admin") ? "bg-accent" : "text-muted"
+              linkBaseClasses,
+              pathname.startsWith("/admin")
+                ? "bg-muted text-foreground"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
             )}
           >
             <Shield size={18} />
@@ -77,13 +88,16 @@ export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle:
       </nav>
 
       <div className="mt-auto p-2 space-y-1">
-        <Link to="/profile" className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-accent text-muted">
+        <Link
+          to="/profile"
+          className={cn(linkBaseClasses, "text-muted-foreground hover:bg-muted hover:text-foreground")}
+        >
           <User size={18} />
           {!collapsed && <span>Profile</span>}
         </Link>
         <button
           onClick={signOut}
-          className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-accent text-muted w-full"
+          className={cn(linkBaseClasses, "text-muted-foreground hover:bg-muted hover:text-foreground w-full justify-start")}
         >
           <LogOut size={18} />
           {!collapsed && <span>Logout</span>}
