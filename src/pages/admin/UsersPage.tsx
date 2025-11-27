@@ -2,22 +2,22 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from '@/components/ui/select';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from '@/components/ui/table';
-import { 
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -26,8 +26,8 @@ import {
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { 
-  Search, 
+import {
+  Search,
   Edit,
   Key,
   Loader2,
@@ -86,7 +86,7 @@ export default function UsersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<AppRole | 'all'>('all');
   const [loading, setLoading] = useState(true);
-  
+
   // Edit dialog state
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
@@ -94,18 +94,18 @@ export default function UsersPage() {
   const [selectedTeams, setSelectedTeams] = useState<number[]>([]);
   const [selectedClubs, setSelectedClubs] = useState<number[]>([]);
   const [selectedPlayer, setSelectedPlayer] = useState<number | null>(null);
-  
+
   // Filter options for player selection
   const [selectedSport, setSelectedSport] = useState<number | null>(null);
   const [selectedClub, setSelectedClub] = useState<number | null>(null);
   const [selectedTeam, setSelectedTeam] = useState<number | null>(null);
-  
+
   // Data options
   const [teams, setTeams] = useState<TeamOption[]>([]);
   const [clubs, setClubs] = useState<ClubOption[]>([]);
   const [players, setPlayers] = useState<PlayerOption[]>([]);
   const [sports, setSports] = useState<SportOption[]>([]);
-  
+
   const [actionLoading, setActionLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
@@ -155,7 +155,7 @@ export default function UsersPage() {
         .order('name');
 
       if (error) throw error;
-      
+
       const teamsData: TeamOption[] = (data || []).map((team: any) => ({
         id: team.id,
         name: team.name,
@@ -163,7 +163,7 @@ export default function UsersPage() {
         club_name: team.clubs.name,
         sport_name: team.clubs.sports.name
       }));
-      
+
       setTeams(teamsData);
     } catch (error) {
       console.error('Error loading teams:', error);
@@ -182,13 +182,13 @@ export default function UsersPage() {
         .order('name');
 
       if (error) throw error;
-      
+
       const clubsData: ClubOption[] = (data || []).map((club: any) => ({
         id: club.id,
         name: club.name,
         sport_name: club.sports.name
       }));
-      
+
       setClubs(clubsData);
     } catch (error) {
       console.error('Error loading clubs:', error);
@@ -216,7 +216,7 @@ export default function UsersPage() {
         .order('full_name');
 
       if (error) throw error;
-      
+
       const playersData: PlayerOption[] = (data || []).map((player: any) => ({
         id: player.id,
         full_name: player.full_name,
@@ -227,7 +227,7 @@ export default function UsersPage() {
         sport_name: player.teams.clubs.sports.name,
         user_id: player.user_id
       }));
-      
+
       setPlayers(playersData);
     } catch (error) {
       console.error('Error loading players:', error);
@@ -252,7 +252,7 @@ export default function UsersPage() {
     let filtered = users;
 
     if (searchTerm) {
-      filtered = filtered.filter(user => 
+      filtered = filtered.filter(user =>
         user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.display_name?.toLowerCase().includes(searchTerm.toLowerCase())
       );
@@ -265,15 +265,91 @@ export default function UsersPage() {
     setFilteredUsers(filtered);
   };
 
-  const handleEditUser = (user: UserProfile) => {
+  const handleEditUser = async (user: UserProfile) => {
+    console.log('=== Opening edit dialog for user ===');
+    console.log('User:', user.email, 'Role:', user.role);
+
     setSelectedUser(user);
     setEditRole(user.role);
-    setSelectedTeams([]);
-    setSelectedClubs([]);
-    setSelectedPlayer(null);
     setSelectedSport(null);
     setSelectedClub(null);
     setSelectedTeam(null);
+
+    // Load current assignments based on role
+    try {
+      if (user.role === 'coach' || user.role === 'admin') {
+        // Load user's current team assignments
+        console.log('Loading team assignments for', user.role);
+        const { data: userTeamRoles, error } = await supabase
+          .from('user_team_roles')
+          .select('team_id, role')
+          .eq('user_id', user.id);
+
+        console.log('Query result:', { userTeamRoles, error });
+
+        if (error) {
+          console.error('Error loading user team roles:', error);
+          setSelectedTeams([]);
+          setSelectedClubs([]);
+        } else if (userTeamRoles && userTeamRoles.length > 0) {
+          const teamIds = userTeamRoles.map(utr => utr.team_id);
+          console.log('Found team IDs:', teamIds);
+
+          if (user.role === 'coach') {
+            // For coaches, just set the team IDs directly
+            console.log('Setting selected teams for coach:', teamIds);
+            setSelectedTeams(teamIds);
+            setSelectedClubs([]);
+          } else if (user.role === 'admin') {
+            // For admins, we need to figure out which clubs they manage
+            // Get unique club IDs from the teams
+            const clubIds = [...new Set(
+              teams
+                .filter(t => teamIds.includes(t.id))
+                .map(t => t.club_id)
+            )];
+            console.log('Setting selected clubs for admin:', clubIds);
+            setSelectedClubs(clubIds);
+            setSelectedTeams([]);
+          }
+        } else {
+          console.log('No team assignments found for this user');
+          setSelectedTeams([]);
+          setSelectedClubs([]);
+        }
+      } else if (user.role === 'player') {
+        // Load linked player if exists
+        console.log('Loading player link');
+        const { data: playerData, error } = await supabase
+          .from('players')
+          .select('id')
+          .eq('user_id', user.id)
+          .single();
+
+        console.log('Player query result:', { playerData, error });
+
+        if (error) {
+          console.error('Error loading player link:', error);
+          setSelectedPlayer(null);
+        } else {
+          setSelectedPlayer(playerData?.id || null);
+        }
+        setSelectedTeams([]);
+        setSelectedClubs([]);
+      } else {
+        console.log('User role is', user.role, '- no assignments to load');
+        setSelectedTeams([]);
+        setSelectedClubs([]);
+        setSelectedPlayer(null);
+      }
+    } catch (error) {
+      console.error('Error loading user assignments:', error);
+      setSelectedTeams([]);
+      setSelectedClubs([]);
+      setSelectedPlayer(null);
+    }
+
+    console.log('Opening dialog...');
     setShowEditDialog(true);
   };
 
@@ -282,22 +358,38 @@ export default function UsersPage() {
 
     try {
       setActionLoading(true);
+      console.log('=== Starting user update ===');
+      console.log('User:', selectedUser.email);
+      console.log('New role:', editRole);
+      console.log('Selected teams:', selectedTeams);
+      console.log('Selected clubs:', selectedClubs);
+      console.log('Selected player:', selectedPlayer);
 
       // Update user role
+      console.log('Step 1: Updating user role...');
       const { error: roleError } = await supabase
         .from('profiles')
         .update({ role: editRole })
         .eq('id', selectedUser.id);
 
-      if (roleError) throw roleError;
+      if (roleError) {
+        console.error('Role update error:', roleError);
+        throw roleError;
+      }
+      console.log('✓ Role updated successfully');
 
       // Clear existing team assignments
+      console.log('Step 2: Clearing existing team assignments...');
       const { error: deleteError } = await supabase
         .from('user_team_roles')
         .delete()
         .eq('user_id', selectedUser.id);
 
-      if (deleteError) throw deleteError;
+      if (deleteError) {
+        console.error('Delete error:', deleteError);
+        throw deleteError;
+      }
+      console.log('✓ Existing assignments cleared');
 
       // Handle role-specific assignments
       if (editRole === 'coach' && selectedTeams.length > 0) {
@@ -308,11 +400,18 @@ export default function UsersPage() {
           role: 'coach' as const
         }));
 
-        const { error: insertError } = await supabase
+        console.log('Step 3: Inserting coach team assignments:', teamAssignments);
+        const { data: insertData, error: insertError } = await supabase
           .from('user_team_roles')
-          .insert(teamAssignments);
+          .insert(teamAssignments)
+          .select();
 
-        if (insertError) throw insertError;
+        if (insertError) {
+          console.error('Insert error:', insertError);
+          console.error('Insert error details:', JSON.stringify(insertError, null, 2));
+          throw insertError;
+        }
+        console.log('✓ Coach assignments inserted:', insertData);
       } else if (editRole === 'admin' && selectedClubs.length > 0) {
         // Assign admin to all teams in selected clubs
         const clubTeams = teams.filter(t => selectedClubs.includes(t.club_id));
@@ -322,34 +421,49 @@ export default function UsersPage() {
           role: 'admin' as const
         }));
 
+        console.log('Step 3: Inserting admin team assignments:', teamAssignments);
         if (teamAssignments.length > 0) {
-          const { error: insertError } = await supabase
+          const { data: insertData, error: insertError } = await supabase
             .from('user_team_roles')
-            .insert(teamAssignments);
+            .insert(teamAssignments)
+            .select();
 
-          if (insertError) throw insertError;
+          if (insertError) {
+            console.error('Insert error:', insertError);
+            console.error('Insert error details:', JSON.stringify(insertError, null, 2));
+            throw insertError;
+          }
+          console.log('✓ Admin assignments inserted:', insertData);
         }
       } else if (editRole === 'player' && selectedPlayer) {
         // Link player to user
+        console.log('Step 3: Linking player to user...');
         const { error: playerError } = await supabase
           .from('players')
           .update({ user_id: selectedUser.id })
           .eq('id', selectedPlayer);
 
-        if (playerError) throw playerError;
+        if (playerError) {
+          console.error('Player link error:', playerError);
+          throw playerError;
+        }
+        console.log('✓ Player linked successfully');
 
         // Note: Players don't need user_team_roles entries
         // They are linked through players.user_id
       }
 
+      console.log('Step 4: Reloading data...');
       // Reload data
       await loadUsers();
       await loadPlayers();
-      
+
+      console.log('=== User update completed successfully ===');
       showMessage('success', 'Usuario actualizado correctamente');
       setShowEditDialog(false);
     } catch (error) {
-      console.error('Error updating user:', error);
+      console.error('=== Error updating user ===');
+      console.error('Error details:', error);
       showMessage('error', 'Error al actualizar usuario');
     } finally {
       setActionLoading(false);
@@ -374,16 +488,16 @@ export default function UsersPage() {
   };
 
   const toggleTeamSelection = (teamId: number) => {
-    setSelectedTeams(prev => 
-      prev.includes(teamId) 
+    setSelectedTeams(prev =>
+      prev.includes(teamId)
         ? prev.filter(id => id !== teamId)
         : [...prev, teamId]
     );
   };
 
   const toggleClubSelection = (clubId: number) => {
-    setSelectedClubs(prev => 
-      prev.includes(clubId) 
+    setSelectedClubs(prev =>
+      prev.includes(clubId)
         ? prev.filter(id => id !== clubId)
         : [...prev, clubId]
     );
@@ -472,49 +586,49 @@ export default function UsersPage() {
 
       {/* Navigation Menu */}
       <div className="flex gap-2 flex-wrap border-b pb-4">
-        <Link 
+        <Link
           to="/admin/sports"
           className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-accent text-sm transition-colors"
         >
           <Trophy className="w-4 h-4" />
           <span>Deportes</span>
         </Link>
-        <Link 
+        <Link
           to="/admin/clubs"
           className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-accent text-sm transition-colors"
         >
           <Building className="w-4 h-4" />
           <span>Clubs</span>
         </Link>
-        <Link 
+        <Link
           to="/admin/teams"
           className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-accent text-sm transition-colors"
         >
           <UsersIcon className="w-4 h-4" />
           <span>Equipos</span>
         </Link>
-        <Link 
+        <Link
           to="/admin/invite-user"
           className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-accent text-sm transition-colors"
         >
           <UserPlus className="w-4 h-4" />
           <span>Invitar Coach/Admin</span>
         </Link>
-        <Link 
+        <Link
           to="/admin/invite-player"
           className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-accent text-sm transition-colors"
         >
           <UsersIcon className="w-4 h-4" />
           <span>Invitar Jugador</span>
         </Link>
-        <Link 
+        <Link
           to="/admin/invitations"
           className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-accent text-sm transition-colors"
         >
           <Mail className="w-4 h-4" />
           <span>Invitaciones</span>
         </Link>
-        <Link 
+        <Link
           to="/admin/users"
           className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent text-sm transition-colors"
         >
@@ -525,11 +639,10 @@ export default function UsersPage() {
 
       {/* Message Alert */}
       {message && (
-        <div className={`p-4 rounded-lg border flex items-center gap-2 ${
-          message.type === 'success' 
-            ? 'bg-green-500/10 border-green-500/20 text-green-500' 
-            : 'bg-red-500/10 border-red-500/20 text-red-500'
-        }`}>
+        <div className={`p-4 rounded-lg border flex items-center gap-2 ${message.type === 'success'
+          ? 'bg-green-500/10 border-green-500/20 text-green-500'
+          : 'bg-red-500/10 border-red-500/20 text-red-500'
+          }`}>
           {message.type === 'success' ? (
             <CheckCircle2 className="w-5 h-5" />
           ) : (
@@ -726,8 +839,8 @@ export default function UsersPage() {
                 <div className="grid grid-cols-3 gap-3">
                   <div>
                     <label className="text-xs text-muted-foreground mb-1 block">Deporte</label>
-                    <Select 
-                      value={selectedSport?.toString() || 'all'} 
+                    <Select
+                      value={selectedSport?.toString() || 'all'}
                       onValueChange={(value) => {
                         setSelectedSport(value === 'all' ? null : parseInt(value));
                         setSelectedClub(null);
@@ -750,8 +863,8 @@ export default function UsersPage() {
 
                   <div>
                     <label className="text-xs text-muted-foreground mb-1 block">Club</label>
-                    <Select 
-                      value={selectedClub?.toString() || 'all'} 
+                    <Select
+                      value={selectedClub?.toString() || 'all'}
                       onValueChange={(value) => {
                         setSelectedClub(value === 'all' ? null : parseInt(value));
                         setSelectedTeam(null);
@@ -773,8 +886,8 @@ export default function UsersPage() {
 
                   <div>
                     <label className="text-xs text-muted-foreground mb-1 block">Equipo</label>
-                    <Select 
-                      value={selectedTeam?.toString() || 'all'} 
+                    <Select
+                      value={selectedTeam?.toString() || 'all'}
                       onValueChange={(value) => setSelectedTeam(value === 'all' ? null : parseInt(value))}
                     >
                       <SelectTrigger>

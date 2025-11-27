@@ -78,3 +78,28 @@ export async function upsertTrainingAttendance(
     .select('training_id,player_id,status')
     .single()
 }
+
+export async function getTeamAttendanceStats(teamId: number) {
+  // Get all trainings for the team
+  const { data: trainings, error: trainingError } = await supabase
+    .from('training_sessions')
+    .select('id')
+    .eq('team_id', teamId)
+
+  if (trainingError) return { error: trainingError }
+
+  const trainingIds = trainings.map(t => t.id)
+
+  if (trainingIds.length === 0) return { data: [] }
+
+  // Get all attendance records for these trainings
+  return supabase
+    .from('training_attendance')
+    .select(`
+      training_id,
+      player_id,
+      status,
+      player:players(id,full_name,jersey_number)
+    `)
+    .in('training_id', trainingIds)
+}

@@ -63,6 +63,7 @@ jobs:
       - name: Deploy to Vercel Production
         run: |
           set -e
+          export VERCEL_FORCE_NO_BUILD_CACHE=1
           echo "⬇️ Syncing Vercel env (production)"
           vercel pull --yes --environment=production --token=$VERCEL_TOKEN
 
@@ -70,7 +71,7 @@ jobs:
           vercel build --prod --token=$VERCEL_TOKEN
 
           echo "🚀 Deploying prebuilt artifacts"
-          vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN > deployment-url.txt
+          vercel deploy --prebuilt --force --prod --token=$VERCEL_TOKEN > deployment-url.txt
 
           echo "Deployment URL: $(cat deployment-url.txt)"
       

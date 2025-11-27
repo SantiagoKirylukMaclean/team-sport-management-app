@@ -6,6 +6,7 @@ import "./i18n/config"; // Inicializa i18n
 import AppShell from "@/components/layout/AppShell";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ToastProvider } from "@/components/ui/toast";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import { Routes, Route, Navigate } from "react-router-dom";
 import AdminGuard from "@/components/RouteGuards/AdminGuard";
 import CoachGuard from "@/components/RouteGuards/CoachGuard";
@@ -14,7 +15,6 @@ import { CoachLayout } from "@/layouts/CoachLayout";
 
 const Dashboard = React.lazy(() => import("@/pages/Dashboard"));
 const Entrenamiento = React.lazy(() => import("@/pages/Entrenamiento"));
-const Asistencia = React.lazy(() => import("@/pages/Asistencia"));
 const Campeonato = React.lazy(() => import("@/pages/Campeonato"));
 const Notes = React.lazy(() => import("@/pages/Notes"));
 const Profile = React.lazy(() => import("@/pages/Profile"));
@@ -35,13 +35,9 @@ const InvitePlayerPage = React.lazy(() => import("@/pages/admin/InvitePlayerPage
 const InvitationManagementPage = React.lazy(() => import("@/pages/admin/InvitationManagementPage"));
 
 // Coach pages
-const CoachDashboard = React.lazy(() => import("@/pages/coach/CoachDashboard"));
 const PlayersPage = React.lazy(() => import("@/pages/coach/PlayersPage"));
 const TrainingsPage = React.lazy(() => import("@/pages/coach/TrainingsPage"));
 const MatchesPage = React.lazy(() => import("@/pages/coach/MatchesPage"));
-
-// Stats page (accessible to all roles)
-const StatisticsPage = React.lazy(() => import("@/pages/coach/StatisticsPage"));
 const MyEvaluations = React.lazy(() => import("@/pages/MyEvaluations"));
 const PlayerEvaluationsPage = React.lazy(() => import("@/pages/coach/PlayerEvaluationsPage"));
 
@@ -64,7 +60,6 @@ function App() {
             <Route path="/dashboard" element={withShell(<Dashboard />)} />
             <Route path="/partidos" element={withShell(<Partidos />)} />
             <Route path="/entrenamiento" element={withShell(<Entrenamiento />)} />
-            <Route path="/asistencia" element={withShell(<Asistencia />)} />
             <Route path="/campeonato" element={withShell(<Campeonato />)} />
             <Route path="/evaluaciones" element={withShell(<MyEvaluations />)} />
             <Route path="/notes" element={withShell(<Notes />)} />
@@ -92,12 +87,11 @@ function App() {
                 <CoachLayout />
               </CoachGuard>
             }>
-              <Route index element={<CoachDashboard />} />
+              <Route index element={<Navigate to="/dashboard" replace />} />
               <Route path="players" element={<PlayersPage />} />
               <Route path="trainings" element={<TrainingsPage />} />
               <Route path="matches" element={<MatchesPage />} />
               <Route path="evaluations" element={<PlayerEvaluationsPage />} />
-              <Route path="estadisticas" element={<StatisticsPage />} />
             </Route>
 
             {/* Legacy admin routes - redirect to new structure */}
@@ -114,6 +108,8 @@ function App() {
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <App />
+    <ThemeProvider>
+      <App />
+    </ThemeProvider>
   </React.StrictMode>
 );
