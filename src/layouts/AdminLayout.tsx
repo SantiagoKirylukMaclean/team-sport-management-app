@@ -24,7 +24,7 @@ export function AdminLayout() {
     <div className="h-full flex">
       {/* Admin Sidebar */}
       <aside className={cn(
-        "h-full bg-black/60 border-r border-border flex flex-col transition-[width] duration-200",
+        "h-full bg-card border-r border-border flex flex-col transition-[width] duration-200",
         collapsed ? "w-16" : "w-64"
       )}>
         {/* Header */}
