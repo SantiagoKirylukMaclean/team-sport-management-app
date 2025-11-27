@@ -7,9 +7,9 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
 import { Loader2, Plus, Trash2 } from 'lucide-react'
-import { 
-  getEvaluationStructure, 
-  getPlayerEvaluations, 
+import {
+  getEvaluationStructure,
+  getPlayerEvaluations,
   createEvaluation,
   saveEvaluationScores,
   deleteEvaluation,
@@ -19,13 +19,19 @@ import {
 import { getPlayersByTeam, type PlayerWithTeam } from '@/services/players'
 import { listCoachTeams, type Team } from '@/services/teams'
 
+import { useSearchParams } from 'react-router-dom'
+
+// ... existing imports ...
+
 const PlayerEvaluationsPage: React.FC = () => {
   const { toast } = useToast()
+  const [searchParams] = useSearchParams()
   const [loading, setLoading] = useState(true)
   const [teams, setTeams] = useState<Team[]>([])
   const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null)
   const [players, setPlayers] = useState<PlayerWithTeam[]>([])
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>('')
+
   const [evaluationStructure, setEvaluationStructure] = useState<CategoryWithCriteria[]>([])
   const [evaluations, setEvaluations] = useState<EvaluationWithScores[]>([])
   const [showNewEvaluation, setShowNewEvaluation] = useState(false)
@@ -38,6 +44,23 @@ const PlayerEvaluationsPage: React.FC = () => {
   useEffect(() => {
     loadTeams()
   }, [])
+
+  // Handle URL params
+  useEffect(() => {
+    const teamIdParam = searchParams.get('teamId')
+    const playerIdParam = searchParams.get('playerId')
+
+    if (teamIdParam) {
+      const teamId = parseInt(teamIdParam)
+      if (!isNaN(teamId)) {
+        setSelectedTeamId(teamId)
+      }
+    }
+
+    if (playerIdParam) {
+      setSelectedPlayerId(playerIdParam)
+    }
+  }, [searchParams])
 
   useEffect(() => {
     if (selectedTeamId) {
@@ -61,14 +84,14 @@ const PlayerEvaluationsPage: React.FC = () => {
         listCoachTeams(),
         getEvaluationStructure()
       ])
-      
+
       if (teamsResult.error) {
         throw teamsResult.error
       }
 
       setTeams(teamsResult.data || [])
       setEvaluationStructure(structure)
-      
+
       // Auto-select first team if available
       if (teamsResult.data && teamsResult.data.length > 0) {
         setSelectedTeamId(teamsResult.data[0].id)
@@ -86,10 +109,10 @@ const PlayerEvaluationsPage: React.FC = () => {
 
   const loadPlayers = async () => {
     if (!selectedTeamId) return
-    
+
     try {
       const result = await getPlayersByTeam(selectedTeamId)
-      
+
       if (result.error) {
         throw result.error
       }
@@ -130,7 +153,7 @@ const PlayerEvaluationsPage: React.FC = () => {
     try {
       setSaving(true)
       const evaluationId = await createEvaluation(parseInt(selectedPlayerId), evaluationDate, notes)
-      
+
       // Save scores
       const scoreEntries = Object.entries(scores)
         .filter(([_, score]) => score > 0)
@@ -212,8 +235,8 @@ const PlayerEvaluationsPage: React.FC = () => {
           <CardTitle>Select Team</CardTitle>
         </CardHeader>
         <CardContent>
-          <Select 
-            value={selectedTeamId?.toString() || ''} 
+          <Select
+            value={selectedTeamId?.toString() || ''}
             onValueChange={(value) => setSelectedTeamId(parseInt(value))}
           >
             <SelectTrigger>
@@ -285,7 +308,7 @@ const PlayerEvaluationsPage: React.FC = () => {
                       {category.name}
                     </h3>
                     <p className="text-sm text-slate-600">{category.description}</p>
-                    
+
                     <div className="grid gap-6">
                       {category.criteria.map(criterion => (
                         <div key={criterion.id} className="border rounded-lg p-4 space-y-3">
@@ -314,15 +337,15 @@ const PlayerEvaluationsPage: React.FC = () => {
                                 className="text-center text-lg font-bold"
                               />
                               <p className="text-xs text-slate-400 mt-1 text-center">
-                                1-2: Muy bajo<br/>
-                                3-4: Bajo<br/>
-                                5-6: Aceptable<br/>
-                                7-8: Bueno<br/>
+                                1-2: Muy bajo<br />
+                                3-4: Bajo<br />
+                                5-6: Aceptable<br />
+                                7-8: Bueno<br />
                                 9-10: Muy bueno
                               </p>
                             </div>
                           </div>
-                          
+
                           <div>
                             <Label className="text-xs text-slate-600">Video de ejemplo (opcional)</Label>
                             <Input
@@ -357,8 +380,8 @@ const PlayerEvaluationsPage: React.FC = () => {
                     {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                     Save Evaluation
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => {
                       setShowNewEvaluation(false)
                       setScores({})
@@ -409,7 +432,7 @@ const PlayerEvaluationsPage: React.FC = () => {
                       const categoryScores = evaluation.scores.filter(s =>
                         category.criteria.some(c => c.id === s.criterion_id)
                       )
-                      
+
                       if (categoryScores.length === 0) return null
 
                       return (
@@ -419,7 +442,7 @@ const PlayerEvaluationsPage: React.FC = () => {
                             {categoryScores.map(score => {
                               const criterion = category.criteria.find(c => c.id === score.criterion_id)
                               if (!criterion) return null
-                              
+
                               return (
                                 <div
                                   key={score.id}
@@ -437,9 +460,9 @@ const PlayerEvaluationsPage: React.FC = () => {
                                     </div>
                                   </div>
                                   {score.example_video_url && (
-                                    <a 
-                                      href={score.example_video_url} 
-                                      target="_blank" 
+                                    <a
+                                      href={score.example_video_url}
+                                      target="_blank"
                                       rel="noopener noreferrer"
                                       className="text-xs text-blue-600 hover:underline flex items-center gap-1"
                                     >
@@ -453,7 +476,7 @@ const PlayerEvaluationsPage: React.FC = () => {
                         </div>
                       )
                     })}
-                    
+
                     {evaluation.notes && (
                       <div className="mt-4 p-3 bg-slate-50 rounded-lg">
                         <p className="text-sm text-slate-700">{evaluation.notes}</p>
