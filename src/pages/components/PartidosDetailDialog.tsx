@@ -80,14 +80,10 @@ export function PartidosDetailDialog({
       // Obtener información de jugadores
       const playersMap = new Map<number, string>()
       if (playerIds.size > 0) {
-        console.log('Fetching players with IDs:', Array.from(playerIds))
         const { data: playersData, error: playersError } = await supabase
           .from('players')
           .select('id, full_name')
           .in('id', Array.from(playerIds))
-
-        console.log('Players data:', playersData)
-        console.log('Players error:', playersError)
 
         if (!playersError && playersData) {
           playersData.forEach(player => {
@@ -106,8 +102,6 @@ export function PartidosDetailDialog({
           ? { full_name: playersMap.get(goal.assister_id)! }
           : null
       }))
-
-      console.log('Goals with players:', goalsWithPlayers)
 
       setQuarterResults(quartersRes.data || [])
       setGoals(goalsWithPlayers)
