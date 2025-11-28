@@ -24,7 +24,9 @@ jobs:
 
       # Vercel
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-    
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -52,15 +54,18 @@ jobs:
           echo "✅ Migrations applied (if there were any new)"
 
       - name: Deploy Supabase Edge Functions
+        if: success()
         run: |
           echo "⚡ Deploying Edge Functions to Supabase project: $SUPABASE_PROJECT_ID"
           supabase functions deploy --project-ref $SUPABASE_PROJECT_ID
           echo "✅ Edge Functions deployed successfully"
-      
+
       - name: Install Vercel CLI
+        if: success()
         run: npm install -g vercel
-      
+
       - name: Deploy to Vercel Production
+        if: success()
         run: |
           set -e
           export VERCEL_FORCE_NO_BUILD_CACHE=1
