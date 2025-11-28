@@ -75,9 +75,8 @@ export interface Player {
  * These types represent the expected structure when fetching data with joins
  */
 
-export interface SportWithMetadata extends Sport {
-  // Future: could include counts of clubs, teams, etc.
-}
+// Future: could include counts of clubs, teams, etc.
+export type SportWithMetadata = Sport
 
 export interface ClubWithSport extends Club {
   sports: {
