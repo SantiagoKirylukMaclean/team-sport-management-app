@@ -88,12 +88,12 @@ export async function getPlayerEvaluations(playerId: number): Promise<Evaluation
           .from('evaluation_scores')
           .select('*')
           .eq('evaluation_id', evaluation.id),
-        evaluation.coach_id 
+        evaluation.coach_id
           ? supabase
-              .from('profiles')
-              .select('display_name')
-              .eq('id', evaluation.coach_id)
-              .single()
+            .from('profiles')
+            .select('display_name')
+            .eq('id', evaluation.coach_id)
+            .single()
           : Promise.resolve({ data: null, error: null })
       ])
 
@@ -205,10 +205,10 @@ export async function getEvaluationById(evaluationId: string): Promise<Evaluatio
       .eq('evaluation_id', evaluationId),
     data.coach_id
       ? supabase
-          .from('profiles')
-          .select('display_name')
-          .eq('id', data.coach_id)
-          .single()
+        .from('profiles')
+        .select('display_name')
+        .eq('id', data.coach_id)
+        .single()
       : Promise.resolve({ data: null, error: null })
   ])
 
@@ -219,4 +219,86 @@ export async function getEvaluationById(evaluationId: string): Promise<Evaluatio
     scores: scoresResult.data || [],
     coach: coachResult.data ? { display_name: coachResult.data.display_name } : undefined
   }
+}
+
+import { listCoachTeams } from '@/services/teams'
+
+// Get players who have evaluations (for coach view)
+export async function getPlayersWithEvaluations(): Promise<{
+  player_id: number
+  full_name: string
+  jersey_number: number | null
+  team_name: string
+  team_id: number
+  evaluation_count: number
+  last_evaluation_date: string
+}[]> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  // First get all teams where the user is a coach
+  const { data: coachTeams, error: teamsError } = await listCoachTeams()
+
+  if (teamsError) throw teamsError
+
+  const teamIds = coachTeams.map(t => t.id)
+
+  if (teamIds.length === 0) return []
+
+  // Get all players from these teams
+  const { data: players, error: playersError } = await supabase
+    .from('players')
+    .select(`
+      id,
+      full_name,
+      jersey_number,
+      team_id,
+      teams (
+        id,
+        name
+      )
+    `)
+    .in('team_id', teamIds)
+
+  if (playersError) throw playersError
+
+  // Get evaluation counts and last dates for these players
+  const { data: evaluations, error: evalError } = await supabase
+    .from('player_evaluations')
+    .select('player_id, evaluation_date')
+    .in('player_id', players.map(p => p.id))
+    .order('evaluation_date', { ascending: false })
+
+  if (evalError) throw evalError
+
+  // Group evaluations by player
+  const playerStats = new Map<number, { count: number, lastDate: string }>()
+
+  evaluations.forEach(ev => {
+    const current = playerStats.get(ev.player_id) || { count: 0, lastDate: ev.evaluation_date }
+    playerStats.set(ev.player_id, {
+      count: current.count + 1,
+      lastDate: ev.evaluation_date > current.lastDate ? ev.evaluation_date : current.lastDate
+    })
+  })
+
+  // Filter players who have at least one evaluation and format the result
+  return players
+    .filter(p => playerStats.has(p.id))
+    .map(p => {
+      const stats = playerStats.get(p.id)!
+      // Handle teams as an array or object depending on return
+      const teamData = Array.isArray(p.teams) ? p.teams[0] : p.teams
+
+      return {
+        player_id: p.id,
+        full_name: p.full_name,
+        jersey_number: p.jersey_number,
+        team_name: teamData?.name || 'Unknown Team',
+        team_id: teamData?.id || 0,
+        evaluation_count: stats.count,
+        last_evaluation_date: stats.lastDate
+      }
+    })
+    .sort((a, b) => new Date(b.last_evaluation_date).getTime() - new Date(a.last_evaluation_date).getTime())
 }

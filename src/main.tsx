@@ -39,7 +39,7 @@ const CoachDashboard = React.lazy(() => import("@/pages/coach/CoachDashboard"));
 const PlayersPage = React.lazy(() => import("@/pages/coach/PlayersPage"));
 const TrainingsPage = React.lazy(() => import("@/pages/coach/TrainingsPage"));
 const MatchesPage = React.lazy(() => import("@/pages/coach/MatchesPage"));
-const MyEvaluations = React.lazy(() => import("@/pages/MyEvaluations"));
+const Evaluaciones = React.lazy(() => import("@/pages/Evaluaciones"));
 const PlayerEvaluationsPage = React.lazy(() => import("@/pages/coach/PlayerEvaluationsPage"));
 
 const withShell = (el: React.ReactNode) => <AppShell>{el}</AppShell>;
@@ -62,7 +62,7 @@ function App() {
             <Route path="/partidos" element={withShell(<Partidos />)} />
             <Route path="/entrenamiento" element={withShell(<Entrenamiento />)} />
             <Route path="/campeonato" element={withShell(<Campeonato />)} />
-            <Route path="/evaluaciones" element={withShell(<MyEvaluations />)} />
+            <Route path="/evaluaciones" element={withShell(<Evaluaciones />)} />
             <Route path="/notes" element={withShell(<Notes />)} />
             <Route path="/profile" element={withShell(<Profile />)} />
 

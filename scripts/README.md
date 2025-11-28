@@ -1,13 +1,39 @@
-# 🔄 Sincronización de Datos entre Ambientes
+# 📁 Scripts de Supabase
 
-Scripts para sincronizar datos entre diferentes ambientes de Supabase.
+Scripts utilitarios para trabajar con Supabase de forma segura y eficiente.
 
-## Scripts Disponibles
+## 📋 Scripts Disponibles
 
-### 1. `sync-production-data.sh`
+### 🔒 Scripts de Seguridad
+
+#### `check-supabase-env.sh` ⭐ NUEVO
+**Verifica a qué ambiente estás conectado antes de ejecutar comandos**
+
+**Uso:**
+```bash
+npm run supabase:check
+# o
+bash scripts/check-supabase-env.sh
+```
+
+**Qué hace:**
+- ✅ Verifica si estás conectado LOCAL o REMOTO
+- ⚠️ Advierte si estás en PRODUCCIÓN
+- 🔍 Verifica que Docker esté corriendo
+- 📊 Muestra URLs de acceso
+
+**Por qué es importante:** Previene ejecutar comandos destructivos en producción por error.
+
+Ver [documentación completa](../SUPABASE_WORKFLOW.md#-cómo-asegurarte-de-usar-siempre-local)
+
+---
+
+### 🔄 Scripts de Sincronización
+
+#### 1. `sync-production-data.sh`
 Sincroniza datos de **producción → local**
 
-### 2. `sync-prod-to-staging.sh`
+#### 2. `sync-prod-to-staging.sh`
 Sincroniza datos de **producción → staging**
 
 ---
