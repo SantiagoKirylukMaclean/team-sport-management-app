@@ -1,22 +1,46 @@
-import { useTranslation } from 'react-i18next';
-import { Globe } from 'lucide-react';
+import { useTranslation } from 'react-i18next'
+import { Globe } from 'lucide-react'
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Button } from '@/components/ui/button'
+
+const languages = [
+  { code: 'en', name: 'English' },
+  { code: 'es', name: 'Español' },
+  { code: 'ca', name: 'Català' },
+]
 
 export function LanguageSwitcher() {
-  const { i18n } = useTranslation();
+  const { i18n } = useTranslation()
 
-  const toggleLanguage = () => {
-    const newLang = i18n.language === 'es' ? 'en' : 'es';
-    i18n.changeLanguage(newLang);
-  };
+  const changeLanguage = (lang: string) => {
+    i18n.changeLanguage(lang)
+  }
 
   return (
-    <button
-      onClick={toggleLanguage}
-      className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
-      title={i18n.language === 'es' ? 'Switch to English' : 'Cambiar a Español'}
-    >
-      <Globe className="h-4 w-4" />
-      <span className="uppercase">{i18n.language}</span>
-    </button>
-  );
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" size="icon" data-testid="language-switcher">
+          <Globe className="h-[1.2rem] w-[1.2rem]" />
+          <span className="sr-only">Toggle language</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {languages.map(lang => (
+          <DropdownMenuItem
+            key={lang.code}
+            onClick={() => changeLanguage(lang.code)}
+            disabled={i18n.language === lang.code}
+          >
+            {lang.name}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
 }

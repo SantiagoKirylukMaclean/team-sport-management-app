@@ -15,17 +15,17 @@
     "prepare": "husky",
     "type-check": "tsc -b --noEmit",
     "validate": "npm run type-check && npm run lint",
-    "supabase:check": "bash scripts/check-supabase-env.sh",
-    "supabase:start": "npx supabase start",
-    "supabase:stop": "npx supabase stop",
-    "supabase:status": "bash scripts/check-supabase-env.sh && npx supabase status",
+    "supabase:check": "bash scripts/check-supabase-env.sh --auto-unlink",
+    "supabase:start": "bash scripts/check-supabase-env.sh --auto-unlink --force && npx supabase start",
+    "supabase:stop": "bash scripts/check-supabase-env.sh --auto-unlink --force && npx supabase stop",
+    "supabase:status": "bash scripts/check-supabase-env.sh --auto-unlink --force && npx supabase status",
     "supabase:studio": "open http://127.0.0.1:54323",
-    "supabase:reset": "bash scripts/check-supabase-env.sh && npx supabase db reset",
-    "supabase:migrate": "bash scripts/check-supabase-env.sh && npx supabase migration up",
-    "supabase:migration:new": "bash scripts/check-supabase-env.sh && npx supabase migration new",
-    "supabase:migration:list": "npx supabase migration list",
-    "supabase:push": "bash scripts/check-supabase-env.sh && npx supabase db push",
-    "supabase:ensure-local": "if [ -f supabase/.temp/project-ref ]; then echo '❌ ERROR: Conectado a proyecto remoto. Ejecuta: npx supabase unlink' && exit 1; else echo '✅ Usando base de datos local'; fi"
+    "supabase:reset": "bash scripts/check-supabase-env.sh --auto-unlink --force && npx supabase db reset",
+    "supabase:migrate": "bash scripts/check-supabase-env.sh --auto-unlink --force && npx supabase migration up",
+    "supabase:migration:new": "bash scripts/check-supabase-env.sh --auto-unlink --force && npx supabase migration new",
+    "supabase:migration:list": "bash scripts/check-supabase-env.sh --auto-unlink --force && npx supabase migration list",
+    "supabase:push": "bash scripts/check-supabase-env.sh --auto-unlink --force && npx supabase db push",
+    "supabase:ensure-local": "bash scripts/check-supabase-env.sh --auto-unlink --force"
   },
   "lint-staged": {
     "*.{ts,tsx}": [

@@ -2,19 +2,21 @@ import { Link, useLocation } from "react-router-dom";
 import { Trophy, Timer, NotebookText, User, Menu, LogOut, LayoutDashboard, Shield, Users, Calendar, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { useAuth } from "@/contexts/AuthContext";
-
-const items = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/partidos", label: "Partidos", icon: Calendar },
-  { to: "/entrenamiento", label: "Entrenamiento", icon: Timer },
-  { to: "/campeonato", label: "Campeonato", icon: Trophy },
-  { to: "/evaluaciones", label: "Mis Evaluaciones", icon: BarChart3 },
-  { to: "/notes", label: "Notes", icon: NotebookText },
-];
+import { useTranslation } from "react-i18next";
 
 export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
+  const { t } = useTranslation();
   const { pathname } = useLocation();
   const { signOut, role } = useAuth();
+
+  const items = [
+    { to: "/dashboard", label: t("nav.dashboard"), icon: LayoutDashboard },
+    { to: "/partidos", label: t("nav.matches"), icon: Calendar },
+    { to: "/entrenamiento", label: t("nav.training"), icon: Timer },
+    { to: "/campeonato", label: t("nav.championship"), icon: Trophy },
+    { to: "/evaluaciones", label: t("nav.evaluations"), icon: BarChart3 },
+    { to: "/notes", label: t("nav.notes"), icon: NotebookText },
+  ];
 
   // Only show admin section for super_admin users
   const showAdminSection = role === 'super_admin';
