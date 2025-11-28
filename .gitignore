@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 
 .idea
+
+# Supabase - prevent accidental commits of remote project links
+supabase/.temp/project-ref
