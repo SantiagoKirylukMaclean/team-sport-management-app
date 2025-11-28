@@ -114,7 +114,7 @@ describe('Invitation Service', () => {
       expect(result.data).toBeNull()
       expect(result.error).toEqual({
         message: 'Authentication required',
-        details: 'No active session found',
+        details: 'No active session found. Please log in again.',
         code: 'AUTH_ERROR'
       })
     })
@@ -126,10 +126,10 @@ describe('Invitation Service', () => {
         error: null
       })
 
-      // Mock Edge Function error
+      // Mock Edge Function error (without timeout/network keywords)
       vi.mocked(supabase.functions.invoke).mockResolvedValue({
         data: null,
-        error: { message: 'Function timeout' }
+        error: { message: 'Function error' }
       })
 
       const result = await createInvitation(mockRequest)
@@ -137,7 +137,7 @@ describe('Invitation Service', () => {
       expect(result.data).toBeNull()
       expect(result.error).toEqual({
         message: 'Failed to create invitation',
-        details: 'Function timeout',
+        details: 'Function error',
         code: 'EDGE_FUNCTION_ERROR'
       })
     })
@@ -149,7 +149,7 @@ describe('Invitation Service', () => {
         error: null
       })
 
-      // Mock Edge Function returning error
+      // Mock Edge Function returning error (using 'role' keyword triggers specific logic)
       vi.mocked(supabase.functions.invoke).mockResolvedValue({
         data: { ok: false, error: 'Invalid role specified' },
         error: null
@@ -159,9 +159,9 @@ describe('Invitation Service', () => {
 
       expect(result.data).toBeNull()
       expect(result.error).toEqual({
-        message: 'Invalid role specified',
-        details: 'Edge Function returned an error response',
-        code: 'INVITATION_ERROR'
+        message: 'Role validation failed',
+        details: 'The selected role is invalid.',
+        code: 'ROLE_ERROR'
       })
     })
 
@@ -182,8 +182,8 @@ describe('Invitation Service', () => {
 
       expect(result.data).toBeNull()
       expect(result.error).toEqual({
-        message: 'Unknown error occurred',
-        details: 'Edge Function returned an error response',
+        message: 'Failed to create invitation',
+        details: 'Unknown error occurred',
         code: 'INVITATION_ERROR'
       })
     })
@@ -223,7 +223,7 @@ describe('Invitation Service', () => {
       expect(result.data).toBeNull()
       expect(result.error).toEqual({
         message: 'Unexpected error creating invitation',
-        details: 'Unknown error',
+        details: 'An unexpected error occurred. Please try again.',
         code: 'UNEXPECTED_ERROR'
       })
     })

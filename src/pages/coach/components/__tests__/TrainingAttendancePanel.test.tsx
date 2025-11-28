@@ -7,7 +7,7 @@ import * as trainingsService from '@/services/trainings'
 
 // Mock the services
 vi.mock('@/services/players', () => ({
-  listPlayers: vi.fn(),
+  getPlayersByTeam: vi.fn(),
 }))
 
 vi.mock('@/services/trainings', () => ({
@@ -46,28 +46,28 @@ describe('TrainingAttendancePanel', () => {
   })
 
   it('renders player list with attendance status', async () => {
-    vi.mocked(playersService.listPlayers).mockResolvedValue({
+    vi.mocked(playersService.getPlayersByTeam).mockResolvedValue({
       data: mockPlayers,
       error: null
     })
-    
+
     vi.mocked(trainingsService.listTrainingAttendance).mockResolvedValue({
       data: mockAttendance,
       error: null
     })
 
     render(<TrainingAttendancePanel {...mockProps} />)
-    
+
     await waitFor(() => {
       expect(screen.getByText('Juan Pérez')).toBeInTheDocument()
       expect(screen.getByText('María García')).toBeInTheDocument()
       expect(screen.getByText('Carlos López')).toBeInTheDocument()
     })
-    
+
     expect(screen.getByText('#10')).toBeInTheDocument()
     expect(screen.getByText('#7')).toBeInTheDocument()
     expect(screen.getByText('-')).toBeInTheDocument() // For player without jersey number
-    
+
     // Check that status badges are displayed (they appear in both select and badge)
     const aTiempoElements = screen.getAllByText('A Tiempo')
     const tardeElements = screen.getAllByText('Tarde')
@@ -76,7 +76,7 @@ describe('TrainingAttendancePanel', () => {
   })
 
   it('calls upsert function when attendance is updated', async () => {
-    vi.mocked(playersService.listPlayers).mockResolvedValue({
+    vi.mocked(playersService.getPlayersByTeam).mockResolvedValue({
       data: mockPlayers,
       error: null
     })
@@ -103,7 +103,7 @@ describe('TrainingAttendancePanel', () => {
   })
 
   it('renders select controls for attendance status', async () => {
-    vi.mocked(playersService.listPlayers).mockResolvedValue({
+    vi.mocked(playersService.getPlayersByTeam).mockResolvedValue({
       data: mockPlayers,
       error: null
     })
@@ -125,7 +125,7 @@ describe('TrainingAttendancePanel', () => {
   })
 
   it('handles save failure with error response', async () => {
-    vi.mocked(playersService.listPlayers).mockResolvedValue({
+    vi.mocked(playersService.getPlayersByTeam).mockResolvedValue({
       data: mockPlayers,
       error: null
     })
@@ -152,7 +152,7 @@ describe('TrainingAttendancePanel', () => {
   })
 
   it('displays empty state when no players exist', async () => {
-    vi.mocked(playersService.listPlayers).mockResolvedValue({
+    vi.mocked(playersService.getPlayersByTeam).mockResolvedValue({
       data: [],
       error: null
     })
@@ -171,7 +171,7 @@ describe('TrainingAttendancePanel', () => {
   })
 
   it('shows loading spinner initially', () => {
-    vi.mocked(playersService.listPlayers).mockReturnValue(new Promise(() => {}))
+    vi.mocked(playersService.getPlayersByTeam).mockReturnValue(new Promise(() => {}))
     vi.mocked(trainingsService.listTrainingAttendance).mockReturnValue(new Promise(() => {}))
 
     render(<TrainingAttendancePanel {...mockProps} />)
@@ -180,7 +180,7 @@ describe('TrainingAttendancePanel', () => {
   })
 
   it('handles RLS permission error on data load', async () => {
-    vi.mocked(playersService.listPlayers).mockResolvedValue({
+    vi.mocked(playersService.getPlayersByTeam).mockResolvedValue({
       data: null,
       error: { message: 'permission denied', code: '42501' }
     })
@@ -193,12 +193,12 @@ describe('TrainingAttendancePanel', () => {
     render(<TrainingAttendancePanel {...mockProps} />)
     
     await waitFor(() => {
-      expect(playersService.listPlayers).toHaveBeenCalledWith(1)
+      expect(playersService.getPlayersByTeam).toHaveBeenCalledWith(1)
     })
   })
 
   it('handles network error on data load', async () => {
-    vi.mocked(playersService.listPlayers).mockRejectedValue(new Error('fetch failed'))
+    vi.mocked(playersService.getPlayersByTeam).mockRejectedValue(new Error('fetch failed'))
     vi.mocked(trainingsService.listTrainingAttendance).mockResolvedValue({
       data: [],
       error: null
@@ -207,12 +207,12 @@ describe('TrainingAttendancePanel', () => {
     render(<TrainingAttendancePanel {...mockProps} />)
     
     await waitFor(() => {
-      expect(playersService.listPlayers).toHaveBeenCalled()
+      expect(playersService.getPlayersByTeam).toHaveBeenCalled()
     })
   })
 
   it('displays correct badge colors for different statuses', async () => {
-    vi.mocked(playersService.listPlayers).mockResolvedValue({
+    vi.mocked(playersService.getPlayersByTeam).mockResolvedValue({
       data: mockPlayers,
       error: null
     })
@@ -241,7 +241,7 @@ describe('TrainingAttendancePanel', () => {
   })
 
   it('shows "Sin Marcar" badge for players without attendance', async () => {
-    vi.mocked(playersService.listPlayers).mockResolvedValue({
+    vi.mocked(playersService.getPlayersByTeam).mockResolvedValue({
       data: mockPlayers,
       error: null
     })
@@ -262,7 +262,7 @@ describe('TrainingAttendancePanel', () => {
 
   it('calls onClose when dialog is closed', async () => {
     const user = userEvent.setup()
-    vi.mocked(playersService.listPlayers).mockResolvedValue({
+    vi.mocked(playersService.getPlayersByTeam).mockResolvedValue({
       data: mockPlayers,
       error: null
     })
@@ -284,7 +284,7 @@ describe('TrainingAttendancePanel', () => {
   })
 
   it('renders attendance controls for multiple players', async () => {
-    vi.mocked(playersService.listPlayers).mockResolvedValue({
+    vi.mocked(playersService.getPlayersByTeam).mockResolvedValue({
       data: mockPlayers,
       error: null
     })
@@ -313,7 +313,7 @@ describe('TrainingAttendancePanel', () => {
   })
 
   it('reloads data when dialog is reopened', async () => {
-    vi.mocked(playersService.listPlayers).mockResolvedValue({
+    vi.mocked(playersService.getPlayersByTeam).mockResolvedValue({
       data: mockPlayers,
       error: null
     })
@@ -325,12 +325,12 @@ describe('TrainingAttendancePanel', () => {
 
     const { rerender } = render(<TrainingAttendancePanel {...mockProps} open={false} />)
     
-    expect(playersService.listPlayers).not.toHaveBeenCalled()
+    expect(playersService.getPlayersByTeam).not.toHaveBeenCalled()
     
     rerender(<TrainingAttendancePanel {...mockProps} open={true} />)
     
     await waitFor(() => {
-      expect(playersService.listPlayers).toHaveBeenCalledWith(1)
+      expect(playersService.getPlayersByTeam).toHaveBeenCalledWith(1)
       expect(trainingsService.listTrainingAttendance).toHaveBeenCalledWith(1)
     })
   })

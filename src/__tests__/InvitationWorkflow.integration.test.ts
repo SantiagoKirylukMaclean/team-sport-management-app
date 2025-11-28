@@ -112,9 +112,9 @@ describe('Invitation Workflow Integration Tests', () => {
 
       expect(result.data).toBeNull()
       expect(result.error).toEqual({
-        message: 'Invalid team IDs provided',
-        details: 'Edge Function returned an error response',
-        code: 'INVITATION_ERROR'
+        message: 'Team validation failed',
+        details: 'One or more selected teams are invalid or no longer exist.',
+        code: 'TEAM_ERROR'
       })
     })
   })
