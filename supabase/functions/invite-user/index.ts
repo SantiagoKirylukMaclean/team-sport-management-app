@@ -213,12 +213,12 @@ serve(async (req) => {
       .select('id')
       .eq('email', body.email.toLowerCase())
       .single()
-    
-    let userId: string
+
+    let _userId: string
 
     if (existingProfile) {
       // User exists, use existing user ID
-      userId = existingProfile.id
+      _userId = existingProfile.id
     } else {
       // Create new user
       const { data: newUser, error: createUserError } = await supabaseAdmin.auth.admin.createUser({
@@ -231,18 +231,18 @@ serve(async (req) => {
 
       if (createUserError || !newUser.user) {
         return new Response(
-          JSON.stringify({ 
-            ok: false, 
-            error: `Failed to create user: ${createUserError?.message || 'Unknown error'}` 
+          JSON.stringify({
+            ok: false,
+            error: `Failed to create user: ${createUserError?.message || 'Unknown error'}`
           }),
-          { 
-            status: 500, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           }
         )
       }
 
-      userId = newUser.user.id
+      _userId = newUser.user.id
     }
 
     // Generate magic link for invitation
