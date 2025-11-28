@@ -37,6 +37,8 @@ npm run supabase:reset    # Reset DB con verificación
 npm run supabase:migration nombre_migracion  # Nueva migración con verificación
 ```
 
+> ℹ️ Todos los scripts `npm run supabase:*` ahora ejecutan el verificador con modo `--auto-unlink`, así que si detectan un `project-ref` remoto lo eliminarán automáticamente con `supabase unlink` antes de invocar el CLI. Esto garantiza que cada comando apunte siempre al stack local en Docker.
+
 ### Método 3: Verificación Manual
 
 ```bash
