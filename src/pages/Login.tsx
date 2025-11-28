@@ -1,21 +1,23 @@
-import React from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useTranslation } from 'react-i18next'
 import './Login.css'
 
-const schema = z.object({
-  email: z.string().email({ message: 'Email inválido' }),
-  password: z
-    .string()
-    .min(6, { message: 'La contraseña debe tener al menos 6 caracteres' }),
-})
+const Login = () => {
+  const { t } = useTranslation()
 
-type FormValues = z.infer<typeof schema>
+  const schema = z.object({
+    email: z.string().email({ message: t('auth.invalidEmail') }),
+    password: z.string().min(6, {
+      message: t('auth.passwordTooShort', { min: 6 }),
+    }),
+  })
 
-const Login: React.FC = () => {
+  type FormValues = z.infer<typeof schema>
+
   const { signIn } = useAuth()
   const {
     register,
@@ -23,9 +25,9 @@ const Login: React.FC = () => {
     formState: { errors, isSubmitting },
     setError,
     clearErrors,
-  } = useForm<FormValues>({ 
-    resolver: zodResolver(schema), 
-    defaultValues: { email: '', password: '' } 
+  } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: { email: '', password: '' },
   })
 
   const onSubmit = async (values: FormValues) => {
@@ -33,9 +35,9 @@ const Login: React.FC = () => {
     try {
       await signIn(values.email, values.password)
     } catch (err: any) {
-      setError('root', { 
-        type: 'server', 
-        message: err?.message ?? 'Ocurrió un error al iniciar sesión' 
+      setError('root', {
+        type: 'server',
+        message: err?.message ?? t('auth.loginError'),
       })
     }
   }
@@ -44,29 +46,21 @@ const Login: React.FC = () => {
     <div className="login-container">
       {/* Encabezado superior */}
       <header className="login-header">
-        <h1 className="login-title">
-          Team Sports Manager
-        </h1>
-        <p className="login-subtitle">
-          Sistema de gestión deportiva
-        </p>
+        <h1 className="login-title">Team Sports Manager</h1>
+        <p className="login-subtitle">{t('auth.subtitle')}</p>
       </header>
 
       {/* Tarjeta de login */}
       <main className="login-card">
         <div className="login-card-header">
-          <h2 className="login-card-title">
-            Iniciar Sesión
-          </h2>
-          <p className="login-card-description">
-            Ingresa tus credenciales para acceder al sistema
-          </p>
+          <h2 className="login-card-title">{t('auth.login')}</h2>
+          <p className="login-card-description">{t('auth.loginPrompt')}</p>
         </div>
-        
+
         <form onSubmit={handleSubmit(onSubmit)} className="login-form">
           <div className="form-group">
             <label htmlFor="email" className="form-label">
-              Email
+              {t('auth.email')}
             </label>
             <input
               id="email"
@@ -76,15 +70,13 @@ const Login: React.FC = () => {
               {...register('email')}
             />
             {errors.email && (
-              <p className="error-message">
-                {errors.email.message}
-              </p>
+              <p className="error-message">{errors.email.message}</p>
             )}
           </div>
 
           <div className="form-group">
             <label htmlFor="password" className="form-label">
-              Contraseña
+              {t('auth.password')}
             </label>
             <input
               id="password"
@@ -94,16 +86,12 @@ const Login: React.FC = () => {
               {...register('password')}
             />
             {errors.password && (
-              <p className="error-message">
-                {errors.password.message}
-              </p>
+              <p className="error-message">{errors.password.message}</p>
             )}
           </div>
 
           {errors.root && (
-            <div className="error-container">
-              {errors.root.message}
-            </div>
+            <div className="error-container">{errors.root.message}</div>
           )}
 
           <button
@@ -111,15 +99,15 @@ const Login: React.FC = () => {
             disabled={isSubmitting}
             className="login-button"
           >
-            {isSubmitting ? 'Ingresando…' : 'Iniciar Sesión'}
+            {isSubmitting ? t('auth.loggingIn') : t('auth.login')}
           </button>
         </form>
 
         <footer className="login-footer">
           <p className="login-footer-text">
-            ¿No tienes cuenta?{' '}
+            {t('auth.noAccount')}{' '}
             <Link to="/signup" className="login-footer-link">
-              Regístrate aquí
+              {t('auth.signUpHere')}
             </Link>
           </p>
         </footer>

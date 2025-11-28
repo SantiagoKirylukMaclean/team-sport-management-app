@@ -20,6 +20,8 @@ interface ConfirmDialogProps {
   variant?: "default" | "destructive"
 }
 
+import { useTranslation } from "react-i18next"
+
 export function ConfirmDialog({
   open,
   title,
@@ -27,10 +29,15 @@ export function ConfirmDialog({
   onConfirm,
   onCancel,
   loading = false,
-  confirmText = "Confirmar",
-  cancelText = "Cancelar",
+  confirmText,
+  cancelText,
   variant = "default"
 }: ConfirmDialogProps) {
+  const { t } = useTranslation()
+
+  const finalConfirmText = confirmText || t("common.confirm")
+  const finalCancelText = cancelText || t("common.cancel")
+
   return (
     <Dialog open={open} onOpenChange={(isOpen: boolean) => !isOpen && onCancel()}>
       <DialogContent className="sm:max-w-[425px]">
@@ -44,14 +51,14 @@ export function ConfirmDialog({
             onClick={onCancel}
             disabled={loading}
           >
-            {cancelText}
+            {finalCancelText}
           </Button>
           <Button
             variant={variant}
             onClick={onConfirm}
             disabled={loading}
           >
-            {loading ? "Procesando..." : confirmText}
+            {loading ? t("common.processing") : finalConfirmText}
           </Button>
         </DialogFooter>
       </DialogContent>

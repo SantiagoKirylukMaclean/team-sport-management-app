@@ -26,7 +26,9 @@
     "address": "Address",
     "status": "Status",
     "active": "Active",
-    "inactive": "Inactive"
+    "inactive": "Inactive",
+    "processing": "Processing...",
+    "team": "Team"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -34,6 +36,8 @@
     "matches": "Matches",
     "statistics": "Statistics",
     "evaluations": "Evaluations",
+    "championship": "Championship",
+    "notes": "Notes",
     "training": "Training",
     "users": "Users",
     "settings": "Settings",
@@ -47,7 +51,96 @@
     "forgotPassword": "Forgot your password?",
     "signIn": "Sign In",
     "signUp": "Sign Up",
-    "welcomeBack": "Welcome back"
+    "welcomeBack": "Welcome back",
+    "invalidEmail": "Invalid email",
+    "passwordTooShort": "Password must be at least {{min}} characters",
+    "loginError": "An error occurred while logging in",
+    "subtitle": "Sports management system",
+    "loginPrompt": "Enter your credentials to access the system",
+    "loggingIn": "Logging in...",
+    "noAccount": "Don't have an account?",
+    "signUpHere": "Sign up here",
+    "signupError": "An error occurred while creating the account",
+    "createAccount": "Create Account",
+    "signupPrompt": "Sign up to access the system",
+    "creatingAccount": "Creating account...",
+    "register": "Register",
+    "alreadyHaveAccount": "Already have an account?"
+  },
+  "dashboard": {
+    "welcome": "Welcome",
+    "upcomingMatches": "Upcoming Matches",
+    "recentResults": "Recent Results",
+    "teamOverview": "Team Overview",
+    "quickActions": "Quick Actions",
+    "userNotLinkedTitle": "User not linked",
+    "userNotLinkedDescription": "Your user ({{email}}) is not linked to any player. Contact the administrator.",
+    "loadPlayerInfoError": "Error loading player information: {{message}}",
+    "loadStatisticsError": "Error loading statistics: {{message}}",
+    "loadingInfo": "Loading information...",
+    "welcomeMessage": "Welcome to the main panel",
+    "notLinkedToPlayer": "You are not linked to any player",
+    "contactAdminToLink": "Contact the administrator to link your account with a player.",
+    "loadingStats": "Loading statistics...",
+    "teamOf": "{{name}}'s Team",
+    "you": "You",
+    "cards": {
+      "matches": "Matches",
+      "attendance": "attendance",
+      "quartersPlayed": "Quarters played",
+      "avgPerMatch": "average per match",
+      "training": "Training",
+      "goalsAndAssists": "Goals and Assists",
+      "goals": "GOALS",
+      "assists": "ASSISTS"
+    },
+    "teamStats": {
+      "matchesPlayed": "Matches played",
+      "winPercentage": "Win percentage",
+      "goals": "GOALS",
+      "goalsFor": "FOR",
+      "goalsAgainst": "AGAINST",
+      "goalDifference": "GOAL<br/>DIFFERENCE",
+      "difference": "Difference"
+    },
+    "tabs": {
+      "matches": "Matches",
+      "quarters": "Quarters",
+      "scorers": "Scorers"
+    },
+    "matchesTab": {
+      "title": "Match History",
+      "description": "Results of all team matches",
+      "noMatches": "No matches registered"
+    },
+    "quartersTab": {
+      "title": "Performance by Quarter",
+      "description": "Analysis of goals and results by quarter",
+      "noData": "No quarter data"
+    },
+    "scorersTab": {
+      "title": "Team Scorers",
+      "description": "Ranking of goals and assists",
+      "noGoals": "No goals registered"
+    },
+    "results": {
+      "win": "Win",
+      "loss": "Loss",
+      "draw": "Draw",
+      "winShort": "W",
+      "lossShort": "L",
+      "drawShort": "D",
+      "resultsShort": "W-D-L"
+    }
+  },
+  "home": {
+    "greeting": "Hello, {{email}}",
+    "role": "Role",
+    "superAdminPanel": "Super Admin Panel",
+    "fullAccessEnabled": "Full access enabled."
+  },
+  "header": {
+    "title": "Championship Standings"
   },
   "players": {
     "title": "Players",
@@ -132,13 +225,6 @@
     "player": "Player",
     "parent": "Parent",
     "noUsers": "No users registered"
-  },
-  "dashboard": {
-    "welcome": "Welcome",
-    "upcomingMatches": "Upcoming Matches",
-    "recentResults": "Recent Results",
-    "teamOverview": "Team Overview",
-    "quickActions": "Quick Actions"
   },
   "admin": {
     "title": "Administration",

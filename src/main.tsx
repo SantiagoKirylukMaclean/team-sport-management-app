@@ -49,58 +49,60 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <ToastProvider>
-          <Routes>
-            {/* Public routes */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/set-password" element={<SetPassword />} />
-            <Route path="/reset-password" element={<SetPassword />} /> {/* Alias for password recovery */}
+          <React.Suspense fallback={<div>Loading...</div>}>
+            <Routes>
+              {/* Public routes */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/set-password" element={<SetPassword />} />
+              <Route path="/reset-password" element={<SetPassword />} /> {/* Alias for password recovery */}
 
-            {/* Protected main app routes */}
-            <Route path="/" element={withShell(<Dashboard />)} />
-            <Route path="/dashboard" element={withShell(<Dashboard />)} />
-            <Route path="/partidos" element={withShell(<Partidos />)} />
-            <Route path="/entrenamiento" element={withShell(<Entrenamiento />)} />
-            <Route path="/campeonato" element={withShell(<Campeonato />)} />
-            <Route path="/evaluaciones" element={withShell(<Evaluaciones />)} />
-            <Route path="/notes" element={withShell(<Notes />)} />
-            <Route path="/profile" element={withShell(<Profile />)} />
+              {/* Protected main app routes */}
+              <Route path="/" element={withShell(<Dashboard />)} />
+              <Route path="/dashboard" element={withShell(<Dashboard />)} />
+              <Route path="/partidos" element={withShell(<Partidos />)} />
+              <Route path="/entrenamiento" element={withShell(<Entrenamiento />)} />
+              <Route path="/campeonato" element={withShell(<Campeonato />)} />
+              <Route path="/evaluaciones" element={withShell(<Evaluaciones />)} />
+              <Route path="/notes" element={withShell(<Notes />)} />
+              <Route path="/profile" element={withShell(<Profile />)} />
 
-            {/* Admin routes - protected by AdminGuard */}
-            <Route path="/admin" element={
-              <AdminGuard>
-                <AdminLayout />
-              </AdminGuard>
-            }>
-              <Route index element={<AdminDashboard />} />
-              <Route path="sports" element={<SportsPage />} />
-              <Route path="clubs" element={<ClubsPage />} />
-              <Route path="teams" element={<TeamsPage />} />
-              <Route path="users" element={<UsersPage />} />
-              <Route path="invite-user" element={<InviteUserPage />} />
-              <Route path="invite-player" element={<InvitePlayerPage />} />
-              <Route path="invitations" element={<InvitationManagementPage />} />
-            </Route>
+              {/* Admin routes - protected by AdminGuard */}
+              <Route path="/admin" element={
+                <AdminGuard>
+                  <AdminLayout />
+                </AdminGuard>
+              }>
+                <Route index element={<AdminDashboard />} />
+                <Route path="sports" element={<SportsPage />} />
+                <Route path="clubs" element={<ClubsPage />} />
+                <Route path="teams" element={<TeamsPage />} />
+                <Route path="users" element={<UsersPage />} />
+                <Route path="invite-user" element={<InviteUserPage />} />
+                <Route path="invite-player" element={<InvitePlayerPage />} />
+                <Route path="invitations" element={<InvitationManagementPage />} />
+              </Route>
 
-            {/* Coach routes - protected by CoachGuard */}
-            <Route path="/coach" element={
-              <CoachGuard>
-                <CoachLayout />
-              </CoachGuard>
-            }>
-              <Route index element={<CoachDashboard />} />
-              <Route path="players" element={<PlayersPage />} />
-              <Route path="trainings" element={<TrainingsPage />} />
-              <Route path="matches" element={<MatchesPage />} />
-              <Route path="evaluations" element={<PlayerEvaluationsPage />} />
-            </Route>
+              {/* Coach routes - protected by CoachGuard */}
+              <Route path="/coach" element={
+                <CoachGuard>
+                  <CoachLayout />
+                </CoachGuard>
+              }>
+                <Route index element={<CoachDashboard />} />
+                <Route path="players" element={<PlayersPage />} />
+                <Route path="trainings" element={<TrainingsPage />} />
+                <Route path="matches" element={<MatchesPage />} />
+                <Route path="evaluations" element={<PlayerEvaluationsPage />} />
+              </Route>
 
-            {/* Legacy admin routes - redirect to new structure */}
-            <Route path="/admin/equipos" element={<Navigate to="/admin/teams" replace />} />
+              {/* Legacy admin routes - redirect to new structure */}
+              <Route path="/admin/equipos" element={<Navigate to="/admin/teams" replace />} />
 
-            {/* Catch-all route for 404 */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+              {/* Catch-all route for 404 */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </React.Suspense>
         </ToastProvider>
       </AuthProvider>
     </BrowserRouter>
