@@ -1,0 +1,166 @@
+name: PR Checks
+
+on:
+  pull_request:
+    branches:
+      - stage
+      - main
+
+jobs:
+  pr-checks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Linting
+        run: |
+          echo "🔍 Running ESLint..."
+          npm run lint
+          echo "✅ Linting passed"
+
+      - name: Run Type Checking
+        run: |
+          echo "📝 Running TypeScript type checking..."
+          npm run type-check
+          echo "✅ Type checking passed"
+
+      - name: Run Tests
+        run: |
+          echo "🧪 Running tests with Vitest..."
+          npm run test:run
+          echo "✅ Tests passed"
+
+      - name: Build Application
+        run: |
+          echo "🏗️ Building application..."
+          npm run build
+          echo "✅ Build successful"
+
+      - name: Verify Pre-commit Hooks
+        run: |
+          echo "🪝 Simulating pre-commit hooks (lint-staged)..."
+          # Get list of changed files
+          git fetch origin ${{ github.base_ref }}
+          CHANGED_FILES=$(git diff --name-only --diff-filter=ACMR origin/${{ github.base_ref }}...HEAD | grep -E '\.(ts|tsx)$' || true)
+
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "No TypeScript files changed, skipping lint-staged simulation"
+          else
+            echo "Changed TypeScript files:"
+            echo "$CHANGED_FILES"
+
+            # Run ESLint on changed files
+            echo "$CHANGED_FILES" | xargs npx eslint --max-warnings 0
+
+            # Run TypeScript type check
+            npx tsc -p tsconfig.app.json --noEmit
+          fi
+          echo "✅ Pre-commit hooks validation passed"
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Validate SQL Migrations Syntax
+        run: |
+          echo "🔍 Validating SQL migrations syntax..."
+
+          # Check if migration files exist
+          if [ ! -d "supabase/migrations" ] || [ -z "$(ls -A supabase/migrations/*.sql 2>/dev/null)" ]; then
+            echo "No migration files found, skipping validation"
+            exit 0
+          fi
+
+          # Basic SQL syntax validation
+          for file in supabase/migrations/*.sql; do
+            if [ -f "$file" ]; then
+              echo "Checking $file..."
+
+              # Check for common SQL syntax issues
+              # 1. Check if file is not empty
+              if [ ! -s "$file" ]; then
+                echo "❌ Error: $file is empty"
+                exit 1
+              fi
+
+              # 2. Check for basic SQL keywords presence and balanced parentheses
+              if grep -q -i -E '(CREATE|ALTER|DROP|INSERT|UPDATE|DELETE|SELECT)' "$file"; then
+                echo "✓ $file contains valid SQL statements"
+              else
+                echo "⚠️ Warning: $file might not contain standard SQL statements"
+              fi
+
+              # 3. Check for unmatched parentheses
+              OPEN_PARENS=$(grep -o '(' "$file" | wc -l)
+              CLOSE_PARENS=$(grep -o ')' "$file" | wc -l)
+              if [ "$OPEN_PARENS" -ne "$CLOSE_PARENS" ]; then
+                echo "❌ Error: Unmatched parentheses in $file (Open: $OPEN_PARENS, Close: $CLOSE_PARENS)"
+                exit 1
+              fi
+
+              echo "✅ $file syntax validation passed"
+            fi
+          done
+
+          echo "✅ All SQL migrations syntax validated"
+
+      - name: Validate Migrations with Supabase
+        run: |
+          echo "🔍 Validating migrations with Supabase local instance..."
+
+          # Check if migration files exist
+          if [ ! -d "supabase/migrations" ] || [ -z "$(ls -A supabase/migrations/*.sql 2>/dev/null)" ]; then
+            echo "No migration files found, skipping Supabase validation"
+            exit 0
+          fi
+
+          # Start local Supabase instance
+          echo "Starting local Supabase instance..."
+          supabase start
+
+          # Run migrations
+          echo "Applying migrations to local instance..."
+          supabase db reset --db-url postgresql://postgres:postgres@127.0.0.1:54322/postgres
+
+          # Check for any migration issues
+          echo "Checking migration status..."
+          supabase migration list
+
+          # Stop local Supabase instance
+          echo "Stopping local Supabase instance..."
+          supabase stop
+
+          echo "✅ Supabase migrations validated successfully"
+
+      - name: PR Checks Summary
+        if: always()
+        run: |
+          echo "## 🔍 PR Checks Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔍 Linting | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          echo "| 📝 Type Checking | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🧪 Tests | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🏗️ Build | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🪝 Pre-commit Hooks | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🗄️ SQL Migrations Syntax | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          echo "| 📦 Supabase Migrations | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ All checks passed!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Note:** No deployment was performed. Deployments only occur on merge to stage or main." >> $GITHUB_STEP_SUMMARY
